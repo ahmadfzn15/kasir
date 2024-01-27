@@ -1,6 +1,5 @@
-import 'dart:js_util';
-
 import 'package:app/models/products.dart';
+import 'package:app/sublayout.dart';
 import 'package:flutter/material.dart';
 
 class Product extends StatefulWidget {
@@ -9,6 +8,24 @@ class Product extends StatefulWidget {
 
   @override
   State<Product> createState() => _ProductState();
+}
+
+Route _goPage(int id) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => Sublayout(id: id),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
 }
 
 class _ProductState extends State<Product> {
@@ -30,29 +47,167 @@ class _ProductState extends State<Product> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(5),
-          child: ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              return ProductCard(
-                products: products[index],
-                onIncrement: () {
-                  products[index].qty++;
-                },
-                onDecrement: () {
-                  products[index].qty--;
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+            appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight),
+                child: AppBar(
+                    bottom: const TabBar(
+                  tabs: [
+                    Tab(text: "Product"),
+                    Tab(text: "Category"),
+                  ],
+                  padding: EdgeInsets.zero,
+                  physics: BouncingScrollPhysics(),
+                  tabAlignment: TabAlignment.fill,
+                  splashBorderRadius: BorderRadius.all(Radius.circular(10)),
+                ))),
+            body: TabBarView(
+              children: [
+                DefaultTabController(
+                    length: 3,
+                    child: Scaffold(
+                      appBar: PreferredSize(
+                          preferredSize: const Size.fromHeight(kToolbarHeight),
+                          child: AppBar(
+                              bottom: const TabBar(
+                            tabs: [
+                              Tab(text: "Food"),
+                              Tab(text: "Drink"),
+                              Tab(text: "Snack"),
+                            ],
+                            isScrollable: true,
+                            physics: BouncingScrollPhysics(),
+                            tabAlignment: TabAlignment.center,
+                            splashBorderRadius:
+                                BorderRadius.all(Radius.circular(10)),
+                          ))),
+                      floatingActionButton: FloatingActionButton(
+                          onPressed: () {
+                            Navigator.of(context).push(_goPage(2));
+                          },
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          tooltip: "Add Orders",
+                          shape: const CircleBorder(eccentricity: 0),
+                          child: const Icon(
+                            Icons.add,
+                            size: 30,
+                          )),
+                      body: TabBarView(
+                        children: [
+                          ListView.builder(
+                            itemCount: 20,
+                            physics: const BouncingScrollPhysics(),
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                subtitle: const Text("Rp.10.000"),
+                                leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child:
+                                        Image.asset("assets/img/burger.jpeg")),
+                                trailing: PopupMenuButton(
+                                  tooltip: "Option",
+                                  icon: const Icon(Icons.menu),
+                                  itemBuilder: (context) {
+                                    return [
+                                      const PopupMenuItem(
+                                          value: "Edit", child: Text("Edit")),
+                                      const PopupMenuItem(
+                                          value: "Delete",
+                                          child: Text("Delete"))
+                                    ];
+                                  },
+                                ),
+                                title: const Text("Burger"),
+                              );
+                            },
+                          ),
+                          ListView.builder(
+                            itemCount: 20,
+                            physics: const BouncingScrollPhysics(),
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                subtitle: const Text("Rp.10.000"),
+                                leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child:
+                                        Image.asset("assets/img/burger.jpeg")),
+                                trailing: PopupMenuButton(
+                                  tooltip: "Option",
+                                  icon: const Icon(Icons.menu),
+                                  itemBuilder: (context) {
+                                    return [
+                                      const PopupMenuItem(
+                                          value: "Edit", child: Text("Edit")),
+                                      const PopupMenuItem(
+                                          value: "Delete",
+                                          child: Text("Delete"))
+                                    ];
+                                  },
+                                ),
+                                title: const Text("Burger"),
+                              );
+                            },
+                          ),
+                          ListView.builder(
+                            itemCount: 20,
+                            physics: const BouncingScrollPhysics(),
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                subtitle: const Text("Rp.10.000"),
+                                leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child:
+                                        Image.asset("assets/img/burger.jpeg")),
+                                trailing: PopupMenuButton(
+                                  tooltip: "Option",
+                                  icon: const Icon(Icons.menu),
+                                  itemBuilder: (context) {
+                                    return [
+                                      const PopupMenuItem(
+                                          value: "Edit", child: Text("Edit")),
+                                      const PopupMenuItem(
+                                          value: "Delete",
+                                          child: Text("Delete"))
+                                    ];
+                                  },
+                                ),
+                                title: const Text("Burger"),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    )),
+                ListView.builder(
+                  itemCount: 10,
+                  physics: const BouncingScrollPhysics(),
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text("Menu $index"),
+                    );
+                  },
+                ),
+              ],
+            )));
   }
 }
 
