@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class Notifications extends StatefulWidget {
-  const Notifications({super.key});
+class History extends StatefulWidget {
+  const History({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _NotificationsState createState() => _NotificationsState();
+  _HistoryState createState() => _HistoryState();
 }
 
-class _NotificationsState extends State<Notifications> {
+class _HistoryState extends State<History> {
   @override
   Widget build(BuildContext context) {
     return const Center(child: Text("Hello World"));

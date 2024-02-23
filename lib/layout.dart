@@ -1,9 +1,11 @@
 import 'package:app/auth/auth.dart';
+import 'package:app/blank.dart';
+import 'package:app/help.dart';
+import 'package:app/history.dart';
 import 'package:app/home.dart';
-import 'package:app/notifications.dart';
 import 'package:app/product.dart';
+import 'package:app/setting/setting.dart';
 import 'package:app/sublayout.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,14 +14,9 @@ import 'package:permission_handler/permission_handler.dart';
 class SideItem {
   String label;
   IconData icon;
-  bool redirect;
-  Function? action;
+  Widget? page = const Blank();
 
-  SideItem(
-      {required this.label,
-      required this.icon,
-      required this.redirect,
-      this.action});
+  SideItem({required this.label, required this.icon, required, this.page});
 }
 
 class Layout extends StatefulWidget {
@@ -50,7 +47,6 @@ Route _goPage(int id) {
 
 class _LayoutState extends State<Layout> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  FirebaseAuth auth = FirebaseAuth.instance;
 
   int _selectedIndex = 0;
   late List<SideItem> link;
@@ -61,25 +57,13 @@ class _LayoutState extends State<Layout> {
     super.initState();
 
     link = [
-      SideItem(label: "Home", icon: Icons.home, redirect: true),
-      SideItem(label: "Orders", icon: Icons.shop, redirect: true),
-      SideItem(label: "History", icon: Icons.history, redirect: true),
-      SideItem(label: "Setting", icon: Icons.settings, redirect: true),
-      SideItem(label: "Help", icon: Icons.help, redirect: true),
-      SideItem(
-          label: "Sign out",
-          icon: Icons.logout,
-          redirect: false,
-          // ignore: void_checks
-          action: openDialog)
+      SideItem(label: "Home", icon: Icons.home, page: const Home()),
+      SideItem(label: "Product", icon: Icons.shop, page: const Product()),
+      SideItem(label: "History", icon: Icons.history, page: const History()),
+      SideItem(label: "Setting", icon: Icons.settings, page: const Setting()),
+      SideItem(label: "Help", icon: Icons.help, page: const Help()),
     ];
   }
-
-  List<Widget> page = const [
-    Home(),
-    Product(title: "Sunda Food"),
-    Notifications()
-  ];
 
   Future<void> _handleRefresh() async {
     await Future.delayed(const Duration(seconds: 1));
@@ -97,7 +81,6 @@ class _LayoutState extends State<Layout> {
     try {
       // ignore: unused_local_variable
       loading = true;
-      await FirebaseAuth.instance.signOut();
 
       const snackBar = SnackBar(
           content: Text(
@@ -115,9 +98,6 @@ class _LayoutState extends State<Layout> {
         },
       ));
       loading = false;
-    } on FirebaseAuthException catch (e) {
-      loading = false;
-      print(e);
     } catch (e) {
       loading = false;
       print(e);
@@ -186,132 +166,108 @@ class _LayoutState extends State<Layout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldKey,
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: Text(
-              "Beranda",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            )),
-        actions: [
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(_goPage(0));
-            },
-            child: const Padding(
-              padding: EdgeInsets.only(right: 15),
-              child: Badge(label: Text("2"), child: Icon(Icons.notifications)),
-            ),
-          )
-        ],
-        titleSpacing: 0,
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-              ),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(_goPage(1));
-                        },
-                        child: const Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 35,
-                                  backgroundImage:
-                                      AssetImage("assets/img/lusi.jpeg"),
-                                ),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                Column(
-                                  children: [
-                                    Text(
-                                      "Lusi Kuraisin",
-                                      style: TextStyle(color: Colors.white),
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                            IconButton(
-                                onPressed: null,
-                                icon: Icon(
-                                  Icons.chevron_right,
-                                  color: Colors.white,
-                                  size: 30,
-                                ))
-                          ],
-                        )),
-                  ]),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text("Dashboard"),
-              selected: _selectedIndex == 0,
-              onTap: () {
-                _onItemTapped(0);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shop),
-              title: const Text("Orders"),
-              selected: _selectedIndex == 1,
-              onTap: () {
-                _onItemTapped(1);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text("History"),
-              selected: _selectedIndex == 2,
-              onTap: () {
-                _onItemTapped(2);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text("Settings"),
-              selected: _selectedIndex == 3,
-              onTap: () {
-                openFile();
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text("Sign Out"),
-              onTap: () {
-                Navigator.pop(context);
-                openDialog(context);
-              },
-            ),
-          ],
+        key: scaffoldKey,
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Text(
+                link[_selectedIndex].label,
+                style:
+                    const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+              )),
+          titleSpacing: 0,
+          backgroundColor: Colors.orange,
+          foregroundColor: Colors.white,
         ),
-      ),
-      body: RefreshIndicator(
-          onRefresh: _handleRefresh,
-          color: Colors.blue,
-          child: page[_selectedIndex]),
-    );
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(
+                  color: Colors.orange,
+                ),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(_goPage(1));
+                          },
+                          child: const Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 35,
+                                    backgroundImage:
+                                        AssetImage("assets/img/user.png"),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Lusi Kuraisin",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17),
+                                      ),
+                                      Text(
+                                        "Admin",
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 15),
+                                      )
+                                    ],
+                                  )
+                                ],
+                              ),
+                              IconButton(
+                                  onPressed: null,
+                                  icon: Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ))
+                            ],
+                          )),
+                    ]),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
+                itemCount: link.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: Icon(link[index].icon),
+                    title: Text(link[index].label),
+                    selected: _selectedIndex == index,
+                    onTap: () {
+                      _onItemTapped(index);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text("Keluar"),
+                onTap: () {
+                  Navigator.pop(context);
+                  openDialog(context);
+                },
+              ),
+            ],
+          ),
+        ),
+        body: link.elementAt(_selectedIndex).page);
   }
 }

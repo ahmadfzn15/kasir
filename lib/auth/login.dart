@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:app/layout.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class Login extends StatefulWidget {
   const Login({super.key, required this.pageController});
@@ -15,81 +17,25 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FlutterSecureStorage storage = const FlutterSecureStorage();
   bool loading = false;
   bool showPwd = false;
 
   void _loginUser(BuildContext context) async {
-    try {
-      // Loading set to true here is unnecessary, as it is not affecting the UI
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.value.text,
-        password: _passwordController.value.text,
-      );
+    final res = await http.post(
+        Uri.parse("https://102a-36-74-40-162.ngrok-free.app/api/auth/login"),
+        headers: {"Content-Type": "application/json; charset=UTF-8"},
+        body: jsonEncode({
+          'username': _usernameController.text,
+          'password': _passwordController.text
+        }));
 
-      // Check if the login was successful
-      if (userCredential.user != null) {
-        await storage.write(key: "uid", value: userCredential.user!.uid);
-
-        const snackBar = SnackBar(
-          content: Text(
-            "Sign in Successfully",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.deepOrange,
-          duration: Duration(seconds: 3),
-        );
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-        // Clear text controllers
-        _emailController.clear();
-        _passwordController.clear();
-
-        // Navigate to Home only if login is successful
-        // ignore: use_build_context_synchronously
-        Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (context) {
-            return const Layout();
-          },
-        ));
-      } else {
-        const snackBar = SnackBar(
-          content: Text(
-            "An unexpected error occurred",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        );
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
-    } on FirebaseAuthException catch (e) {
-      final snackBar = SnackBar(
-        content: Text(
-          e.message!,
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      );
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    } catch (e) {
-      const snackBar = SnackBar(
-        content: Text(
-          "An unexpected error occurred",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 3),
-      );
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if (res.statusCode == 200) {
+      print("Login Berhasil");
+    } else {
+      print(_usernameController.text);
     }
   }
 
@@ -117,7 +63,7 @@ class _LoginState extends State<Login> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text("Email",
+                      Text("Username",
                           style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold)),
@@ -127,8 +73,7 @@ class _LoginState extends State<Login> {
                     height: 6,
                   ),
                   TextFormField(
-                    keyboardType: TextInputType.emailAddress,
-                    controller: _emailController,
+                    controller: _usernameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'This field is required';
@@ -137,7 +82,7 @@ class _LoginState extends State<Login> {
                     },
                     autofocus: true,
                     decoration: InputDecoration(
-                      hintText: "Type your email address",
+                      hintText: "Masukkan username anda",
                       filled: true,
                       fillColor: Colors.white,
                       prefixIcon: const Icon(Icons.person),
@@ -170,7 +115,7 @@ class _LoginState extends State<Login> {
                     },
                     obscureText: !showPwd,
                     decoration: InputDecoration(
-                      hintText: "Type your password",
+                      hintText: "Masukkan password anda",
                       filled: true,
                       fillColor: Colors.white,
                       prefixIcon: const Icon(Icons.lock),

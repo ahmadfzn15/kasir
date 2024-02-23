@@ -1,5 +1,3 @@
-import 'package:app/layout.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -24,82 +22,7 @@ class _RegisterState extends State<Register> {
   bool showPwd = false;
   bool showPwdConf = false;
 
-  void _registerUser(BuildContext context) async {
-    try {
-      // ignore: unused_local_variable
-      loading = true;
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.value.text,
-        password: _passwordController.value.text,
-      );
-
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.value.text,
-        password: _passwordController.value.text,
-      );
-
-      if (userCredential.user != null) {
-        await storage.write(key: "uid", value: userCredential.user!.uid);
-
-        const snackBar = SnackBar(
-            content: Text(
-              "Sign up Successfully",
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.deepOrange,
-            duration: Duration(seconds: 3));
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        setState(() {
-          _emailController.clear();
-          _passwordController.clear();
-        });
-        // ignore: use_build_context_synchronously
-        Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (context) {
-            return const Layout();
-          },
-        ));
-        loading = false;
-      } else {
-        SnackBar snackBar = const SnackBar(
-          content: Text(
-            "An unexpected error occurred",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        );
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
-    } on FirebaseAuthException catch (e) {
-      loading = false;
-      SnackBar snackBar = SnackBar(
-        content: Text(
-          e.message!,
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      );
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    } catch (e) {
-      loading = false;
-      SnackBar snackBar = const SnackBar(
-        content: Text(
-          "An unexpected error occurred",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 3),
-      );
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    }
-  }
+  void _registerUser(BuildContext context) async {}
 
   @override
   Widget build(BuildContext context) {

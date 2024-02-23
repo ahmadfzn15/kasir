@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class Setting extends StatefulWidget {
-  const Setting({super.key});
+class Blank extends StatefulWidget {
+  const Blank({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _SettingState createState() => _SettingState();
+  _BlankState createState() => _BlankState();
 }
 
-class _SettingState extends State<Setting> {
+class _BlankState extends State<Blank> {
   @override
   Widget build(BuildContext context) {
     return const Center(child: Text("Hello World"));

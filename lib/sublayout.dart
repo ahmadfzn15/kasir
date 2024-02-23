@@ -1,6 +1,6 @@
 import 'package:app/add_product.dart';
-import 'package:app/notifications.dart';
 import 'package:app/profile.dart';
+import 'package:app/setting/setting.dart';
 import 'package:flutter/material.dart';
 
 class Sublayout extends StatefulWidget {
@@ -22,9 +22,9 @@ class Pages {
 
 class _SublayoutState extends State<Sublayout> {
   List<Pages> page = [
-    Pages(page: const Notifications(), title: "Notification"),
     Pages(page: const Profile(), title: "Profile"),
     Pages(page: const AddProduct(), title: "Add Product"),
+    Pages(page: const Setting(), title: "Setting"),
   ];
 
   @override

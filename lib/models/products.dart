@@ -1,14 +1,26 @@
 class Products {
-  String img;
-  String productName;
-  int price;
-  int qty;
-  int stock;
+  int id;
+  String? foto;
+  String namaProduk;
+  int harga;
+  int stok;
+  bool selected = false;
 
   Products(
-      {required this.img,
-      required this.productName,
-      required this.price,
-      this.qty = 0,
-      this.stock = 10});
+      {required this.id,
+      required this.foto,
+      required this.namaProduk,
+      required this.harga,
+      required this.stok,
+      required this.selected});
+
+  factory Products.fromJson(Map<String, dynamic> json) {
+    return Products(
+        id: json['id'],
+        foto: json['foto'],
+        namaProduk: json['namaProduk'],
+        harga: json['harga'],
+        stok: json['stok'],
+        selected: json['selected']);
+  }
 }
