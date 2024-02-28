@@ -13,12 +13,10 @@ class Auth extends StatefulWidget {
 class _AuthState extends State<Auth> {
   final PageController _pageController = PageController(initialPage: 0);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool loading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.orange,
       key: _scaffoldKey,
       body: PageView(
           controller: _pageController,

@@ -21,9 +21,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Widget> page = const [
-    Banners(img: "assets/img/gelung.jpeg"),
-    Banners(img: "assets/img/gelung.jpeg"),
-    Banners(img: "assets/img/gelung.jpeg")
+    Banners(img: "assets/img/french-fries.jpeg"),
+    Banners(img: "assets/img/sprite.jpg"),
+    Banners(img: "assets/img/burger.jpeg")
   ];
 
   List<WidgetIcon> icon = [

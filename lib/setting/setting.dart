@@ -1,30 +1,77 @@
-import 'package:app/setting/account.dart';
-import 'package:app/setting/setting_page.dart';
+import 'package:app/sublayout.dart';
 import 'package:flutter/material.dart';
+
+Route _goPage(int id, int? idProduk) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => Sublayout(
+      id: id,
+    ),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _SettingState createState() => _SettingState();
+  State<Setting> createState() => _SettingState();
 }
 
 class _SettingState extends State<Setting> {
-  final PageController _pageController = PageController(initialPage: 0);
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<String> list = ["Akun", "Tampilan"];
+  final GlobalKey<ScaffoldState> _scaffoldKeys = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      body: PageView(
-          controller: _pageController,
-          physics: const ClampingScrollPhysics(),
-          children: [
-            SettingPage(pageController: _pageController),
-            Account(pageController: _pageController),
-          ]),
+      key: _scaffoldKeys,
+      body: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              ListTile(
+                onTap: () {
+                  Navigator.of(context).push(_goPage(3, null));
+                },
+                hoverColor: Colors.white12,
+                title: const Text("Akun"),
+                trailing: const Icon(Icons.chevron_right,
+                    size: 35, color: Colors.orange),
+              ),
+              const Divider(),
+              ListTile(
+                onTap: () {
+                  Navigator.of(context).push(_goPage(4, null));
+                },
+                hoverColor: Colors.white12,
+                title: const Text("Tampilan"),
+                trailing: const Icon(Icons.chevron_right,
+                    size: 35, color: Colors.orange),
+              ),
+              const Divider(),
+              ListTile(
+                onTap: () {
+                  Navigator.of(context).push(_goPage(5, null));
+                },
+                hoverColor: Colors.white12,
+                title: const Text("Toko"),
+                trailing: const Icon(Icons.chevron_right,
+                    size: 35, color: Colors.orange),
+              ),
+              const Divider()
+            ],
+          )),
     );
   }
 }

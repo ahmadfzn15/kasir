@@ -7,25 +7,58 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class AddProduct extends StatefulWidget {
-  const AddProduct({super.key});
+class EditProduct extends StatefulWidget {
+  const EditProduct({super.key, required this.id});
+  final int id;
 
   @override
   // ignore: library_private_types_in_public_api
-  _AddProductState createState() => _AddProductState();
+  _EditProductState createState() => _EditProductState();
 }
 
-class _AddProductState extends State<AddProduct> {
+class _EditProductState extends State<EditProduct> {
   final TextEditingController _namaProduk = TextEditingController();
   final TextEditingController _harga = TextEditingController();
   final TextEditingController _deskripsi = TextEditingController();
   final TextEditingController _stok = TextEditingController();
+  final TextEditingController _menuCategory = TextEditingController();
   XFile? _image;
   final List<DropdownMenuEntry<dynamic>> _category = [
     const DropdownMenuEntry(value: 1, label: "Makanan"),
     const DropdownMenuEntry(value: 2, label: "Minuman"),
   ];
   int _selectedOption = 1;
+
+  @override
+  void initState() {
+    super.initState();
+
+    fetchDataProduct();
+  }
+
+  Future<void> fetchDataProduct() async {
+    String url = dotenv.env['API_URL']!;
+
+    final response = await http.get(
+      Uri.parse("$url/api/product/${widget.id}"),
+      headers: {"Content-Type": "application/json; charset=UTF-8"},
+    );
+
+    Map<String, dynamic> res = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      setState(() {
+        Map<String, dynamic> products = res['data'];
+        _namaProduk.value = TextEditingValue(text: products['namaProduk']);
+        _harga.value = TextEditingValue(text: products['harga'].toString());
+        _deskripsi.value = TextEditingValue(text: products['deskripsi']);
+        _stok.value = TextEditingValue(text: products['stok'].toString());
+        _menuCategory.value =
+            TextEditingValue(text: products['id_kategori'].toString());
+      });
+    } else {
+      throw Exception(res['message']);
+    }
+  }
 
   void _openFileManager() async {
     PermissionStatus status = await Permission.storage.request();
@@ -141,8 +174,8 @@ class _AddProductState extends State<AddProduct> {
   }
 
   Future<void> _uploadToDatabase(BuildContext context) async {
-    final res =
-        await http.post(Uri.parse("${dotenv.env['API_URL']!}/api/product"),
+    final res = await http
+        .put(Uri.parse("${dotenv.env['API_URL']!}/api/product/${widget.id}"),
             body: jsonEncode({
               "namaProduk": _namaProduk.text,
               "id_kategori": _selectedOption,
@@ -152,26 +185,34 @@ class _AddProductState extends State<AddProduct> {
             }),
             headers: {"Content-type": "application/json"});
 
+    Map<String, dynamic> result = jsonDecode(res.body);
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
-      const snackBar = SnackBar(
-        behavior: SnackBarBehavior.floating,
-        content: Text(
-          "Produk baru berhasil ditambahkan.",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 3),
-      );
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      showSnackBar(context, result['message'], true);
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
-      print("Data gagal ditambahkan.");
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, result['message'], false);
     }
+  }
+
+  void showSnackBar(BuildContext context, String message, bool status) {
+    final snackBar = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      showCloseIcon: true,
+      closeIconColor: Colors.white,
+      content: Text(
+        message,
+        style: const TextStyle(color: Colors.white),
+      ),
+      backgroundColor: status ? Colors.green : Colors.red,
+      duration: const Duration(seconds: 3),
+    );
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -388,6 +429,7 @@ class _AddProductState extends State<AddProduct> {
                       SizedBox(
                           width: double.infinity,
                           child: DropdownMenu(
+                            controller: _menuCategory,
                             initialSelection: _category[0].value,
                             inputDecorationTheme: InputDecorationTheme(
                                 border: OutlineInputBorder(

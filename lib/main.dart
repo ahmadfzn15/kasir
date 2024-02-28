@@ -36,7 +36,9 @@ class _MainAppState extends State<MainApp> {
           future: Future.delayed(const Duration(seconds: 1)),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              return const Layout();
+              return const Layout(
+                user: {},
+              );
             } else {
               return const Startup();
             }

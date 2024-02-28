@@ -1,3 +1,4 @@
+import 'package:app/comming_soon.dart';
 import 'package:flutter/material.dart';
 
 class History extends StatefulWidget {
@@ -11,6 +12,6 @@ class History extends StatefulWidget {
 class _HistoryState extends State<History> {
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text("Hello World"));
+    return const CommingSoon();
   }
 }

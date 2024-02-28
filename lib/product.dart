@@ -14,9 +14,12 @@ class Product extends StatefulWidget {
   State<Product> createState() => _ProductState();
 }
 
-Route _goPage(int id) {
+Route _goPage(int id, int? idProduk) {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => Sublayout(id: id),
+    pageBuilder: (context, animation, secondaryAnimation) => Sublayout(
+      id: id,
+      id_product: idProduk!,
+    ),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const begin = Offset(0.0, 1.0);
       const end = Offset.zero;
@@ -33,19 +36,19 @@ Route _goPage(int id) {
 }
 
 class _ProductState extends State<Product> {
-  bool isSelected = false;
-  bool isSelectedStart = false;
   List order = [];
   List<Products> products = [];
+  List<dynamic> category = [];
 
   @override
   void initState() {
     super.initState();
 
-    fetchData();
+    fetchDataProduct();
+    fetchDataCategory();
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchDataProduct() async {
     String url = dotenv.env['API_URL']!;
 
     final response = await http.get(
@@ -65,12 +68,29 @@ class _ProductState extends State<Product> {
     }
   }
 
+  Future<void> fetchDataCategory() async {
+    String url = dotenv.env['API_URL']!;
+
+    final response = await http.get(
+      Uri.parse("$url/api/category"),
+      headers: {"Content-Type": "application/json; charset=UTF-8"},
+    );
+
+    Map<String, dynamic> res = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      setState(() {
+        category = res['data'];
+      });
+    } else {
+      throw Exception(res['message']);
+    }
+  }
+
   Future<void> _handleRefresh() async {
-    await fetchData();
+    await fetchDataProduct();
   }
 
   void _addOrder(int id) {
-    fetchData();
     setState(() {
       order.add({
         "id": id,
@@ -79,9 +99,125 @@ class _ProductState extends State<Product> {
         "qty": 1
       });
     });
+
+    showSheetOrder();
+  }
+
+  void showSheetOrder() {
+    if (order.isNotEmpty) {
+      showBottomSheet(
+        backgroundColor: Colors.white,
+        context: context,
+        enableDrag: false,
+        elevation: 5,
+        builder: (context) {
+          return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              child: ListTile(
+                leading: Column(
+                  children: [
+                    const Text(
+                      "Total",
+                      style:
+                          TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    Text(
+                      "Rp.${order.fold(0, (previousValue, element) => previousValue + (element['harga'] * element['qty']) as int)}",
+                      style: const TextStyle(fontSize: 13),
+                    )
+                  ],
+                ),
+                trailing: const FilledButton(
+                    style: ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.white),
+                        backgroundColor:
+                            MaterialStatePropertyAll(Colors.orange)),
+                    onPressed: null,
+                    child: Text("Checkout")),
+              ));
+        },
+      );
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  void _openOption(BuildContext context, int id) {
+    showModalBottomSheet(
+      showDragHandle: true,
+      enableDrag: true,
+      constraints: const BoxConstraints(maxHeight: 130),
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(_goPage(2, id));
+                },
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      size: 30,
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Text("Edit")
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  openDialogDelete(context, id);
+                },
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      size: 30,
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Text("Hapus")
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showAddCategory() {
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      context: context,
+      enableDrag: false,
+      showDragHandle: true,
+      isScrollControlled: true,
+      constraints: const BoxConstraints.expand(),
+      builder: (context) {
+        return const Padding(padding: EdgeInsets.all(20), child: Text("Hello"));
+      },
+    );
   }
 
   void _increment(int id) {
+    showSheetOrder();
     Iterable data = order.where((element) => element['id'] == id);
     if (data.isNotEmpty) {
       setState(() {
@@ -90,7 +226,7 @@ class _ProductState extends State<Product> {
     }
   }
 
-  void _decrement(int id) {
+  void _decrement(BuildContext context, int id) {
     Iterable data = order.where((element) => element['id'] == id);
     if (data.isNotEmpty && data.first['qty'] > 0) {
       setState(() {
@@ -102,38 +238,7 @@ class _ProductState extends State<Product> {
         });
       }
     }
-  }
-
-  void _openOption(BuildContext context, int id) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        actions: <CupertinoDialogAction>[
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Edit produk'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              openDialogDelete(context, id);
-            },
-            child: const Text('Hapus produk'),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
+    showSheetOrder();
   }
 
   void openDialogDelete(BuildContext context, int id) {
@@ -151,7 +256,7 @@ class _ProductState extends State<Product> {
                 },
                 child: const Text("No")),
             CupertinoDialogAction(
-                isDefaultAction: true,
+                isDestructiveAction: true,
                 onPressed: () {
                   deleteProduct(context, id);
                 },
@@ -169,7 +274,7 @@ class _ProductState extends State<Product> {
     );
 
     if (response.statusCode == 200) {
-      fetchData();
+      fetchDataProduct();
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
@@ -179,75 +284,60 @@ class _ProductState extends State<Product> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      color: Colors.blue,
-      onRefresh: _handleRefresh,
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(kToolbarHeight),
-            child: AppBar(
-              bottom: const TabBar(
-                tabs: [
-                  Tab(
-                    child: Text(
-                      "Daftar Produk",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ),
-                  Tab(
-                    child: Text(
-                      "Daftar Kategori",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ),
-                ],
-                padding: EdgeInsets.zero,
-                physics: BouncingScrollPhysics(),
-                tabAlignment: TabAlignment.fill,
-                splashBorderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-            ),
-          ),
-          body: TabBarView(
-            children: [
-              Scaffold(
-                floatingActionButton: FloatingActionButton(
-                  onPressed: () {
-                    Navigator.of(context).push(_goPage(2));
-                  },
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  tooltip: "Add Orders",
-                  shape: const CircleBorder(eccentricity: 0),
-                  child: const Icon(
-                    Icons.add,
-                    size: 30,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: AppBar(
+            bottom: const TabBar(
+              tabs: [
+                Tab(
+                  child: Text(
+                    "Daftar Produk",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
-                body: Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: products.isNotEmpty
-                      ? ListView.builder(
-                          itemCount: products.length,
-                          physics: const ClampingScrollPhysics(),
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onLongPress: () {
-                                setState(() {
-                                  products[index].selected = true;
-                                });
-                              },
-                              onTap: () {
-                                if (products[index].selected) {
-                                  products[index].selected = false;
-                                }
-                              },
-                              child: SizedBox(
+                Tab(
+                  child: Text(
+                    "Daftar Kategori",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                ),
+              ],
+              padding: EdgeInsets.zero,
+              tabAlignment: TabAlignment.fill,
+              splashBorderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            Scaffold(
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  Navigator.of(context).push(_goPage(1, 0));
+                },
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                tooltip: "Add Orders",
+                shape: const CircleBorder(eccentricity: 0),
+                child: const Icon(
+                  Icons.add,
+                  size: 30,
+                ),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    products.isNotEmpty
+                        ? ListView.builder(
+                            itemCount: products.length,
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return SizedBox(
                                 height: 120,
                                 child: Card(
                                   surfaceTintColor: Colors.white,
@@ -322,7 +412,8 @@ class _ProductState extends State<Product> {
                                                     children: [
                                                       IconButton(
                                                         onPressed: () {
-                                                          _decrement(index);
+                                                          _decrement(
+                                                              context, index);
                                                         },
                                                         icon: const Icon(
                                                             Icons.remove),
@@ -364,28 +455,60 @@ class _ProductState extends State<Product> {
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        )
-                      : const Center(
-                          child: CircularProgressIndicator(
-                          color: Colors.blue,
-                        )),
+                              );
+                            },
+                          )
+                        : const Center(
+                            child: CircularProgressIndicator(
+                            color: Colors.blue,
+                          ))
+                  ],
                 ),
               ),
-              ListView.builder(
-                itemCount: 10,
-                physics: const BouncingScrollPhysics(),
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text("Menu $index"),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            Scaffold(
+                floatingActionButton: FloatingActionButton(
+                  onPressed: () {
+                    showAddCategory();
+                  },
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  tooltip: "Add Category",
+                  shape: const CircleBorder(eccentricity: 0),
+                  child: const Icon(
+                    Icons.add,
+                    size: 30,
+                  ),
+                ),
+                body: category.isNotEmpty
+                    ? ListView.builder(
+                        itemCount: category.length,
+                        shrinkWrap: true,
+                        itemBuilder: (context, index) {
+                          return Column(
+                            children: [
+                              ListTile(
+                                title: Text(category[index]['kategori']),
+                                trailing: GestureDetector(
+                                  onTap: () {
+                                    _openOption(context, category[index]['id']);
+                                  },
+                                  child: const Icon(Icons.menu),
+                                ),
+                              ),
+                              const Divider(
+                                indent: 10,
+                                endIndent: 10,
+                              )
+                            ],
+                          );
+                        },
+                      )
+                    : const Center(
+                        child: CircularProgressIndicator(
+                        color: Colors.blue,
+                      )))
+          ],
         ),
       ),
     );

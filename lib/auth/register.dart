@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key, required this.pageController});
@@ -13,7 +17,7 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _passwordControllerConfirmation =
       TextEditingController();
@@ -22,185 +26,244 @@ class _RegisterState extends State<Register> {
   bool showPwd = false;
   bool showPwdConf = false;
 
-  void _registerUser(BuildContext context) async {}
+  Future<void> _registerUser(BuildContext context) async {
+    final res = await http
+        .post(Uri.parse("${dotenv.env['API_URL']!}/api/auth/register"),
+            body: jsonEncode({
+              "username": _usernameController.text,
+              "password": _passwordController.text,
+            }),
+            headers: {"Content-type": "application/json"});
+
+    if (res.statusCode == 200) {
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, "Daftar berhasil. Silahkan login!", true);
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, "Daftar gagal", false);
+    }
+  }
+
+  void showSnackBar(BuildContext context, String message, bool status) {
+    final snackBar = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      showCloseIcon: true,
+      closeIconColor: Colors.white,
+      content: Text(
+        message,
+        style: const TextStyle(color: Colors.white),
+      ),
+      backgroundColor: status ? Colors.green : Colors.red,
+      duration: const Duration(seconds: 3),
+    );
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.orange,
       key: _scaffoldKey,
-      body: Center(
-        child: Form(
-            key: _formKey,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 160,
-                    height: 80,
-                    child: Image.asset("assets/img/logo.png"),
-                  ),
-                  const SizedBox(
-                    height: 40,
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Form(
+                key: _formKey,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                  child: Column(
                     children: [
-                      Text("Email",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 6,
-                  ),
-                  TextFormField(
-                    keyboardType: TextInputType.emailAddress,
-                    controller: _emailController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'This field is required';
-                      }
-                      return null;
-                    },
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: "Type your email address",
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.person),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text("Password",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 6,
-                  ),
-                  TextFormField(
-                    controller: _passwordController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'This field is required';
-                      }
-                      return null;
-                    },
-                    obscureText: !showPwd,
-                    decoration: InputDecoration(
-                      hintText: "Type your password",
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              showPwd = !showPwd;
-                            });
-                          },
-                          child: const Icon(Icons.remove_red_eye)),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text("Password Confirmation",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 6,
-                  ),
-                  TextFormField(
-                    controller: _passwordControllerConfirmation,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'This field is required';
-                      }
-                      return null;
-                    },
-                    obscureText: !showPwdConf,
-                    decoration: InputDecoration(
-                      hintText: "Type your password",
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              showPwdConf = !showPwdConf;
-                            });
-                          },
-                          child: const Icon(Icons.remove_red_eye)),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: FilledButton(
-                        onPressed: () => loading
-                            ? null
-                            : {
-                                if (_formKey.currentState!.validate())
-                                  _registerUser(context)
-                              },
-                        style: const ButtonStyle(
-                            backgroundColor:
-                                MaterialStatePropertyAll(Colors.white30),
-                            foregroundColor:
-                                MaterialStatePropertyAll(Colors.white)),
-                        child: const Text("Sign up",
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Selamat Datang",
                             style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                      )),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          widget.pageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOutExpo);
+                                fontSize: 25, fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text("Username",
+                              style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      TextFormField(
+                        keyboardType: TextInputType.emailAddress,
+                        controller: _usernameController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Username wajib diisi!';
+                          }
+                          return null;
                         },
-                        child: const Text(
-                          "Already account?",
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: "Masukkan username anda",
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.person),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 0),
+                          border: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFe2e8f0), width: 0.5),
+                              borderRadius: BorderRadius.circular(10)),
                         ),
-                      )
+                      ),
+                      const SizedBox(height: 15),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text("Kata Sandi",
+                              style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      TextFormField(
+                        controller: _passwordController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Kata sandi wajib diisi!';
+                          }
+                          return null;
+                        },
+                        obscureText: !showPwd,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: "Masukkan kata sandi anda",
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.lock),
+                          suffixIcon: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  showPwd = !showPwd;
+                                });
+                              },
+                              child: const Icon(Icons.remove_red_eye)),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 0),
+                          border: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFe2e8f0), width: 0.5),
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text("Ulang Kata Sandi",
+                              style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      TextFormField(
+                        controller: _passwordControllerConfirmation,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Kata sandi wajib diisi!';
+                          }
+                          return null;
+                        },
+                        obscureText: !showPwdConf,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: "Masukkan ulang kata sandi anda!",
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.lock),
+                          suffixIcon: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  showPwdConf = !showPwdConf;
+                                });
+                              },
+                              child: const Icon(Icons.remove_red_eye)),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 0),
+                          border: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFe2e8f0), width: 0.5),
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                      const SizedBox(height: 25),
+                      SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: FilledButton(
+                            onPressed: () => loading
+                                ? null
+                                : {
+                                    if (_formKey.currentState!.validate())
+                                      _registerUser(context)
+                                  },
+                            style: const ButtonStyle(
+                                shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(5)))),
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.deepOrange),
+                                foregroundColor:
+                                    MaterialStatePropertyAll(Colors.white)),
+                            child: const Text("Daftar",
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                          )),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              widget.pageController.previousPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOutExpo);
+                            },
+                            child: const Text(
+                              "Sudah punya akun? Masuk",
+                              style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          )
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            )),
+                )),
+          ),
+        ],
       ),
     );
   }
