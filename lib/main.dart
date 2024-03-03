@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
-  // Panggil dotenv.load() sebelum runApp()
   await dotenv.load(fileName: ".env");
   runApp(const MainApp());
 }
