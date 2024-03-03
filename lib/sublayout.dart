@@ -1,12 +1,13 @@
-import 'package:app/add_product.dart';
-import 'package:app/edit_product.dart';
+import 'package:app/employee/add_employee.dart';
+import 'package:app/product/add_product.dart';
+import 'package:app/product/edit_product.dart';
 import 'package:app/profile.dart';
 import 'package:app/setting/account.dart';
 import 'package:app/setting/change_password.dart';
 import 'package:app/setting/delete_account.dart';
-import 'package:app/setting/setting.dart';
 import 'package:app/setting/theme_page.dart';
 import 'package:app/setting/toko.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Sublayout extends StatefulWidget {
@@ -49,6 +50,7 @@ class _SublayoutState extends State<Sublayout> {
       Pages(page: const Toko(), title: "Pengaturan Toko"),
       Pages(page: const ChangePassword(), title: "Ubah Kata Sandi"),
       Pages(page: const DeleteAccount(), title: "Hapus Akun"),
+      Pages(page: const AddEmployee(), title: "Tambah Karyawan"),
     ];
   }
 
@@ -70,7 +72,7 @@ class _SublayoutState extends State<Sublayout> {
                 Navigator.pop(context);
               },
               icon: const Icon(
-                Icons.arrow_back,
+                CupertinoIcons.back,
               )),
         ),
       ),

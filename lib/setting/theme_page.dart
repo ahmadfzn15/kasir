@@ -37,7 +37,7 @@ class _ThemePageState extends State<ThemePage> {
                   },
                 ),
               ),
-              const Divider()
+              const Divider(color: Color(0xFFcbd5e1))
             ],
           )),
     );

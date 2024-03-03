@@ -27,24 +27,11 @@ class _HomeState extends State<Home> {
   ];
 
   List<WidgetIcon> icon = [
-    WidgetIcon(icon: Icons.shopping_bag, label: "Products"),
-    WidgetIcon(icon: Icons.people, label: "Employee")
+    WidgetIcon(icon: Icons.shopping_bag_outlined, label: "Produk"),
+    WidgetIcon(icon: Icons.people_outline, label: "Karyawan"),
+    WidgetIcon(icon: Icons.shop_outlined, label: "Toko"),
+    WidgetIcon(icon: Icons.headset_mic_outlined, label: "Bantuan")
   ];
-
-  Future<List<Map<String, dynamic>>> fetchData() async {
-    final response = await http.get(
-      Uri.parse("https://102a-36-74-40-162.ngrok-free.app"),
-      headers: {"Content-Type": "application/json; charset=UTF-8"},
-    );
-
-    print(response.body);
-    if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body);
-      return data.cast<Map<String, dynamic>>();
-    } else {
-      throw Exception('Failed to load data.');
-    }
-  }
 
   @override
   void initState() {
@@ -52,65 +39,54 @@ class _HomeState extends State<Home> {
     // fetchData();
   }
 
+  Future<void> _refresh() async {
+    await Future.delayed(const Duration(seconds: 1));
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(children: [
-        SizedBox(
-            height: 200,
-            child: PageView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: page.length,
-                physics: const BouncingScrollPhysics(),
+      child: RefreshIndicator(
+          onRefresh: () {
+            return _refresh();
+          },
+          child: Column(children: [
+            SizedBox(
+                height: 200,
+                child: PageView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: page.length,
+                    physics: const BouncingScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return page[index];
+                    })),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              height: 300,
+              child: GridView.builder(
+                itemCount: icon.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4, crossAxisSpacing: 5, mainAxisSpacing: 5),
                 itemBuilder: (context, index) {
-                  return page[index];
-                })),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          height: 300,
-          child: GridView.builder(
-            itemCount: icon.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, crossAxisSpacing: 5, mainAxisSpacing: 5),
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  showBottomSheet(
-                    elevation: 10,
-                    constraints: const BoxConstraints(maxWidth: 640),
-                    context: context,
-                    builder: (context) {
-                      return const Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [Text("Burger"), Text("Rp.10.0000")],
-                        ),
-                      );
-                    },
-                  );
+                  return Card(
+                      elevation: 0.4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(icon[index].icon,
+                              color: Colors.orange, size: 30),
+                          const SizedBox(height: 4),
+                          Text(
+                            icon[index].label,
+                            style: const TextStyle(fontSize: 12),
+                          )
+                        ],
+                      ));
                 },
-                child: Card(
-                    surfaceTintColor: const Color.fromRGBO(255, 255, 255, 1),
-                    elevation: 0,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(icon[index].icon, color: Colors.orange, size: 40),
-                        const SizedBox(height: 5),
-                        Text(
-                          icon[index].label,
-                        )
-                      ],
-                    )),
-              );
-            },
-          ),
-        )
-      ]),
+              ),
+            )
+          ])),
     );
   }
 }

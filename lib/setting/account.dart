@@ -6,6 +6,9 @@ Route _goPage(int id, int? idProduk) {
     pageBuilder: (context, animation, secondaryAnimation) => Sublayout(
       id: id,
     ),
+    transitionDuration: const Duration(milliseconds: 500),
+    reverseTransitionDuration: const Duration(milliseconds: 500),
+    opaque: false,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const begin = Offset(1.0, 0.0);
       const end = Offset.zero;
@@ -48,7 +51,7 @@ class _AccountState extends State<Account> {
                 trailing: const Icon(Icons.chevron_right,
                     size: 35, color: Colors.orange),
               ),
-              const Divider(),
+              const Divider(color: Color(0xFFcbd5e1)),
               ListTile(
                 onTap: () {
                   Navigator.of(context).push(_goPage(6, null));
@@ -58,7 +61,7 @@ class _AccountState extends State<Account> {
                 trailing: const Icon(Icons.chevron_right,
                     size: 35, color: Colors.orange),
               ),
-              const Divider(),
+              const Divider(color: Color(0xFFcbd5e1)),
               ListTile(
                 onTap: () {
                   Navigator.of(context).push(_goPage(7, null));
@@ -68,7 +71,7 @@ class _AccountState extends State<Account> {
                 trailing: const Icon(Icons.chevron_right,
                     size: 35, color: Colors.orange),
               ),
-              const Divider()
+              const Divider(color: Color(0xFFcbd5e1))
             ],
           )),
     );

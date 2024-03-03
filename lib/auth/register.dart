@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app/components/popup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -37,31 +38,13 @@ class _RegisterState extends State<Register> {
 
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
-      showSnackBar(context, "Daftar berhasil. Silahkan login!", true);
+      Popup().show(context, "Daftar berhasil. Silahkan login!", true);
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
       // ignore: use_build_context_synchronously
-      showSnackBar(context, "Daftar gagal", false);
+      Popup().show(context, "Daftar gagal", false);
     }
-  }
-
-  void showSnackBar(BuildContext context, String message, bool status) {
-    final snackBar = SnackBar(
-      behavior: SnackBarBehavior.floating,
-      showCloseIcon: true,
-      closeIconColor: Colors.white,
-      content: Text(
-        message,
-        style: const TextStyle(color: Colors.white),
-      ),
-      backgroundColor: status ? Colors.green : Colors.red,
-      duration: const Duration(seconds: 3),
-    );
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -244,6 +227,10 @@ class _RegisterState extends State<Register> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          const Text("Sudah punya akun? ",
+                              style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontWeight: FontWeight.bold)),
                           GestureDetector(
                             onTap: () {
                               widget.pageController.previousPage(
@@ -251,7 +238,7 @@ class _RegisterState extends State<Register> {
                                   curve: Curves.easeInOutExpo);
                             },
                             child: const Text(
-                              "Sudah punya akun? Masuk",
+                              "Masuk",
                               style: TextStyle(
                                   color: Color(0xFF475569),
                                   fontWeight: FontWeight.bold),

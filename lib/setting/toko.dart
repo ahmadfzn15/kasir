@@ -17,7 +17,8 @@ class _TokoState extends State<Toko> {
       body: SingleChildScrollView(
         child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Column(
+            child: Form(
+                child: Column(
               children: [
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -29,7 +30,7 @@ class _TokoState extends State<Toko> {
                 const SizedBox(
                   height: 6,
                 ),
-                TextField(
+                TextFormField(
                   controller: _namaToko,
                   decoration: InputDecoration(
                     hintText: "Masukkan nama toko",
@@ -56,7 +57,7 @@ class _TokoState extends State<Toko> {
                 const SizedBox(
                   height: 6,
                 ),
-                TextField(
+                TextFormField(
                   controller: _alamatToko,
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
@@ -85,7 +86,7 @@ class _TokoState extends State<Toko> {
                 const SizedBox(
                   height: 6,
                 ),
-                TextField(
+                TextFormField(
                   controller: _namaToko,
                   decoration: InputDecoration(
                     hintText: "Masukkan bidang usaha",
@@ -112,7 +113,7 @@ class _TokoState extends State<Toko> {
                 const SizedBox(
                   height: 6,
                 ),
-                TextField(
+                TextFormField(
                   controller: _namaToko,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
@@ -131,7 +132,7 @@ class _TokoState extends State<Toko> {
                   height: 12,
                 ),
               ],
-            )),
+            ))),
       ),
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.all(20),

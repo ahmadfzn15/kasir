@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:app/auth/auth.dart';
+import 'package:app/components/popup.dart';
 import 'package:app/layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -28,7 +29,7 @@ class _LoginState extends State<Login> {
   void _loginUser(BuildContext context) async {
     final res = await http.post(
         Uri.parse("${dotenv.env['API_URL']!}/api/auth/login"),
-        headers: {"Content-Type": "application/json; charset=UTF-8"},
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           'username': _usernameController.text,
           'password': _passwordController.text
@@ -36,38 +37,28 @@ class _LoginState extends State<Login> {
 
     if (res.statusCode == 200) {
       Map<String, dynamic> result = jsonDecode(res.body);
+      await const FlutterSecureStorage()
+          .write(key: 'token', value: result['data']['token']);
+      await const FlutterSecureStorage()
+          .write(key: 'id', value: result['data']['id'].toString());
+      await const FlutterSecureStorage()
+          .write(key: 'role', value: result['data']['role']);
+
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (context) {
-            return Layout(user: result['data']);
+            return const Layout();
           },
         ),
       );
       // ignore: use_build_context_synchronously
-      showSnackBar(context, "Login berhasil.", true);
+      Popup().show(context, "Login berhasil.", true);
     } else {
-      showSnackBar(context, "Login gagal.", false);
+      // ignore: use_build_context_synchronously
+      Popup().show(context, "Login gagal.", false);
     }
-  }
-
-  void showSnackBar(BuildContext context, String message, bool status) {
-    final snackBar = SnackBar(
-      behavior: SnackBarBehavior.floating,
-      showCloseIcon: true,
-      closeIconColor: Colors.white,
-      content: Text(
-        message,
-        style: const TextStyle(color: Colors.white),
-      ),
-      backgroundColor: status ? Colors.green : Colors.red,
-      duration: const Duration(seconds: 3),
-    );
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -218,6 +209,12 @@ class _LoginState extends State<Login> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          const Text(
+                            "Belum punya akun? ",
+                            style: TextStyle(
+                                color: Color(0xFF475569),
+                                fontWeight: FontWeight.bold),
+                          ),
                           GestureDetector(
                             onTap: () {
                               widget.pageController.nextPage(
@@ -225,7 +222,7 @@ class _LoginState extends State<Login> {
                                   curve: Curves.easeInOutExpo);
                             },
                             child: const Text(
-                              "Belum punya akun? Daftar",
+                              "Daftar",
                               style: TextStyle(
                                   color: Color(0xFF475569),
                                   fontWeight: FontWeight.bold),
