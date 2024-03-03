@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:app/components/banners.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class WidgetIcon {
   IconData icon;

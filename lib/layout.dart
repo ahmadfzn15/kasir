@@ -1,7 +1,6 @@
 import 'package:app/components/popup.dart';
 import 'package:app/employee/employee.dart';
 import 'package:app/etc/auth_user.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -114,7 +113,6 @@ class _LayoutState extends State<Layout> {
     setState(() {
       user = res;
     });
-    print(user);
   }
 
   Future<void> getRole() async {
@@ -150,7 +148,6 @@ class _LayoutState extends State<Layout> {
       loading = false;
     } catch (e) {
       loading = false;
-      print(e);
     }
   }
 

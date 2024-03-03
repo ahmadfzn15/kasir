@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:app/auth/auth.dart';
 import 'package:app/components/popup.dart';
 import 'package:app/layout.dart';
 import 'package:flutter/material.dart';
