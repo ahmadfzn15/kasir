@@ -59,8 +59,6 @@ class _ChangePasswordState extends State<ChangePassword> {
                 ),
                 TextField(
                   controller: _newPassword,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                     hintText: "Masukkan kata sandi baru",
                     filled: true,

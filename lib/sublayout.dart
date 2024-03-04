@@ -1,4 +1,5 @@
 import 'package:app/employee/add_employee.dart';
+import 'package:app/product/add_category.dart';
 import 'package:app/product/add_product.dart';
 import 'package:app/product/edit_product.dart';
 import 'package:app/profile.dart';
@@ -51,6 +52,7 @@ class _SublayoutState extends State<Sublayout> {
       Pages(page: const ChangePassword(), title: "Ubah Kata Sandi"),
       Pages(page: const DeleteAccount(), title: "Hapus Akun"),
       Pages(page: const AddEmployee(), title: "Tambah Karyawan"),
+      Pages(page: const AddCategory(), title: "Tambah Kategori"),
     ];
   }
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:app/components/popup.dart';
 import 'package:flutter/cupertino.dart';
@@ -23,12 +24,16 @@ class _AddProductState extends State<AddProduct> {
   final TextEditingController _deskripsi = TextEditingController();
   final TextEditingController _stok = TextEditingController();
   XFile? _image;
-  final List<DropdownMenuEntry<dynamic>> _category = [
-    const DropdownMenuEntry(value: 1, label: "Makanan"),
-    const DropdownMenuEntry(value: 2, label: "Minuman"),
-  ];
+  List<DropdownMenuEntry<dynamic>> _category = [];
   int _selectedOption = 1;
   bool loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    fetchDataCategory();
+  }
 
   void _openFileManager() async {
     PermissionStatus status = await Permission.storage.request();
@@ -39,6 +44,8 @@ class _AddProductState extends State<AddProduct> {
       setState(() {
         _image = pickImg;
       });
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
     } else {
       // ignore: use_build_contevar ronously
       showCupertinoModalPopup(
@@ -68,6 +75,8 @@ class _AddProductState extends State<AddProduct> {
       setState(() {
         _image = pickImg;
       });
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
     } else {
       // ignore: use_build_context_synchronously
       showCupertinoModalPopup(
@@ -88,55 +97,109 @@ class _AddProductState extends State<AddProduct> {
     }
   }
 
+  Future<void> fetchDataCategory() async {
+    String url = dotenv.env['API_URL']!;
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+    String? id = await const FlutterSecureStorage().read(key: 'id');
+
+    final response = await http.get(
+      Uri.parse("$url/api/category/$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+    );
+
+    Map<String, dynamic> res = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      setState(() {
+        _category = (res['data'] as List<dynamic>)
+            .map((data) =>
+                DropdownMenuEntry(value: data['id'], label: data['kategori']))
+            .toList();
+      });
+    } else {
+      throw Exception(res['message']);
+    }
+  }
+
   void _openDialogImage(BuildContext context) {
     showModalBottomSheet(
       showDragHandle: true,
       enableDrag: true,
-      constraints: const BoxConstraints(maxHeight: 120),
+      constraints:
+          const BoxConstraints(maxHeight: 120, minWidth: double.infinity),
       context: context,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          child: ListView(
+            shrinkWrap: true,
+            physics: const BouncingScrollPhysics(),
+            scrollDirection: Axis.horizontal,
             children: [
-              GestureDetector(
-                onTap: () {
-                  _openFileManager();
-                },
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.photo,
-                      size: 30,
-                      color: Color(0xFF64748b),
+              Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                spacing: 50,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      _openFileManager();
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Galeri")
+                      ],
                     ),
-                    SizedBox(
-                      height: 5,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _openCamera();
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Kamera")
+                      ],
                     ),
-                    Text("Pick from galery")
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  _openCamera();
-                },
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.camera_alt,
-                      size: 30,
-                      color: Color(0xFF64748b),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _image = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.delete,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Hapus")
+                      ],
                     ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text("Open camera")
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -189,6 +252,13 @@ class _AddProductState extends State<AddProduct> {
               key: _formKey,
               child: Column(
                 children: [
+                  const Text(
+                    "Foto Produk",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    height: 6,
+                  ),
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
@@ -232,7 +302,7 @@ class _AddProductState extends State<AddProduct> {
                     ],
                   ),
                   const SizedBox(
-                    height: 50,
+                    height: 10,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,9 +311,7 @@ class _AddProductState extends State<AddProduct> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Nama Produk",
-                              style: TextStyle(
-                                  color: Color(0xFF64748b),
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(
@@ -282,9 +350,7 @@ class _AddProductState extends State<AddProduct> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Harga Jual",
-                              style: TextStyle(
-                                  color: Color(0xFF64748b),
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(
@@ -324,9 +390,7 @@ class _AddProductState extends State<AddProduct> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Deskripsi",
-                              style: TextStyle(
-                                  color: Color(0xFF64748b),
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(
@@ -334,13 +398,14 @@ class _AddProductState extends State<AddProduct> {
                       ),
                       TextFormField(
                         controller: _deskripsi,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
                         decoration: InputDecoration(
                           hintText: "Masukkan deskripsi",
                           filled: true,
                           fillColor: Colors.white,
-                          prefixIcon: const Icon(Icons.description),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 0),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 10),
                           border: OutlineInputBorder(
                               borderSide: const BorderSide(
                                   color: Color(0xFFe2e8f0), width: 0.5),
@@ -362,9 +427,8 @@ class _AddProductState extends State<AddProduct> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 Text("Stok",
-                                    style: TextStyle(
-                                        color: Color(0xFF64748b),
-                                        fontWeight: FontWeight.bold)),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
                               ],
                             ),
                             const SizedBox(
@@ -399,9 +463,8 @@ class _AddProductState extends State<AddProduct> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 Text("Kategori",
-                                    style: TextStyle(
-                                        color: Color(0xFF64748b),
-                                        fontWeight: FontWeight.bold)),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
                               ],
                             ),
                             const SizedBox(
@@ -410,8 +473,16 @@ class _AddProductState extends State<AddProduct> {
                             SizedBox(
                                 width: double.infinity,
                                 child: DropdownMenu(
-                                  initialSelection: _category[0].value,
+                                  expandedInsets: const EdgeInsets.all(0),
+                                  initialSelection: _category.isNotEmpty
+                                      ? _category[0].value
+                                      : 0,
                                   inputDecorationTheme: InputDecorationTheme(
+                                      constraints:
+                                          const BoxConstraints(maxHeight: 50),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 10),
                                       border: OutlineInputBorder(
                                           borderSide: const BorderSide(
                                               color: Color(0xFFe2e8f0),
@@ -449,7 +520,7 @@ class _AddProductState extends State<AddProduct> {
                   _uploadToDatabase(context);
                 }
               },
-              child: const Text("Save")),
+              child: const Text("Simpan")),
         ),
       ),
     );

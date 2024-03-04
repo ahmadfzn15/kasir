@@ -52,6 +52,17 @@ class _CheckoutState extends State<Checkout> {
             icon: const Icon(
               Icons.close,
             )),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                widget.order.clear();
+              });
+            },
+            child: const Text("Batalkan"),
+          )
+        ],
       ),
       body: ListView.builder(
         itemCount: widget.order.length,

@@ -4,6 +4,7 @@ import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,7 +23,7 @@ class _ProfileState extends State<Profile> {
   final TextEditingController _username = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _noTlp = TextEditingController();
-  XFile? _image;
+  XFile? _image = XFile("");
 
   @override
   void initState() {
@@ -53,6 +54,8 @@ class _ProfileState extends State<Profile> {
       setState(() {
         _image = pickImg;
       });
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
     } else {
       // ignore: use_build_context_synchronously
       showCupertinoModalPopup(
@@ -82,6 +85,8 @@ class _ProfileState extends State<Profile> {
       setState(() {
         _image = pickImg;
       });
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
     } else {
       // ignore: use_build_context_synchronously
       showCupertinoModalPopup(
@@ -106,49 +111,79 @@ class _ProfileState extends State<Profile> {
     showModalBottomSheet(
       showDragHandle: true,
       enableDrag: true,
-      constraints: const BoxConstraints(maxHeight: 150),
+      constraints:
+          const BoxConstraints(maxHeight: 120, minWidth: double.infinity),
       context: context,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          child: ListView(
+            shrinkWrap: true,
+            physics: const BouncingScrollPhysics(),
+            scrollDirection: Axis.horizontal,
             children: [
-              GestureDetector(
-                onTap: () {
-                  _openFileManager();
-                },
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.photo,
-                      size: 30,
+              Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                spacing: 50,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      _openFileManager();
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Galeri")
+                      ],
                     ),
-                    SizedBox(
-                      height: 5,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _openCamera();
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Kamera")
+                      ],
                     ),
-                    Text("Pick from galery")
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  _openCamera();
-                },
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.camera_alt,
-                      size: 30,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _image = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.delete,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Hapus")
+                      ],
                     ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text("Open camera")
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -193,11 +228,11 @@ class _ProfileState extends State<Profile> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
-              "Profile Picture",
-              style: TextStyle(fontSize: 18),
+              "Foto Profil",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(
-              height: 15,
+              height: 6,
             ),
             Stack(
               alignment: Alignment.bottomRight,
@@ -242,7 +277,7 @@ class _ProfileState extends State<Profile> {
               ],
             ),
             const SizedBox(
-              height: 20,
+              height: 10,
             ),
             const Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -338,7 +373,7 @@ class _ProfileState extends State<Profile> {
               onPressed: () {
                 updateData();
               },
-              child: const Text("Save")),
+              child: const Text("Simpan")),
         ),
       ),
     );

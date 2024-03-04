@@ -85,6 +85,15 @@ class _ProductState extends State<Product> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    fetchDataProduct();
+    fetchDataCategory();
+    order.clear();
+  }
+
   Future<void> getUser() async {
     Map<String, dynamic> res = await AuthUser().getCurrentUser();
     setState(() {
@@ -123,10 +132,15 @@ class _ProductState extends State<Product> {
 
   Future<void> fetchDataCategory() async {
     String url = dotenv.env['API_URL']!;
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final response = await http.get(
-      Uri.parse("$url/api/category"),
-      headers: {"Content-Type": "application/json; charset=UTF-8"},
+      Uri.parse("$url/api/category/$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
     );
 
     Map<String, dynamic> res = jsonDecode(response.body);
@@ -185,11 +199,10 @@ class _ProductState extends State<Product> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Total",
-                          style: TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.bold),
-                        ),
+                        Text(
+                            "Total (${order.fold(0, (previousValue, element) => previousValue + element['qty'] as int)})",
+                            style: const TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.bold)),
                         const SizedBox(
                           height: 3,
                         ),
@@ -218,7 +231,7 @@ class _ProductState extends State<Product> {
     }
   }
 
-  void _openOption(BuildContext context, int id) {
+  void _openOptionProduct(BuildContext context, int id) {
     showModalBottomSheet(
       showDragHandle: true,
       enableDrag: true,
@@ -252,7 +265,64 @@ class _ProductState extends State<Product> {
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
-                  openDialogDelete(context, id);
+                  openDeleteProduct(context, id);
+                },
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      size: 30,
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Text("Hapus")
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openOptionCategory(BuildContext context, int id) {
+    showModalBottomSheet(
+      showDragHandle: true,
+      enableDrag: true,
+      constraints: const BoxConstraints(maxHeight: 120),
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(_goPage(2, id));
+                },
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      size: 30,
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Text("Edit")
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  openDeleteCategory(context, id);
                 },
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -314,7 +384,7 @@ class _ProductState extends State<Product> {
     showSheetOrder();
   }
 
-  void openDialogDelete(BuildContext context, int id) {
+  void openDeleteProduct(BuildContext context, int id) {
     showCupertinoModalPopup(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -338,12 +408,61 @@ class _ProductState extends State<Product> {
     );
   }
 
+  void openDeleteCategory(BuildContext context, int id) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+          title: const Text("Hapus Kategori"),
+          content:
+              const Text("Apakah yakin anda ingin menghapus kategori ini?"),
+          actions: [
+            CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("No")),
+            CupertinoDialogAction(
+                isDestructiveAction: true,
+                onPressed: () {
+                  deleteCategory(context, id);
+                },
+                child: const Text("Yes"))
+          ]),
+    );
+  }
+
   Future<void> deleteProduct(BuildContext context, int id) async {
     String url = dotenv.env['API_URL']!;
     String? token = await const FlutterSecureStorage().read(key: 'token');
 
     final response = await http.delete(
       Uri.parse("$url/api/product/$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+    );
+
+    final res = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      _handleRefresh();
+      // ignore: use_build_context_synchronously
+      Popup().show(context, res['message'], true);
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      Popup().show(context, res['message'], false);
+    }
+  }
+
+  Future<void> deleteCategory(BuildContext context, int id) async {
+    String url = dotenv.env['API_URL']!;
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+
+    final response = await http.delete(
+      Uri.parse("$url/api/category/$id"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
@@ -486,7 +605,7 @@ class _ProductState extends State<Product> {
                                                         user['role'] == 'admin'
                                                     ? GestureDetector(
                                                         onTap: () {
-                                                          _openOption(
+                                                          _openOptionProduct(
                                                               context,
                                                               products[index]
                                                                   .id);
@@ -577,7 +696,7 @@ class _ProductState extends State<Product> {
             Scaffold(
                 floatingActionButton: FloatingActionButton(
                   onPressed: () {
-                    showAddCategory();
+                    Navigator.of(context).push(_goPage(9, 0));
                   },
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
@@ -604,7 +723,7 @@ class _ProductState extends State<Product> {
                                     title: Text(category[index]['kategori']),
                                     trailing: GestureDetector(
                                       onTap: () {
-                                        _openOption(
+                                        _openOptionCategory(
                                             context, category[index]['id']);
                                       },
                                       child: const Icon(Icons.menu),
@@ -621,7 +740,7 @@ class _ProductState extends State<Product> {
                         ))
                     : const Center(
                         child: CircularProgressIndicator(
-                        color: Colors.blue,
+                        color: Colors.orange,
                       )))
           ],
         ),

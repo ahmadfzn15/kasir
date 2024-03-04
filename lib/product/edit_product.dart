@@ -462,7 +462,7 @@ class _EditProductState extends State<EditProduct> {
                   onPressed: () {
                     _uploadToDatabase(context);
                   },
-                  child: const Text("Save")),
+                  child: const Text("Simpan")),
             )
           ],
         ),

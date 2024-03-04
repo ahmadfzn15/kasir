@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app/components/popup.dart';
 import 'package:app/sublayout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,14 @@ class _EmployeeState extends State<Employee> {
     fetchDataEmployee();
   }
 
-  Future<void> _refresh() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    fetchDataEmployee();
+  }
+
+  Future<void> _handleRefresh() async {
     fetchDataEmployee();
   }
 
@@ -116,7 +124,7 @@ class _EmployeeState extends State<Employee> {
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
-                  openDialogDelete(context, id);
+                  openDelete(context, id);
                 },
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -139,7 +147,7 @@ class _EmployeeState extends State<Employee> {
     );
   }
 
-  void openDialogDelete(BuildContext context, int id) {
+  void openDelete(BuildContext context, int id) {
     showCupertinoModalPopup(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -153,10 +161,39 @@ class _EmployeeState extends State<Employee> {
                   Navigator.pop(context);
                 },
                 child: const Text("No")),
-            const CupertinoDialogAction(
-                isDestructiveAction: true, onPressed: null, child: Text("Yes"))
+            CupertinoDialogAction(
+                isDestructiveAction: true,
+                onPressed: () {
+                  deleteEmployee(context, id);
+                },
+                child: const Text("Yes"))
           ]),
     );
+  }
+
+  Future<void> deleteEmployee(BuildContext context, int id) async {
+    String url = dotenv.env['API_URL']!;
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+
+    final response = await http.delete(
+      Uri.parse("$url/api/user/$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+    );
+
+    final res = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      _handleRefresh();
+      // ignore: use_build_context_synchronously
+      Popup().show(context, res['message'], true);
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      Popup().show(context, res['message'], false);
+    }
   }
 
   @override
@@ -179,7 +216,7 @@ class _EmployeeState extends State<Employee> {
           ? employee.isNotEmpty
               ? RefreshIndicator(
                   onRefresh: () {
-                    return _refresh();
+                    return _handleRefresh();
                   },
                   child: ListView.builder(
                     itemCount: employee.length,
