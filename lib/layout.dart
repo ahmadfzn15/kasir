@@ -182,46 +182,6 @@ class _LayoutState extends State<Layout> {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: _selectedIndex == 1
-            ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: SizedBox(
-                  height: 45,
-                  child: SearchAnchor.bar(
-                    barLeading: const Icon(
-                      Icons.search,
-                      color: Colors.grey,
-                      size: 30,
-                    ),
-                    barBackgroundColor:
-                        const MaterialStatePropertyAll(Colors.white),
-                    barElevation: const MaterialStatePropertyAll(0),
-                    barHintText: "Search product",
-                    suggestionsBuilder: (context, controller) {
-                      return [
-                        const Center(
-                          child: Text('No search history.',
-                              style: TextStyle(color: Colors.grey)),
-                        )
-                      ];
-                    },
-                  ),
-                ),
-              )
-            : Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Text(
-                  link[_selectedIndex].label,
-                  style: const TextStyle(
-                      fontSize: 19, fontWeight: FontWeight.bold),
-                ),
-              ),
-        centerTitle: true,
-        titleSpacing: 0,
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
-      ),
       drawerEdgeDragWidth: 50,
       drawer: Drawer(
         clipBehavior: Clip.antiAlias,

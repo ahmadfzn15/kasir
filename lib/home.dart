@@ -22,18 +22,11 @@ class _HomeState extends State<Home> {
     Banners(img: "assets/img/sprite.jpg"),
     Banners(img: "assets/img/burger.jpeg")
   ];
-
-  List<WidgetIcon> icon = [
-    WidgetIcon(icon: Icons.shopping_bag_outlined, label: "Produk"),
-    WidgetIcon(icon: Icons.people_outline, label: "Karyawan"),
-    WidgetIcon(icon: Icons.shop_outlined, label: "Toko"),
-    WidgetIcon(icon: Icons.headset_mic_outlined, label: "Bantuan")
-  ];
+  DateTime time = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    // fetchData();
   }
 
   Future<void> _refresh() async {
@@ -42,48 +35,78 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: RefreshIndicator(
-          onRefresh: () {
-            return _refresh();
-          },
-          child: Column(children: [
-            SizedBox(
-                height: 200,
-                child: PageView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: page.length,
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return page[index];
-                    })),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              height: 300,
-              child: GridView.builder(
-                itemCount: icon.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4, crossAxisSpacing: 5, mainAxisSpacing: 5),
-                itemBuilder: (context, index) {
-                  return Card(
-                      elevation: 0.4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(icon[index].icon,
-                              color: Colors.orange, size: 30),
-                          const SizedBox(height: 4),
-                          Text(
-                            icon[index].label,
-                            style: const TextStyle(fontSize: 12),
-                          )
-                        ],
-                      ));
-                },
-              ),
-            )
-          ])),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            icon: const Icon(Icons.menu)),
+        title: const Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: Text(
+            "Beranda",
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+          ),
+        ),
+        centerTitle: true,
+        titleSpacing: 0,
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        child: RefreshIndicator(
+            onRefresh: () {
+              return _refresh();
+            },
+            child: Column(children: [
+              SizedBox(
+                  height: 200,
+                  child: PageView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: page.length,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return page[index];
+                      })),
+              GridView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      mainAxisExtent: 80,
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 5),
+                  children: const [
+                    Card(
+                      child: ListTile(
+                        title: Text(
+                          "Transaksi Lunas",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          "1",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    Card(
+                      child: ListTile(
+                        title: Text(
+                          "Produk Terjual",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          "3",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    )
+                  ]),
+            ])),
+      ),
     );
   }
 }

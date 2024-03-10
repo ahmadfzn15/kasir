@@ -1,6 +1,7 @@
 import 'package:app/auth/auth.dart';
 import 'package:app/layout.dart';
 import 'package:app/etc/startup.dart';
+import 'package:app/order/struk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -41,7 +42,7 @@ class _MainAppState extends State<MainApp> {
             if (snapshot.data![1]) {
               return const Layout();
             } else {
-              return const Layout();
+              return const Auth();
             }
           } else {
             return const Startup();

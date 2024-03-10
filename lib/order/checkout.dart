@@ -1,4 +1,3 @@
-import 'package:app/order/detail_product.dart';
 import 'package:app/order/payment.dart';
 import 'package:flutter/material.dart';
 
@@ -33,6 +32,24 @@ Route _goPage(Widget page) {
 }
 
 class _CheckoutState extends State<Checkout> {
+  void _increment(int id) {
+    Iterable data = widget.order.where((element) => element['id'] == id);
+    if (data.isNotEmpty) {
+      setState(() {
+        data.first['qty']++;
+      });
+    }
+  }
+
+  void _decrement(int id) {
+    Iterable data = widget.order.where((element) => element['id'] == id);
+    if (data.first['qty'] > 1) {
+      setState(() {
+        data.first['qty']--;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,29 +85,64 @@ class _CheckoutState extends State<Checkout> {
         itemCount: widget.order.length,
         shrinkWrap: true,
         itemBuilder: (context, index) {
-          return Column(
-            children: [
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(
-                      _goPage(DetailProduct(detail: widget.order[index])));
-                },
-                title: Text(widget.order[index]['namaProduk'],
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                    "Rp.${widget.order[index]['harga']} x ${widget.order[index]['qty']}"),
-                trailing: Text(
-                  "Rp.${widget.order[index]['harga'] * widget.order[index]['qty']}",
-                  style: const TextStyle(fontSize: 15),
-                ),
-              ),
-              const Divider(
-                indent: 15,
-                endIndent: 15,
-              )
-            ],
-          );
+          return Dismissible(
+              key: Key(index.toString()),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 15),
+                  alignment: Alignment.centerRight,
+                  decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          widget.order.removeAt(index);
+                        });
+                        if (widget.order.isEmpty) {
+                          Navigator.pop(context);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                        size: 40,
+                      ))),
+              child: Column(
+                children: [
+                  ListTile(
+                      title: Text(widget.order[index]['namaProduk'],
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold)),
+                      subtitle: Text("Rp.${widget.order[index]['harga']}"),
+                      trailing: Wrap(
+                        direction: Axis.horizontal,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              _decrement(index);
+                            },
+                            icon: const Icon(Icons.remove),
+                          ),
+                          Text(
+                            widget.order[index]['qty'].toString(),
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              _increment(index);
+                            },
+                            icon: const Icon(Icons.add),
+                          ),
+                        ],
+                      )),
+                  const Divider(
+                    indent: 15,
+                    endIndent: 15,
+                  )
+                ],
+              ));
         },
       ),
       bottomNavigationBar: Padding(
@@ -104,7 +156,7 @@ class _CheckoutState extends State<Checkout> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                      "Total (${widget.order.fold(0, (previousValue, element) => previousValue + element['qty'] as int)})",
+                      "Total (${widget.order.fold(0, (previousValue, element) => previousValue + element['qty'] as int)} Produk)",
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                   Text(
@@ -129,6 +181,7 @@ class _CheckoutState extends State<Checkout> {
                             MaterialStatePropertyAll(Colors.white)),
                     onPressed: () {
                       Navigator.of(context).push(_goPage(Payment(
+                          order: widget.order,
                           total: widget.order.fold(
                               0,
                               (previousValue, element) => previousValue +

@@ -32,6 +32,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                 ),
                 TextField(
                   controller: _currentPassword,
+                  obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Masukkan kata sandi saat ini",
                     filled: true,
@@ -59,6 +60,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                 ),
                 TextField(
                   controller: _newPassword,
+                  obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Masukkan kata sandi baru",
                     filled: true,
@@ -86,6 +88,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                 ),
                 TextField(
                   controller: _repeatPassword,
+                  obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Ulang kata sandi baru",
                     filled: true,

@@ -68,6 +68,7 @@ class _DeleteAccountState extends State<DeleteAccount> {
                 ),
                 TextFormField(
                   controller: _password,
+                  obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Kata sandi wajib diisi!';

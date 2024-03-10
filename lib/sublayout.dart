@@ -13,10 +13,9 @@ import 'package:flutter/material.dart';
 
 class Sublayout extends StatefulWidget {
   // ignore: non_constant_identifier_names
-  const Sublayout({super.key, required this.id, this.id_product = 0});
+  const Sublayout({super.key, required this.id});
   final int? id;
   // ignore: non_constant_identifier_names
-  final int id_product;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -40,12 +39,7 @@ class _SublayoutState extends State<Sublayout> {
 
     page = [
       Pages(page: const Profile(), title: "Profile"),
-      Pages(page: const AddProduct(), title: "Add Product"),
-      Pages(
-          page: EditProduct(
-            id: widget.id_product,
-          ),
-          title: "Edit Product"),
+      Pages(page: const AddProduct(), title: "Tambah Product"),
       Pages(page: const Account(), title: "Akun"),
       Pages(page: const ThemePage(), title: "Tampilan"),
       Pages(page: const Toko(), title: "Pengaturan Toko"),
