@@ -247,262 +247,279 @@ class _AddProductState extends State<AddProduct> {
       body: SingleChildScrollView(
         child: Center(
             child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const Text(
-                    "Foto Produk",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    height: 6,
-                  ),
-                  Stack(
-                    alignment: Alignment.bottomRight,
+          padding: const EdgeInsets.all(10),
+          child: Card(
+            surfaceTintColor: Colors.white,
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Form(
+                  key: _formKey,
+                  child: Column(
                     children: [
-                      _image != null
-                          ? Container(
-                              width: 150,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(75),
-                                  border: Border.all(color: Colors.grey)),
-                              clipBehavior: Clip.antiAlias,
-                              child: Image.file(File(_image!.path),
-                                  fit: BoxFit.cover),
-                            )
-                          : Container(
-                              width: 150,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(75),
-                                  border: Border.all(color: Colors.grey),
-                                  color: Colors.grey),
-                              clipBehavior: Clip.antiAlias,
+                      const Text(
+                        "Foto Produk",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          _image != null
+                              ? Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(75),
+                                      border: Border.all(color: Colors.grey)),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Image.file(File(_image!.path),
+                                      fit: BoxFit.cover),
+                                )
+                              : Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(75),
+                                      border: Border.all(color: Colors.grey),
+                                      color: Colors.grey),
+                                  clipBehavior: Clip.antiAlias,
+                                ),
+                          GestureDetector(
+                            onTap: () async {
+                              _openDialogImage(context);
+                            },
+                            child: Container(
+                              width: 35,
+                              height: 35,
+                              margin: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black, blurRadius: 2)
+                                  ]),
+                              child: const Icon(Icons.edit),
                             ),
-                      GestureDetector(
-                        onTap: () async {
-                          _openDialogImage(context);
-                        },
-                        child: Container(
-                          width: 35,
-                          height: 35,
-                          margin: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(color: Colors.black, blurRadius: 2)
-                              ]),
-                          child: const Icon(Icons.edit),
-                        ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text("Nama Produk",
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          )
                         ],
                       ),
                       const SizedBox(
-                        height: 6,
+                        height: 10,
                       ),
-                      TextFormField(
-                        controller: _namaProduk,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Nama produk wajib diisi!';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          hintText: "Masukkan nama produk",
-                          filled: true,
-                          fillColor: Colors.white,
-                          prefixIcon: const Icon(Icons.shopping_bag_rounded),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 0),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Harga Jual",
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text("Nama Produk",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 6,
+                          ),
+                          TextFormField(
+                            controller: _namaProduk,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Nama produk wajib diisi!';
+                              }
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Masukkan nama produk",
+                              filled: true,
+                              fillColor: Colors.white,
+                              prefixIcon:
+                                  const Icon(Icons.shopping_bag_rounded),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 0),
+                              border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFe2e8f0), width: 0.5),
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(
-                        height: 6,
+                        height: 12,
                       ),
-                      TextFormField(
-                        controller: _harga,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Harga wajib diisi!';
-                          }
-                          return null;
-                        },
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: "0",
-                          filled: true,
-                          fillColor: Colors.white,
-                          prefixIcon: const Icon(Icons.price_change),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 0),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Deskripsi",
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text("Harga Jual",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 6,
+                          ),
+                          TextFormField(
+                            controller: _harga,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Harga wajib diisi!';
+                              }
+                              return null;
+                            },
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: "0",
+                              filled: true,
+                              fillColor: Colors.white,
+                              prefixIcon: const Icon(Icons.price_change),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 0),
+                              border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFe2e8f0), width: 0.5),
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(
-                        height: 6,
+                        height: 12,
                       ),
-                      TextFormField(
-                        controller: _deskripsi,
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan deskripsi",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text("Deskripsi",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 6,
+                          ),
+                          TextFormField(
+                            controller: _deskripsi,
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                            decoration: InputDecoration(
+                              hintText: "Masukkan deskripsi",
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 0, horizontal: 10),
+                              border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFe2e8f0), width: 0.5),
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Stok",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text("Stok",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                TextFormField(
+                                  controller: _stok,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    hintText: '0',
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 0, horizontal: 10),
+                                    border: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFFe2e8f0),
+                                            width: 0.5),
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                  ),
+                                )
                               ],
                             ),
-                            const SizedBox(
-                              height: 6,
-                            ),
-                            TextFormField(
-                              controller: _stok,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: '0',
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 0, horizontal: 10),
-                                border: OutlineInputBorder(
-                                    borderSide: const BorderSide(
-                                        color: Color(0xFFe2e8f0), width: 0.5),
-                                    borderRadius: BorderRadius.circular(10)),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Kategori",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text("Kategori",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                SizedBox(
+                                    width: double.infinity,
+                                    child: DropdownMenu(
+                                      expandedInsets: const EdgeInsets.all(0),
+                                      initialSelection: _category.isNotEmpty
+                                          ? _category[0].value
+                                          : 0,
+                                      inputDecorationTheme:
+                                          InputDecorationTheme(
+                                              constraints: const BoxConstraints(
+                                                  maxHeight: 50),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10),
+                                              border: OutlineInputBorder(
+                                                  borderSide: const BorderSide(
+                                                      color: Color(0xFFe2e8f0),
+                                                      width: 0.5),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10))),
+                                      onSelected: (newValue) {
+                                        setState(() {
+                                          _selectedOption = newValue;
+                                        });
+                                      },
+                                      dropdownMenuEntries: _category,
+                                    ))
                               ],
                             ),
-                            const SizedBox(
-                              height: 6,
-                            ),
-                            SizedBox(
-                                width: double.infinity,
-                                child: DropdownMenu(
-                                  expandedInsets: const EdgeInsets.all(0),
-                                  initialSelection: _category.isNotEmpty
-                                      ? _category[0].value
-                                      : 0,
-                                  inputDecorationTheme: InputDecorationTheme(
-                                      constraints:
-                                          const BoxConstraints(maxHeight: 50),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 10),
-                                      border: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFe2e8f0),
-                                              width: 0.5),
-                                          borderRadius:
-                                              BorderRadius.circular(10))),
-                                  onSelected: (newValue) {
-                                    setState(() {
-                                      _selectedOption = newValue;
-                                    });
-                                  },
-                                  dropdownMenuEntries: _category,
-                                ))
-                          ],
-                        ),
-                      )
+                          )
+                        ],
+                      ),
                     ],
-                  ),
-                ],
-              )),
+                  )),
+            ),
+          ),
         )),
       ),
       bottomNavigationBar: Padding(

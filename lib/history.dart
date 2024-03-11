@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:app/components/popup.dart';
-import 'package:app/order/detail_history.dart';
 import 'package:app/order/struk.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -269,76 +268,80 @@ class _HistoryState extends State<History> {
                   child: Padding(
                     padding: const EdgeInsets.all(10),
                     child: ListView.builder(
+                      shrinkWrap: true,
                       itemCount: history.length,
                       itemBuilder: (context, index) {
-                        return Column(
+                        return Wrap(
                           children: [
-                            Dismissible(
-                                key: Key(history[index]['id'].toString()),
-                                direction: DismissDirection.endToStart,
-                                confirmDismiss: (direction) async {
-                                  final details = await Future.delayed(
-                                    const Duration(seconds: 3),
-                                    () {
-                                      null;
-                                    },
-                                  );
+                            Card(
+                              clipBehavior: Clip.antiAlias,
+                              surfaceTintColor: Colors.white,
+                              elevation: 4,
+                              child: Dismissible(
+                                  key: Key(history[index]['id'].toString()),
+                                  direction: DismissDirection.endToStart,
+                                  confirmDismiss: (direction) async {
+                                    final details = await Future.delayed(
+                                      const Duration(seconds: 3),
+                                      () {
+                                        null;
+                                      },
+                                    );
 
-                                  return details != null;
-                                },
-                                background: Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                onDismissed: (direction) {
-                                  history.removeAt(index);
-                                },
-                                child: ListTile(
-                                  onLongPress: () {
-                                    setState(() {
-                                      _select = true;
-                                      history[index]['selected'] = true;
-                                    });
-                                    showSheetOrder(context);
+                                    return details != null;
                                   },
-                                  onTap: () {
-                                    if (history[index]['selected']) {
+                                  background: Container(
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child: const Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  onDismissed: (direction) {
+                                    history.removeAt(index);
+                                  },
+                                  child: ListTile(
+                                    onLongPress: () {
                                       setState(() {
-                                        history[index]['selected'] = false;
-                                      });
-                                      showSheetOrder(context);
-                                    } else if (history.any(
-                                        (element) => element['selected'])) {
-                                      setState(() {
+                                        _select = true;
                                         history[index]['selected'] = true;
                                       });
                                       showSheetOrder(context);
-                                    } else {
-                                      Navigator.of(context)
-                                          .push(_goPage(history[index]['id']));
-                                    }
-                                  },
-                                  selected: history[index]['selected'],
-                                  selectedTileColor: Colors.black26,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                  title: Text(
-                                      "Rp.${history[index]['total_pembayaran'].toString()}"),
-                                  subtitle:
-                                      Text(history[index]['metode_pembayaran']),
-                                )),
-                            const Divider(
-                              indent: 10,
-                              endIndent: 10,
-                            )
+                                    },
+                                    onTap: () {
+                                      if (history[index]['selected']) {
+                                        setState(() {
+                                          history[index]['selected'] = false;
+                                        });
+                                        showSheetOrder(context);
+                                      } else if (history.any(
+                                          (element) => element['selected'])) {
+                                        setState(() {
+                                          history[index]['selected'] = true;
+                                        });
+                                        showSheetOrder(context);
+                                      } else {
+                                        Navigator.of(context).push(
+                                            _goPage(history[index]['id']));
+                                      }
+                                    },
+                                    selected: history[index]['selected'],
+                                    selectedTileColor: Colors.black26,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    title: Text(
+                                        "Rp.${history[index]['total_pembayaran'].toString()}"),
+                                    subtitle: Text(
+                                        history[index]['metode_pembayaran']),
+                                  )),
+                            ),
                           ],
                         );
                       },

@@ -1,3 +1,4 @@
+import 'package:app/order/struk.dart';
 import 'package:flutter/material.dart';
 
 class Success extends StatefulWidget {
@@ -7,6 +8,27 @@ class Success extends StatefulWidget {
   @override
   // ignore: library_private_types_in_public_api
   _SuccessState createState() => _SuccessState();
+}
+
+Route _goPage() {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => const Struk(),
+    transitionDuration: const Duration(milliseconds: 500),
+    reverseTransitionDuration: const Duration(milliseconds: 500),
+    opaque: false,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
 }
 
 class _SuccessState extends State<Success> {
@@ -100,9 +122,9 @@ class _SuccessState extends State<Success> {
                       shape: MaterialStatePropertyAll(RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5))))),
                   onPressed: () {
-                    print("Struk");
+                    Navigator.of(context).push(_goPage());
                   },
-                  child: const Text("Cetak Struk"),
+                  child: const Text("Lihat Struk"),
                 ),
               ),
               const SizedBox(

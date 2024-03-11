@@ -222,158 +222,156 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       body: SingleChildScrollView(
           child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Form(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              "Foto Profil",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(
-              height: 6,
-            ),
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                _image != null
-                    ? Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(75),
-                            border: Border.all(color: Colors.grey)),
-                        clipBehavior: Clip.antiAlias,
-                        child:
-                            Image.file(File(_image!.path), fit: BoxFit.cover),
-                      )
-                    : Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(75),
-                            border: Border.all(color: Colors.grey),
-                            color: Colors.grey),
-                        clipBehavior: Clip.antiAlias,
-                      ),
-                GestureDetector(
-                  onTap: () async {
-                    _openDialogImage(context);
-                  },
-                  child: Container(
-                    width: 35,
-                    height: 35,
-                    margin: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(color: Colors.black, blurRadius: 2)
-                        ]),
-                    child: const Icon(Icons.edit),
-                  ),
-                )
-              ],
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Card(
-              surfaceTintColor: Colors.white,
-              elevation: 5,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        padding: const EdgeInsets.all(15),
+        child: Card(
+            surfaceTintColor: Colors.white,
+            elevation: 5,
+            child: Form(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  "Foto Profil",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 6,
+                ),
+                Stack(
+                  alignment: Alignment.bottomRight,
                   children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Username",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextField(
-                      controller: _username,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan username",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Email",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextField(
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan email",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Nomor Telepon",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextField(
-                      controller: _noTlp,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan nomor telepon",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
+                    _image != null
+                        ? Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(75),
+                                border: Border.all(color: Colors.grey)),
+                            clipBehavior: Clip.antiAlias,
+                            child: Image.file(File(_image!.path),
+                                fit: BoxFit.cover),
+                          )
+                        : Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(75),
+                                border: Border.all(color: Colors.grey),
+                                color: Colors.grey),
+                            clipBehavior: Clip.antiAlias,
+                          ),
+                    GestureDetector(
+                      onTap: () async {
+                        _openDialogImage(context);
+                      },
+                      child: Container(
+                        width: 35,
+                        height: 35,
+                        margin: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black, blurRadius: 2)
+                            ]),
+                        child: const Icon(Icons.edit),
                       ),
                     )
                   ],
                 ),
-              ),
-            ),
-          ],
-        )),
+                const SizedBox(
+                  height: 10,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text("Username",
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      TextField(
+                        controller: _username,
+                        decoration: InputDecoration(
+                          hintText: "Masukkan username",
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 10),
+                          border: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFe2e8f0), width: 0.5),
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text("Email",
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      TextField(
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: "Masukkan email",
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 10),
+                          border: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFe2e8f0), width: 0.5),
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text("Nomor Telepon",
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      TextField(
+                        controller: _noTlp,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          hintText: "Masukkan nomor telepon",
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 10),
+                          border: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFe2e8f0), width: 0.5),
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ))),
       )),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20),

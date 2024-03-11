@@ -13,6 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 
 class Product extends StatefulWidget {
   const Product({super.key});
@@ -135,6 +136,16 @@ class _ProductState extends State<Product> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void vibrateDevices() async {
+    bool? hasVibration = await Vibration.hasVibrator();
+    if (hasVibration!) {
+      Vibration.vibrate(
+        duration: 300,
+        amplitude: 100,
+      );
+    }
   }
 
   Future<void> setView(bool value) async {
@@ -547,30 +558,21 @@ class _ProductState extends State<Product> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: _select ? 150 : 50,
         leading: _select
-            ? Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Checkbox(
-                      value: _selectAll,
-                      checkColor: Colors.orange,
-                      fillColor: const MaterialStatePropertyAll(Colors.white),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectAll = value!;
-                          if (_selectAll) {
-                            products.map((e) => e.selected = true).toList();
-                          } else {
-                            products.map((e) => e.selected = false).toList();
-                          }
-                        });
-                      },
-                    ),
-                    const Text("Pilih Semua")
-                  ],
-                ),
+            ? Checkbox(
+                value: _selectAll,
+                checkColor: Colors.orange,
+                fillColor: const MaterialStatePropertyAll(Colors.white),
+                onChanged: (value) {
+                  setState(() {
+                    _selectAll = value!;
+                    if (_selectAll) {
+                      products.map((e) => e.selected = true).toList();
+                    } else {
+                      products.map((e) => e.selected = false).toList();
+                    }
+                  });
+                },
               )
             : IconButton(
                 onPressed: () {
@@ -936,8 +938,8 @@ class _ProductState extends State<Product> {
                                   : GridView.builder(
                                       itemCount: products.length,
                                       shrinkWrap: true,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10),
+                                      padding: const EdgeInsets.only(
+                                          left: 10, right: 10, bottom: 80),
                                       gridDelegate:
                                           const SliverGridDelegateWithFixedCrossAxisCount(
                                               mainAxisExtent: 240,
@@ -948,6 +950,7 @@ class _ProductState extends State<Product> {
                                         return GestureDetector(
                                           onLongPress: () {
                                             setState(() {
+                                              vibrateDevices();
                                               products[index].selected = true;
                                               _select = true;
                                               if (products.every((element) =>
@@ -984,7 +987,8 @@ class _ProductState extends State<Product> {
                                           child: Card(
                                             surfaceTintColor:
                                                 products[index].selected
-                                                    ? Colors.black38
+                                                    ? const Color.fromARGB(
+                                                        96, 197, 30, 30)
                                                     : Colors.white,
                                             elevation: 4,
                                             clipBehavior: Clip.antiAlias,
@@ -1137,7 +1141,7 @@ class _ProductState extends State<Product> {
               Scaffold(
                   floatingActionButton: FloatingActionButton(
                     onPressed: () {
-                      Navigator.of(context).push(_goPage(9));
+                      Navigator.of(context).push(_goPage(8));
                     },
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
@@ -1157,23 +1161,27 @@ class _ProductState extends State<Product> {
                             child: ListView.builder(
                               itemCount: category.length,
                               shrinkWrap: true,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               itemBuilder: (context, index) {
                                 return Column(
                                   children: [
-                                    ListTile(
-                                      title: Text(category[index]['kategori']),
-                                      trailing: GestureDetector(
-                                        onTap: () {
-                                          _openOptionCategory(
-                                              context, category[index]);
-                                        },
-                                        child: const Icon(Icons.menu),
+                                    Card(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 5, horizontal: 10),
+                                      surfaceTintColor: Colors.white,
+                                      elevation: 4,
+                                      child: ListTile(
+                                        title:
+                                            Text(category[index]['kategori']),
+                                        trailing: GestureDetector(
+                                          onTap: () {
+                                            _openOptionCategory(
+                                                context, category[index]);
+                                          },
+                                          child: const Icon(Icons.menu),
+                                        ),
                                       ),
                                     ),
-                                    const Divider(
-                                      indent: 10,
-                                      endIndent: 10,
-                                    )
                                   ],
                                 );
                               },

@@ -28,7 +28,7 @@ class _MainAppState extends State<MainApp> {
     return MaterialApp(
       title: "Sunda Food",
       debugShowCheckedModeBanner: false,
-      themeMode: themeMode,
+      themeMode: ThemeMode.dark,
       theme: ThemeData(
         useMaterial3: true,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),

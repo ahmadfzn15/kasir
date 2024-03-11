@@ -39,41 +39,47 @@ class _AccountState extends State<Account> {
     return Scaffold(
       key: _scaffoldKeys,
       body: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(_goPage(0, null));
-                },
-                hoverColor: Colors.white12,
-                title: const Text("Profil"),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 35, color: Colors.orange),
-              ),
-              const Divider(color: Color(0xFFcbd5e1)),
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(_goPage(6, null));
-                },
-                hoverColor: Colors.white12,
-                title: const Text("Ubah Kata Sandi"),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 35, color: Colors.orange),
-              ),
-              const Divider(color: Color(0xFFcbd5e1)),
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(_goPage(7, null));
-                },
-                hoverColor: Colors.white12,
-                title: const Text("Hapus Akun"),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 35, color: Colors.orange),
-              ),
-              const Divider(color: Color(0xFFcbd5e1))
-            ],
-          )),
+        padding: const EdgeInsets.all(10),
+        child: Card(
+          surfaceTintColor: Colors.white,
+          elevation: 4,
+          child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Wrap(
+                children: [
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(_goPage(0, null));
+                    },
+                    hoverColor: Colors.white12,
+                    title: const Text("Profil"),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 35, color: Colors.orange),
+                  ),
+                  const Divider(color: Color(0xFFcbd5e1)),
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(_goPage(5, null));
+                    },
+                    hoverColor: Colors.white12,
+                    title: const Text("Ubah Kata Sandi"),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 35, color: Colors.orange),
+                  ),
+                  const Divider(color: Color(0xFFcbd5e1)),
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(_goPage(6, null));
+                    },
+                    hoverColor: Colors.white12,
+                    title: const Text("Hapus Akun"),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 35, color: Colors.orange),
+                  ),
+                ],
+              )),
+        ),
+      ),
     );
   }
 }

@@ -64,176 +64,183 @@ class _AddEmployeeState extends State<AddEmployee> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+          padding: const EdgeInsets.all(10),
+          child: Card(
+            surfaceTintColor: Colors.white,
+            elevation: 4,
+            child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Form(
+                    key: _formKey,
+                    child: Column(
                       children: [
-                        Text("Username Karyawan",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Username Karyawan",
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        TextFormField(
+                          controller: _username,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Username wajib diisi!';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            hintText: "Masukkan username karyawan",
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 10),
+                            border: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFe2e8f0), width: 0.5),
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Email",
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        TextFormField(
+                          controller: _email,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Email wajib diisi!';
+                            }
+                            return null;
+                          },
+                          maxLines: null,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: "Masukkan email",
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 10),
+                            border: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFe2e8f0), width: 0.5),
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Nomor Telepon",
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        TextFormField(
+                          controller: _noTlp,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            hintText: "Masukkan nomor telepon",
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 10),
+                            border: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFe2e8f0), width: 0.5),
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Kata Sandi",
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        TextFormField(
+                          controller: _password,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Kata sandi wajib diisi!';
+                            }
+                            return null;
+                          },
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            hintText: "Masukkan kata sandi",
+                            filled: true,
+                            fillColor: Colors.white,
+                            suffixIcon: const Icon(CupertinoIcons.eye),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 10),
+                            border: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFe2e8f0), width: 0.5),
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Ulang Kata Sandi",
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        TextFormField(
+                          controller: _repeatPassword,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Kata sandi wajib diisi!';
+                            }
+                            return null;
+                          },
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            hintText: "Masukkan ulang kata sandi",
+                            filled: true,
+                            fillColor: Colors.white,
+                            suffixIcon: const Icon(CupertinoIcons.eye),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 10),
+                            border: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFe2e8f0), width: 0.5),
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
                       ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextFormField(
-                      controller: _username,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Username wajib diisi!';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        hintText: "Masukkan username karyawan",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Email",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextFormField(
-                      controller: _email,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email wajib diisi!';
-                        }
-                        return null;
-                      },
-                      maxLines: null,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan email",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Nomor Telepon",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextFormField(
-                      controller: _noTlp,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan nomor telepon",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Kata Sandi",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextFormField(
-                      controller: _password,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Kata sandi wajib diisi!';
-                        }
-                        return null;
-                      },
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan kata sandi",
-                        filled: true,
-                        fillColor: Colors.white,
-                        suffixIcon: const Icon(CupertinoIcons.eye),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Ulang Kata Sandi",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    TextFormField(
-                      controller: _repeatPassword,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Kata sandi wajib diisi!';
-                        }
-                        return null;
-                      },
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: "Masukkan ulang kata sandi",
-                        filled: true,
-                        fillColor: Colors.white,
-                        suffixIcon: const Icon(CupertinoIcons.eye),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ],
-                ))),
+                    ))),
+          ),
+        ),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20),

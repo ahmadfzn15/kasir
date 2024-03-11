@@ -61,7 +61,7 @@ Route _goPage(int id) {
 class _LayoutState extends State<Layout> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
   late List<SideItem> link;
   bool loading = false;
   Map<String, dynamic> user = {};

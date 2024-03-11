@@ -16,30 +16,36 @@ class _ThemePageState extends State<ThemePage> {
     return Scaffold(
       key: _scaffoldKeys,
       body: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              ListTile(
-                onTap: () {
-                  setState(() {
-                    darkMode = !darkMode;
-                  });
-                },
-                hoverColor: Colors.white12,
-                title: const Text("Dark Mode"),
-                trailing: Switch(
-                  activeColor: Colors.blue,
-                  value: darkMode,
-                  onChanged: (value) {
-                    setState(() {
-                      darkMode = !darkMode;
-                    });
-                  },
-                ),
-              ),
-              const Divider(color: Color(0xFFcbd5e1))
-            ],
-          )),
+        padding: const EdgeInsets.all(10),
+        child: Card(
+          surfaceTintColor: Colors.white,
+          elevation: 4,
+          child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Wrap(
+                children: [
+                  ListTile(
+                    onTap: () {
+                      setState(() {
+                        darkMode = !darkMode;
+                      });
+                    },
+                    hoverColor: Colors.white12,
+                    title: const Text("Dark Mode"),
+                    trailing: Switch(
+                      activeColor: Colors.blue,
+                      value: darkMode,
+                      onChanged: (value) {
+                        setState(() {
+                          darkMode = !darkMode;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              )),
+        ),
+      ),
     );
   }
 }

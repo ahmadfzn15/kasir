@@ -17,92 +17,99 @@ class _ChangePasswordState extends State<ChangePassword> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+          padding: const EdgeInsets.all(10),
+          child: Card(
+            surfaceTintColor: Colors.white,
+            elevation: 4,
+            child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
                   children: [
-                    Text("Kata Sandi Saat Ini",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text("Kata Sandi Saat Ini",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 6,
+                    ),
+                    TextField(
+                      controller: _currentPassword,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: "Masukkan kata sandi saat ini",
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 10),
+                        border: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: Color(0xFFe2e8f0), width: 0.5),
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text("Kata Sandi Baru",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 6,
+                    ),
+                    TextField(
+                      controller: _newPassword,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: "Masukkan kata sandi baru",
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 10),
+                        border: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: Color(0xFFe2e8f0), width: 0.5),
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text("Ulang Kata Sandi",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 6,
+                    ),
+                    TextField(
+                      controller: _repeatPassword,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: "Ulang kata sandi baru",
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 10),
+                        border: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: Color(0xFFe2e8f0), width: 0.5),
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
                   ],
-                ),
-                const SizedBox(
-                  height: 6,
-                ),
-                TextField(
-                  controller: _currentPassword,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: "Masukkan kata sandi saat ini",
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-                    border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            color: Color(0xFFe2e8f0), width: 0.5),
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text("Kata Sandi Baru",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(
-                  height: 6,
-                ),
-                TextField(
-                  controller: _newPassword,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: "Masukkan kata sandi baru",
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-                    border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            color: Color(0xFFe2e8f0), width: 0.5),
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text("Ulang Kata Sandi",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(
-                  height: 6,
-                ),
-                TextField(
-                  controller: _repeatPassword,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: "Ulang kata sandi baru",
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-                    border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            color: Color(0xFFe2e8f0), width: 0.5),
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ],
-            )),
+                )),
+          ),
+        ),
       ),
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.all(20),

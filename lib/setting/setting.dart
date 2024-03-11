@@ -71,53 +71,77 @@ class _SettingState extends State<Setting> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKeys,
+      appBar: AppBar(
+        leading: IconButton(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            icon: const Icon(Icons.menu)),
+        title: const Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: Text(
+            "Pengaturan",
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+          ),
+        ),
+        centerTitle: true,
+        titleSpacing: 0,
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+      ),
       body: role != null
           ? SafeArea(
               child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        onTap: () {
-                          Navigator.of(context).push(_goPage(3, null));
-                        },
-                        hoverColor: Colors.white12,
-                        title: const Text("Akun"),
-                        trailing: const Icon(Icons.chevron_right,
-                            size: 35, color: Colors.orange),
-                      ),
-                      const Divider(
-                        color: Color(0xFFcbd5e1),
-                      ),
-                      ListTile(
-                        onTap: () {
-                          Navigator.of(context).push(_goPage(4, null));
-                        },
-                        hoverColor: Colors.white12,
-                        title: const Text("Tampilan"),
-                        trailing: const Icon(Icons.chevron_right,
-                            size: 35, color: Colors.orange),
-                      ),
-                      const Divider(color: Color(0xFFcbd5e1)),
-                      role != null && role == 'admin'
-                          ? Wrap(
-                              children: [
-                                ListTile(
-                                  onTap: () {
-                                    Navigator.of(context)
-                                        .push(_goPage(5, null));
-                                  },
-                                  hoverColor: Colors.white12,
-                                  title: const Text("Toko"),
-                                  trailing: const Icon(Icons.chevron_right,
-                                      size: 35, color: Colors.orange),
-                                ),
-                                const Divider(color: Color(0xFFcbd5e1))
-                              ],
-                            )
-                          : Container()
-                    ],
-                  )))
+              padding: const EdgeInsets.all(10),
+              child: Card(
+                surfaceTintColor: Colors.white,
+                elevation: 4,
+                child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          onTap: () {
+                            Navigator.of(context).push(_goPage(2, null));
+                          },
+                          hoverColor: Colors.white12,
+                          title: const Text("Akun"),
+                          trailing: const Icon(Icons.chevron_right,
+                              size: 35, color: Colors.orange),
+                        ),
+                        const Divider(
+                          color: Color(0xFFcbd5e1),
+                        ),
+                        ListTile(
+                          onTap: () {
+                            Navigator.of(context).push(_goPage(3, null));
+                          },
+                          hoverColor: Colors.white12,
+                          title: const Text("Tampilan"),
+                          trailing: const Icon(Icons.chevron_right,
+                              size: 35, color: Colors.orange),
+                        ),
+                        const Divider(color: Color(0xFFcbd5e1)),
+                        role != null && role == 'admin'
+                            ? Wrap(
+                                children: [
+                                  ListTile(
+                                    onTap: () {
+                                      Navigator.of(context)
+                                          .push(_goPage(4, null));
+                                    },
+                                    hoverColor: Colors.white12,
+                                    title: const Text("Toko"),
+                                    trailing: const Icon(Icons.chevron_right,
+                                        size: 35, color: Colors.orange),
+                                  ),
+                                ],
+                              )
+                            : Container()
+                      ],
+                    )),
+              ),
+            ))
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.orange,

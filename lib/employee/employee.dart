@@ -19,7 +19,7 @@ class Employee extends StatefulWidget {
 Route _toAddPage() {
   return PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) =>
-        const Sublayout(id: 8),
+        const Sublayout(id: 7),
     transitionDuration: const Duration(milliseconds: 500),
     reverseTransitionDuration: const Duration(milliseconds: 500),
     opaque: false,
@@ -199,6 +199,24 @@ class _EmployeeState extends State<Employee> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            icon: const Icon(Icons.menu)),
+        title: const Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: Text(
+            "Petugas",
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+          ),
+        ),
+        centerTitle: true,
+        titleSpacing: 0,
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(_toAddPage());
@@ -218,31 +236,36 @@ class _EmployeeState extends State<Employee> {
                   onRefresh: () {
                     return _handleRefresh();
                   },
-                  child: ListView.builder(
-                    itemCount: employee.length,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          ListTile(
-                            leading: const CircleAvatar(
-                              backgroundImage:
-                                  AssetImage("assets/img/lusi.jpeg"),
-                            ),
-                            title: Text(employee[index]['username']),
-                            subtitle: Text(employee[index]['role']),
-                            trailing: IconButton(
-                                onPressed: () {
-                                  _openOption(context, employee[index]['id']);
-                                },
-                                icon: const Icon(Icons.menu)),
-                          ),
-                          const Divider(
-                            indent: 15,
-                            endIndent: 15,
-                          )
-                        ],
-                      );
-                    },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Card(
+                      surfaceTintColor: Colors.white,
+                      elevation: 4,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: employee.length,
+                        itemBuilder: (context, index) {
+                          return Wrap(
+                            children: [
+                              ListTile(
+                                leading: const CircleAvatar(
+                                  backgroundImage:
+                                      AssetImage("assets/img/lusi.jpeg"),
+                                ),
+                                title: Text(employee[index]['username']),
+                                subtitle: Text(employee[index]['role']),
+                                trailing: IconButton(
+                                    onPressed: () {
+                                      _openOption(
+                                          context, employee[index]['id']);
+                                    },
+                                    icon: const Icon(Icons.menu)),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 )
               : const Center(
