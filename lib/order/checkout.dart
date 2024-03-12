@@ -1,4 +1,5 @@
 import 'package:app/order/payment.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Checkout extends StatefulWidget {
@@ -170,25 +171,18 @@ class _CheckoutState extends State<Checkout> {
               ),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton(
-                    style: const ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5)))),
-                        backgroundColor:
-                            MaterialStatePropertyAll(Colors.orange),
-                        foregroundColor:
-                            MaterialStatePropertyAll(Colors.white)),
-                    onPressed: () {
-                      Navigator.of(context).push(_goPage(Payment(
-                          order: widget.order,
-                          total: widget.order.fold(
-                              0,
-                              (previousValue, element) => previousValue +
-                                      (element['harga'] * element['qty'])
-                                  as int))));
-                    },
-                    child: const Text("Bayar")),
+                child: CupertinoButton(
+                  color: Colors.orange,
+                  child: const Text("Bayar"),
+                  onPressed: () {
+                    Navigator.of(context).push(_goPage(Payment(
+                        order: widget.order,
+                        total: widget.order.fold(
+                            0,
+                            (previousValue, element) => previousValue +
+                                (element['harga'] * element['qty']) as int))));
+                  },
+                ),
               ),
             ],
           ),

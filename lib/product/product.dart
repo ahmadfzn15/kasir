@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app/help.dart';
 import 'package:app/order/checkout.dart';
 import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
@@ -228,7 +229,7 @@ class _ProductState extends State<Product> {
         "id": id,
         "idProduk": products[id].id,
         "namaProduk": products[id].namaProduk,
-        "harga": products[id].harga,
+        "harga": products[id].harga_jual,
         "qty": 1
       });
     });
@@ -610,11 +611,12 @@ class _ProductState extends State<Product> {
         actions: [
           _select
               ? TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     setState(() {
                       products.map((e) => e.selected = false).toList();
                       _select = false;
                     });
+                    await Navigator.maybePop(context);
                   },
                   child: const Text(
                     "Batalkan",
@@ -628,38 +630,46 @@ class _ProductState extends State<Product> {
         foregroundColor: Colors.white,
       ),
       body: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(kToolbarHeight),
-            child: AppBar(
-              bottom: const TabBar(
-                tabs: [
-                  Tab(
-                    child: Text(
-                      "Daftar Produk",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
+          length: 3,
+          initialIndex: 1,
+          child: Scaffold(
+            appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight),
+                child: AppBar(
+                  bottom: const TabBar(
+                    tabs: [
+                      Tab(
+                        child: Text(
+                          "Barcode",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ),
+                      Tab(
+                        child: Text(
+                          "Produk",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ),
+                      Tab(
+                        child: Text(
+                          "Kategori",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ),
+                    ],
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    padding: EdgeInsets.zero,
+                    tabAlignment: TabAlignment.fill,
+                    splashBorderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                  Tab(
-                    child: Text(
-                      "Daftar Kategori",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ),
-                ],
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorWeight: 4,
-                padding: EdgeInsets.zero,
-                tabAlignment: TabAlignment.fill,
-                splashBorderRadius: BorderRadius.all(Radius.circular(10)),
+                )),
+            body: TabBarView(children: [
+              const Scaffold(
+                body: Help(),
               ),
-            ),
-          ),
-          body: TabBarView(
-            children: [
               Scaffold(
                 floatingActionButton: FloatingActionButton(
                   onPressed: () {
@@ -688,20 +698,33 @@ class _ProductState extends State<Product> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text("Atur Tampilan"),
-                                  DropdownButton(
-                                    icon: const Icon(Icons.window_outlined),
-                                    items: const [
-                                      DropdownMenuItem(
-                                          value: true,
-                                          child: Text("Tampilan Baris")),
-                                      DropdownMenuItem(
-                                          value: false,
-                                          child: Text("Tampilan Kolom")),
-                                    ],
-                                    onChanged: (value) {
-                                      setView(value!);
-                                    },
-                                  )
+                                  MenuAnchor(
+                                      builder: (context, controller, child) {
+                                        return IconButton(
+                                          onPressed: () {
+                                            if (controller.isOpen) {
+                                              controller.close();
+                                            } else {
+                                              controller.open();
+                                            }
+                                          },
+                                          icon:
+                                              const Icon(Icons.window_outlined),
+                                        );
+                                      },
+                                      menuChildren: [
+                                        MenuItemButton(
+                                            onPressed: () {
+                                              setView(true);
+                                            },
+                                            child:
+                                                const Text("Tampilan Baris")),
+                                        MenuItemButton(
+                                            onPressed: () {
+                                              setView(false);
+                                            },
+                                            child: const Text("Tampilan Kolom"))
+                                      ]),
                                 ],
                               ),
                             ),
@@ -860,7 +883,7 @@ class _ProductState extends State<Product> {
                                                                             overflow: TextOverflow.ellipsis),
                                                                       ),
                                                                       Text(
-                                                                        "Rp.${products[index].harga}",
+                                                                        "Rp.${products[index].harga_jual}",
                                                                         style: const TextStyle(
                                                                             fontSize:
                                                                                 12),
@@ -911,9 +934,13 @@ class _ProductState extends State<Product> {
                                                                             ),
                                                                           ],
                                                                         )
-                                                                      : FilledButton(
-                                                                          style:
-                                                                              const ButtonStyle(surfaceTintColor: MaterialStatePropertyAll(Colors.orange)),
+                                                                      : CupertinoButton(
+                                                                          padding: const EdgeInsets
+                                                                              .symmetric(
+                                                                              horizontal: 20,
+                                                                              vertical: 5),
+                                                                          color:
+                                                                              Colors.orange,
                                                                           onPressed:
                                                                               () {
                                                                             _addOrder(context,
@@ -1029,7 +1056,7 @@ class _ProductState extends State<Product> {
                                                       Text(products[index]
                                                           .namaProduk),
                                                       Text(
-                                                        "Rp.${products[index].harga.toString()}",
+                                                        "Rp.${products[index].harga_jual.toString()}",
                                                         style: const TextStyle(
                                                             fontSize: 15,
                                                             fontWeight:
@@ -1158,43 +1185,48 @@ class _ProductState extends State<Product> {
                           color: Colors.orange,
                           child: SizedBox(
                             height: double.infinity,
-                            child: ListView.builder(
-                              itemCount: category.length,
-                              shrinkWrap: true,
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              itemBuilder: (context, index) {
-                                return Column(
-                                  children: [
-                                    Card(
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 5, horizontal: 10),
-                                      surfaceTintColor: Colors.white,
-                                      elevation: 4,
-                                      child: ListTile(
-                                        title:
-                                            Text(category[index]['kategori']),
-                                        trailing: GestureDetector(
-                                          onTap: () {
-                                            _openOptionCategory(
-                                                context, category[index]);
-                                          },
-                                          child: const Icon(Icons.menu),
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Card(
+                                surfaceTintColor: Colors.white,
+                                elevation: 4,
+                                child: ListView.builder(
+                                  itemCount: category.length,
+                                  shrinkWrap: true,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  itemBuilder: (context, index) {
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          title:
+                                              Text(category[index]['kategori']),
+                                          trailing: GestureDetector(
+                                            onTap: () {
+                                              _openOptionCategory(
+                                                  context, category[index]);
+                                            },
+                                            child: const Icon(Icons.menu),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
+                                        if (index != category.length - 1)
+                                          const Divider(
+                                            indent: 15,
+                                            endIndent: 15,
+                                          )
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                           ))
                       : const Center(
                           child: CircularProgressIndicator(
                           color: Colors.orange,
-                        )))
-            ],
-          ),
-        ),
-      ),
+                        ))),
+            ]),
+          )),
     );
   }
 }

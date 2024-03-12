@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:app/components/popup.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,14 +20,20 @@ class AddProduct extends StatefulWidget {
 
 class _AddProductState extends State<AddProduct> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _barcode = TextEditingController();
   final TextEditingController _namaProduk = TextEditingController();
-  final TextEditingController _harga = TextEditingController();
+  final TextEditingController _hargaBeli = TextEditingController();
+  final TextEditingController _hargaJual = TextEditingController();
   final TextEditingController _deskripsi = TextEditingController();
+  final TextEditingController _variant = TextEditingController();
   final TextEditingController _stok = TextEditingController();
   XFile? _image;
   List<DropdownMenuEntry<dynamic>> _category = [];
   int _selectedOption = 1;
+  bool allowStock = false;
+  bool allowVarian = false;
   bool loading = false;
+  String? barcode;
 
   @override
   void initState() {
@@ -219,8 +226,10 @@ class _AddProductState extends State<AddProduct> {
     request.files.add(await http.MultipartFile.fromPath('foto', _image!.path));
     request.fields['id'] = id!;
     request.fields['namaProduk'] = _namaProduk.text;
+    request.fields['barcode'] = barcode ?? "";
     request.fields['id_kategori'] = _selectedOption.toString();
-    request.fields['harga'] = _harga.text;
+    request.fields['harga_beli'] = _hargaBeli.text;
+    request.fields['harga_jual'] = _hargaJual.text;
     request.fields['deskripsi'] = _deskripsi.text;
     request.fields['stok'] = _stok.text;
     request.headers['Content-Type'] = "application/json";
@@ -241,6 +250,57 @@ class _AddProductState extends State<AddProduct> {
     }
   }
 
+  void openAddCategory() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text("Tambah Kategori Baru"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                height: 20,
+              ),
+              CupertinoTextField(
+                placeholder: "Masukkan kategori baru",
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border:
+                      Border.all(color: const Color(0xFFe2e8f0), width: 0.5),
+                ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoButton(
+                  color: Colors.orange,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Simpan"),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void scanBarcode() async {
+    final res = await BarcodeScanner.scan();
+    setState(() {
+      barcode = res.rawContent;
+      _barcode.value = TextEditingValue(text: res.rawContent);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -257,55 +317,114 @@ class _AddProductState extends State<AddProduct> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      const Text(
-                        "Foto Produk",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(
-                        height: 6,
-                      ),
-                      Stack(
-                        alignment: Alignment.bottomRight,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          _image != null
-                              ? Container(
-                                  width: 150,
-                                  height: 150,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(75),
-                                      border: Border.all(color: Colors.grey)),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: Image.file(File(_image!.path),
-                                      fit: BoxFit.cover),
-                                )
-                              : Container(
-                                  width: 150,
-                                  height: 150,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(75),
-                                      border: Border.all(color: Colors.grey),
-                                      color: Colors.grey),
-                                  clipBehavior: Clip.antiAlias,
+                          Column(
+                            children: [
+                              const Text(
+                                "Foto Produk",
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  _image != null
+                                      ? Container(
+                                          width: 150,
+                                          height: 150,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                  color: Colors.black26)),
+                                          clipBehavior: Clip.antiAlias,
+                                          child: Image.file(File(_image!.path),
+                                              fit: BoxFit.cover),
+                                        )
+                                      : Container(
+                                          width: 150,
+                                          height: 150,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: Colors.black12),
+                                          clipBehavior: Clip.antiAlias,
+                                        ),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      _openDialogImage(context);
+                                    },
+                                    child: Container(
+                                      width: 35,
+                                      height: 35,
+                                      margin: const EdgeInsets.all(8),
+                                      decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                          boxShadow: [
+                                            BoxShadow(
+                                                color: Colors.black,
+                                                blurRadius: 2)
+                                          ]),
+                                      child: const Icon(Icons.edit),
+                                    ),
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
+                          Expanded(
+                              child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              barcode != null
+                                  ? SizedBox(
+                                      width: 170,
+                                      child: CupertinoTextField(
+                                        controller: _barcode,
+                                        readOnly: true,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 15),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                              color: const Color(0xFF94a3b8),
+                                              width: 0.5),
+                                        ),
+                                      ),
+                                    )
+                                  : Container(),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              CupertinoButton(
+                                color: Colors.orange,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                onPressed: () {
+                                  scanBarcode();
+                                },
+                                child: const Wrap(
+                                  direction: Axis.horizontal,
+                                  children: [
+                                    Icon(CupertinoIcons.barcode_viewfinder),
+                                    SizedBox(
+                                      width: 5,
+                                    ),
+                                    Text("Pindai Barcode")
+                                  ],
                                 ),
-                          GestureDetector(
-                            onTap: () async {
-                              _openDialogImage(context);
-                            },
-                            child: Container(
-                              width: 35,
-                              height: 35,
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                        color: Colors.black, blurRadius: 2)
-                                  ]),
-                              child: const Icon(Icons.edit),
-                            ),
-                          )
+                              )
+                            ],
+                          ))
                         ],
                       ),
                       const SizedBox(
@@ -325,26 +444,56 @@ class _AddProductState extends State<AddProduct> {
                           const SizedBox(
                             height: 6,
                           ),
-                          TextFormField(
+                          CupertinoTextField(
                             controller: _namaProduk,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Nama produk wajib diisi!';
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              hintText: "Masukkan nama produk",
-                              filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon:
-                                  const Icon(Icons.shopping_bag_rounded),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 0),
-                              border: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color(0xFFe2e8f0), width: 0.5),
-                                  borderRadius: BorderRadius.circular(10)),
+                            prefix: const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Icon(Icons.shopping_bag_rounded),
+                            ),
+                            placeholder: "Masukkan nama produk",
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: const Color(0xFF94a3b8), width: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text("Harga Beli",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 6,
+                          ),
+                          CupertinoTextField(
+                            controller: _hargaBeli,
+                            keyboardType: TextInputType.number,
+                            prefix: const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text("Rp."),
+                            ),
+                            placeholder: "0",
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: const Color(0xFF94a3b8), width: 0.5),
                             ),
                           ),
                         ],
@@ -366,32 +515,200 @@ class _AddProductState extends State<AddProduct> {
                           const SizedBox(
                             height: 6,
                           ),
-                          TextFormField(
-                            controller: _harga,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Harga wajib diisi!';
-                              }
-                              return null;
-                            },
+                          CupertinoTextField(
+                            controller: _hargaJual,
                             keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: "0",
-                              filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon: const Icon(Icons.price_change),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 0),
-                              border: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color(0xFFe2e8f0), width: 0.5),
-                                  borderRadius: BorderRadius.circular(10)),
+                            prefix: const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text("Rp."),
+                            ),
+                            placeholder: "0",
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: const Color(0xFF94a3b8), width: 0.5),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(
                         height: 12,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text("Kategori",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 6,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: SizedBox(
+                                      width: double.infinity,
+                                      child: DropdownMenu(
+                                        expandedInsets: const EdgeInsets.all(0),
+                                        initialSelection: _category.isNotEmpty
+                                            ? _category[0].value
+                                            : 0,
+                                        inputDecorationTheme:
+                                            InputDecorationTheme(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                        maxHeight: 50),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10),
+                                                border: OutlineInputBorder(
+                                                    borderSide:
+                                                        const BorderSide(
+                                                            color: Color(
+                                                                0xFFe2e8f0),
+                                                            width: 0.5),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10))),
+                                        onSelected: (newValue) {
+                                          setState(() {
+                                            _selectedOption = newValue;
+                                          });
+                                        },
+                                        dropdownMenuEntries: _category,
+                                      ))),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    openAddCategory();
+                                  },
+                                  icon: const Icon(
+                                    Icons.add,
+                                    size: 35,
+                                  ))
+                            ],
+                          )
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      SwitchListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 0),
+                        value: allowVarian,
+                        title: const Text("Varian"),
+                        activeColor: Colors.orange,
+                        onChanged: (value) {
+                          setState(() {
+                            allowVarian = value;
+                          });
+                        },
+                      ),
+                      allowVarian
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text("Varian",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                CupertinoTextField(
+                                  controller: _variant,
+                                  placeholder: "Masukkan varian",
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 15),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color: const Color(0xFF94a3b8),
+                                        width: 0.5),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                const Divider(
+                                  indent: 10,
+                                  endIndent: 10,
+                                ),
+                              ],
+                            )
+                          : Container(),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      SwitchListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 0),
+                        value: allowStock,
+                        title: const Text("Manajemen Stok"),
+                        activeColor: Colors.orange,
+                        onChanged: (value) {
+                          setState(() {
+                            allowStock = value;
+                          });
+                        },
+                      ),
+                      allowStock
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text("Stok",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                CupertinoTextField(
+                                  controller: _stok,
+                                  keyboardType: TextInputType.number,
+                                  placeholder: "0",
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 15),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color: const Color(0xFF94a3b8),
+                                        width: 0.5),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                const Divider(
+                                  indent: 10,
+                                  endIndent: 10,
+                                ),
+                              ],
+                            )
+                          : Container(),
+                      const SizedBox(
+                        height: 10,
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,113 +724,20 @@ class _AddProductState extends State<AddProduct> {
                           const SizedBox(
                             height: 6,
                           ),
-                          TextFormField(
+                          CupertinoTextField(
                             controller: _deskripsi,
-                            maxLines: null,
+                            placeholder: "Masukkan deskripsi",
                             keyboardType: TextInputType.multiline,
-                            decoration: InputDecoration(
-                              hintText: "Masukkan deskripsi",
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 0, horizontal: 10),
-                              border: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color(0xFFe2e8f0), width: 0.5),
-                                  borderRadius: BorderRadius.circular(10)),
+                            maxLines: 4,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: const Color(0xFF94a3b8), width: 0.5),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 12,
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text("Stok",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 6,
-                                ),
-                                TextFormField(
-                                  controller: _stok,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    hintText: '0',
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 0, horizontal: 10),
-                                    border: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                            color: Color(0xFFe2e8f0),
-                                            width: 0.5),
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text("Kategori",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 6,
-                                ),
-                                SizedBox(
-                                    width: double.infinity,
-                                    child: DropdownMenu(
-                                      expandedInsets: const EdgeInsets.all(0),
-                                      initialSelection: _category.isNotEmpty
-                                          ? _category[0].value
-                                          : 0,
-                                      inputDecorationTheme:
-                                          InputDecorationTheme(
-                                              constraints: const BoxConstraints(
-                                                  maxHeight: 50),
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 10),
-                                              border: OutlineInputBorder(
-                                                  borderSide: const BorderSide(
-                                                      color: Color(0xFFe2e8f0),
-                                                      width: 0.5),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10))),
-                                      onSelected: (newValue) {
-                                        setState(() {
-                                          _selectedOption = newValue;
-                                        });
-                                      },
-                                      dropdownMenuEntries: _category,
-                                    ))
-                              ],
-                            ),
-                          )
                         ],
                       ),
                     ],
@@ -526,18 +750,15 @@ class _AddProductState extends State<AddProduct> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: const ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _uploadToDatabase(context);
-                }
-              },
-              child: const Text("Simpan")),
+          child: CupertinoButton(
+            color: Colors.orange,
+            child: const Text("Simpan"),
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                _uploadToDatabase(context);
+              }
+            },
+          ),
         ),
       ),
     );

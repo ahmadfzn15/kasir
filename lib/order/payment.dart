@@ -183,7 +183,8 @@ class _PaymentState extends State<Payment> {
                   const SizedBox(
                     height: 6,
                   ),
-                  CheckboxListTile(
+                  SwitchListTile(
+                    activeColor: Colors.orange,
                     value: _discount,
                     title: const Text(
                       "Diskon",
@@ -191,7 +192,7 @@ class _PaymentState extends State<Payment> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _discount = value!;
+                        _discount = value;
                       });
                     },
                   ),
@@ -208,8 +209,17 @@ class _PaymentState extends State<Payment> {
                           const SizedBox(
                             height: 6,
                           ),
-                          TextField(
+                          CupertinoTextField(
                             controller: _discountValue,
+                            keyboardType: TextInputType.number,
+                            prefix: const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Icon(Icons.discount),
+                            ),
+                            suffix: const Padding(
+                              padding: EdgeInsets.only(right: 10),
+                              child: Icon(Icons.percent),
+                            ),
                             onChanged: (value) {
                               if (int.parse(value) > 0 &&
                                   int.parse(value) <= 100) {
@@ -223,19 +233,14 @@ class _PaymentState extends State<Payment> {
                                 });
                               }
                             },
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: "0",
-                              filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon: const Icon(Icons.discount),
-                              suffixIcon: const Icon(Icons.percent),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 0, horizontal: 10),
-                              border: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color(0xFFe2e8f0), width: 0.5),
-                                  borderRadius: BorderRadius.circular(10)),
+                            placeholder: "0",
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: const Color(0xFF94a3b8), width: 0.5),
                             ),
                           ),
                           const SizedBox(
@@ -247,7 +252,8 @@ class _PaymentState extends State<Payment> {
                   const SizedBox(
                     height: 6,
                   ),
-                  CheckboxListTile(
+                  SwitchListTile(
+                    activeColor: Colors.orange,
                     value: _etc,
                     title: const Text(
                       "Biaya Tambahan",
@@ -255,7 +261,7 @@ class _PaymentState extends State<Payment> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _etc = value!;
+                        _etc = value;
                       });
                     },
                   ),
@@ -273,20 +279,21 @@ class _PaymentState extends State<Payment> {
                             const SizedBox(
                               height: 6,
                             ),
-                            TextField(
+                            CupertinoTextField(
                               controller: _etcValue,
-                              onChanged: (value) {},
                               keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: "0",
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 0, horizontal: 10),
-                                border: OutlineInputBorder(
-                                    borderSide: const BorderSide(
-                                        color: Color(0xFFe2e8f0), width: 0.5),
-                                    borderRadius: BorderRadius.circular(10)),
+                              prefix: const Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Text("Rp."),
+                              ),
+                              placeholder: "0",
+                              padding: const EdgeInsets.only(
+                                  right: 10, top: 15, bottom: 15),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: const Color(0xFF94a3b8), width: 0.5),
                               ),
                             ),
                             const SizedBox(
@@ -300,7 +307,7 @@ class _PaymentState extends State<Payment> {
                     height: 6,
                   ),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Expanded(
                           flex: 2,
@@ -329,8 +336,13 @@ class _PaymentState extends State<Payment> {
                               const SizedBox(
                                 height: 6,
                               ),
-                              TextField(
+                              CupertinoTextField(
                                 controller: _cash,
+                                keyboardType: TextInputType.number,
+                                prefix: const Padding(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Text("Rp."),
+                                ),
                                 readOnly: _pas,
                                 onChanged: (value) {
                                   if (int.parse(value) >= widget.total) {
@@ -352,57 +364,19 @@ class _PaymentState extends State<Payment> {
                                     _cashback.clear();
                                   }
                                 },
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  hintText: "0",
-                                  errorText: _hargaKurang ? "Uang kurang" : "",
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  prefixText: "Rp.",
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 0, horizontal: 10),
-                                  border: OutlineInputBorder(
-                                      borderSide: const BorderSide(
-                                          color: Color(0xFFe2e8f0), width: 0.5),
-                                      borderRadius: BorderRadius.circular(10)),
+                                placeholder: "0",
+                                padding: const EdgeInsets.only(
+                                    right: 10, top: 15, bottom: 15),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: const Color(0xFF94a3b8),
+                                      width: 0.5),
                                 ),
-                              )
+                              ),
                             ],
                           )),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text("Uang Kembalian",
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 6,
-                      ),
-                      TextField(
-                        controller: _cashback,
-                        enabled: false,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          prefixText: "Rp.",
-                          hintText: "0",
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(
@@ -421,20 +395,18 @@ class _PaymentState extends State<Payment> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
+                      CupertinoTextField(
                         controller: _ket,
-                        maxLines: null,
+                        placeholder: "Masukkan keterangan",
                         keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          helperText: "Opsional",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        maxLines: 4,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFF94a3b8), width: 0.5),
                         ),
                       ),
                     ],

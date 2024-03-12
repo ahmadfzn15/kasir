@@ -37,7 +37,7 @@ class _EditProductState extends State<EditProduct> {
     super.initState();
 
     _namaProduk.value = TextEditingValue(text: widget.product.namaProduk);
-    _harga.value = TextEditingValue(text: widget.product.harga.toString());
+    _harga.value = TextEditingValue(text: widget.product.harga_jual.toString());
     _deskripsi.value = TextEditingValue(text: widget.product.deskripsi ?? "");
     _stok.value = TextEditingValue(text: widget.product.stok.toString());
     _kategori.value =

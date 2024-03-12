@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app/components/popup.dart';
 import 'package:app/layout.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,6 +15,27 @@ class Login extends StatefulWidget {
   @override
   // ignore: library_private_types_in_public_api
   _LoginState createState() => _LoginState();
+}
+
+Route _goPage() {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => const Layout(),
+    transitionDuration: const Duration(milliseconds: 500),
+    reverseTransitionDuration: const Duration(milliseconds: 500),
+    opaque: false,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
 }
 
 class _LoginState extends State<Login> {
@@ -44,14 +66,9 @@ class _LoginState extends State<Login> {
           .write(key: 'role', value: result['data']['role']);
 
       Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return const Layout();
-          },
-        ),
-      );
+          // ignore: use_build_context_synchronously
+          context,
+          _goPage());
       // ignore: use_build_context_synchronously
       Popup().show(context, "Login berhasil.", true);
     } else {
@@ -101,26 +118,20 @@ class _LoginState extends State<Login> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
+                      CupertinoTextField(
                         controller: _usernameController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Username wajib diisi!';
-                          }
-                          return null;
-                        },
-                        style: const TextStyle(fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: "Masukkan username anda",
-                          filled: true,
-                          fillColor: Colors.white,
-                          prefixIcon: const Icon(Icons.person),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 0),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.person),
+                        ),
+                        placeholder: "Masukkan username anda",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFF94a3b8), width: 0.5),
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -136,34 +147,33 @@ class _LoginState extends State<Login> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
+                      CupertinoTextField(
                         controller: _passwordController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Kata sandi wajib diisi!';
-                          }
-                          return null;
-                        },
-                        obscureText: !showPwd,
-                        style: const TextStyle(fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: "Masukkan kata sandi anda",
-                          filled: true,
-                          fillColor: Colors.white,
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: GestureDetector(
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.lock),
+                        ),
+                        suffix: Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: GestureDetector(
                               onTap: () {
                                 setState(() {
                                   showPwd = !showPwd;
                                 });
                               },
-                              child: const Icon(Icons.remove_red_eye)),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 0),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                              child: showPwd
+                                  ? const Icon(CupertinoIcons.eye_fill)
+                                  : const Icon(CupertinoIcons.eye_slash_fill)),
+                        ),
+                        placeholder: "Masukkan kata sandi anda",
+                        obscureText: !showPwd,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFF94a3b8), width: 0.5),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -182,22 +192,14 @@ class _LoginState extends State<Login> {
                       SizedBox(
                           width: double.infinity,
                           height: 50,
-                          child: FilledButton(
+                          child: CupertinoButton(
                             onPressed: () => loading
                                 ? null
                                 : {
                                     if (_formKey.currentState!.validate())
                                       _loginUser(context)
                                   },
-                            style: const ButtonStyle(
-                                shape: MaterialStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(5)))),
-                                backgroundColor:
-                                    MaterialStatePropertyAll(Colors.deepOrange),
-                                foregroundColor:
-                                    MaterialStatePropertyAll(Colors.white)),
+                            color: Colors.orange,
                             child: const Text("Masuk",
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold)),

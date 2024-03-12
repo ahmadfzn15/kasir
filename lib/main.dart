@@ -1,14 +1,19 @@
 import 'package:app/auth/auth.dart';
 import 'package:app/layout.dart';
 import 'package:app/etc/startup.dart';
-import 'package:app/order/struk.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+late List<CameraDescription> cameras;
+
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  cameras = await availableCameras();
   runApp(const MainApp());
 }
 

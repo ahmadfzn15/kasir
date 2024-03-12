@@ -261,6 +261,11 @@ class _EmployeeState extends State<Employee> {
                                     },
                                     icon: const Icon(Icons.menu)),
                               ),
+                              if (index != employee.length - 1)
+                                const Divider(
+                                  indent: 15,
+                                  endIndent: 15,
+                                )
                             ],
                           );
                         },

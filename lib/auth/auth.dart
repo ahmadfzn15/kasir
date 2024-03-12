@@ -1,5 +1,6 @@
 import 'package:app/auth/login.dart';
 import 'package:app/auth/register.dart';
+import 'package:app/auth/register_toko.dart';
 import 'package:flutter/material.dart';
 
 class Auth extends StatefulWidget {
@@ -24,6 +25,9 @@ class _AuthState extends State<Auth> {
           children: [
             Login(pageController: _pageController),
             Register(
+              pageController: _pageController,
+            ),
+            RegisterToko(
               pageController: _pageController,
             )
           ]),

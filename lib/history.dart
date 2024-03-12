@@ -267,17 +267,18 @@ class _HistoryState extends State<History> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(10),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: history.length,
-                      itemBuilder: (context, index) {
-                        return Wrap(
-                          children: [
-                            Card(
-                              clipBehavior: Clip.antiAlias,
-                              surfaceTintColor: Colors.white,
-                              elevation: 4,
-                              child: Dismissible(
+                    child: Card(
+                      surfaceTintColor: Colors.white,
+                      clipBehavior: Clip.antiAlias,
+                      elevation: 4,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        itemCount: history.length,
+                        itemBuilder: (context, index) {
+                          return Wrap(
+                            children: [
+                              Dismissible(
                                   key: Key(history[index]['id'].toString()),
                                   direction: DismissDirection.endToStart,
                                   confirmDismiss: (direction) async {
@@ -341,10 +342,11 @@ class _HistoryState extends State<History> {
                                     subtitle: Text(
                                         history[index]['metode_pembayaran']),
                                   )),
-                            ),
-                          ],
-                        );
-                      },
+                              if (index != history.length - 1) const Divider()
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
                 )

@@ -1,4 +1,5 @@
-import 'package:app/etc/comming_soon.dart';
+import 'package:app/main.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class Help extends StatefulWidget {
@@ -10,37 +11,40 @@ class Help extends StatefulWidget {
 }
 
 class _HelpState extends State<Help> {
-  Future<void> _refresh() async {
-    await Future.delayed(const Duration(seconds: 1));
+  late CameraController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = CameraController(cameras[0], ResolutionPreset.max);
+    controller.initialize().then((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    }).catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            break;
+          default:
+            break;
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-            icon: const Icon(Icons.menu)),
-        title: const Padding(
-          padding: EdgeInsets.only(right: 10),
-          child: Text(
-            "Pengaturan",
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-          ),
-        ),
-        centerTitle: true,
-        titleSpacing: 0,
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
-      ),
-      body: RefreshIndicator(
-        onRefresh: () {
-          return _refresh();
-        },
-        child: const CommingSoon(),
-      ),
-    );
+    if (!controller.value.isInitialized) {
+      return Container();
+    }
+    return CameraPreview(controller);
   }
 }

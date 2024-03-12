@@ -2,10 +2,14 @@ class Products {
   int id;
   String? foto;
   String namaProduk;
+  String? barcode;
   String? deskripsi;
   // ignore: non_constant_identifier_names
   int id_kategori;
-  int harga;
+  // ignore: non_constant_identifier_names
+  int harga_beli;
+  // ignore: non_constant_identifier_names
+  int harga_jual;
   int? stok;
   bool selected;
 
@@ -13,7 +17,11 @@ class Products {
       {required this.id,
       required this.foto,
       required this.namaProduk,
-      required this.harga,
+      this.barcode,
+      // ignore: non_constant_identifier_names
+      required this.harga_beli,
+      // ignore: non_constant_identifier_names
+      required this.harga_jual,
       this.deskripsi = "",
       // ignore: non_constant_identifier_names
       required this.id_kategori,
@@ -25,7 +33,9 @@ class Products {
       id: json['id'],
       foto: json['foto'],
       namaProduk: json['namaProduk'],
-      harga: json['harga'],
+      barcode: json['barcode'],
+      harga_beli: json['harga_beli'],
+      harga_jual: json['harga_jual'],
       deskripsi: json['deskripsi'],
       id_kategori: json['id_kategori'],
       stok: json['stok'],
