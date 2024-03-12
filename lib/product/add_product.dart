@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:vibration/vibration.dart';
 
 class AddProduct extends StatefulWidget {
   const AddProduct({super.key});
@@ -295,6 +296,14 @@ class _AddProductState extends State<AddProduct> {
 
   void scanBarcode() async {
     final res = await BarcodeScanner.scan();
+    bool? hasVibration = await Vibration.hasVibrator();
+    if (hasVibration!) {
+      Vibration.vibrate(
+        duration: 100,
+        amplitude: 100,
+      );
+    }
+
     setState(() {
       barcode = res.rawContent;
       _barcode.value = TextEditingValue(text: res.rawContent);
