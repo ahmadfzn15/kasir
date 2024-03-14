@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:app/components/popup.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -101,24 +102,20 @@ class _EditCategoryState extends State<EditCategory> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
+                      CupertinoTextField(
                         controller: _category,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Nama kategori wajib diisi!';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          hintText: "Masukkan nama kategori",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.shopping_bag_rounded),
+                        ),
+                        placeholder: "Masukkan nama kategori",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                     ],

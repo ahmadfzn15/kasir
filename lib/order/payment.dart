@@ -240,7 +240,7 @@ class _PaymentState extends State<Payment> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: const Color(0xFF94a3b8), width: 0.5),
+                                  color: const Color(0xFFcbd5e1), width: 0.5),
                             ),
                           ),
                           const SizedBox(
@@ -293,7 +293,7 @@ class _PaymentState extends State<Payment> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: const Color(0xFF94a3b8), width: 0.5),
+                                    color: const Color(0xFFcbd5e1), width: 0.5),
                               ),
                             ),
                             const SizedBox(
@@ -371,7 +371,7 @@ class _PaymentState extends State<Payment> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                      color: const Color(0xFF94a3b8),
+                                      color: const Color(0xFFcbd5e1),
                                       width: 0.5),
                                 ),
                               ),
@@ -406,7 +406,7 @@ class _PaymentState extends State<Payment> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                              color: const Color(0xFF94a3b8), width: 0.5),
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                     ],

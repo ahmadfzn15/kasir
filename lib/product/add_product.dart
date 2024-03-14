@@ -271,7 +271,7 @@ class _AddProductState extends State<AddProduct> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   border:
-                      Border.all(color: const Color(0xFFe2e8f0), width: 0.5),
+                      Border.all(color: const Color(0xFFcbd5e1), width: 0.5),
                 ),
               ),
               const SizedBox(
@@ -388,6 +388,9 @@ class _AddProductState extends State<AddProduct> {
                               )
                             ],
                           ),
+                          const SizedBox(
+                            width: 10,
+                          ),
                           Expanded(
                               child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -398,14 +401,13 @@ class _AddProductState extends State<AddProduct> {
                                       child: CupertinoTextField(
                                         controller: _barcode,
                                         readOnly: true,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 15),
+                                        padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
                                           borderRadius:
                                               BorderRadius.circular(10),
                                           border: Border.all(
-                                              color: const Color(0xFF94a3b8),
+                                              color: const Color(0xFFcbd5e1),
                                               width: 0.5),
                                         ),
                                       ),
@@ -466,7 +468,7 @@ class _AddProductState extends State<AddProduct> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: const Color(0xFF94a3b8), width: 0.5),
+                                  color: const Color(0xFFcbd5e1), width: 0.5),
                             ),
                           ),
                         ],
@@ -502,7 +504,7 @@ class _AddProductState extends State<AddProduct> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: const Color(0xFF94a3b8), width: 0.5),
+                                  color: const Color(0xFFcbd5e1), width: 0.5),
                             ),
                           ),
                         ],
@@ -538,7 +540,7 @@ class _AddProductState extends State<AddProduct> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: const Color(0xFF94a3b8), width: 0.5),
+                                  color: const Color(0xFFcbd5e1), width: 0.5),
                             ),
                           ),
                         ],
@@ -582,7 +584,7 @@ class _AddProductState extends State<AddProduct> {
                                                     borderSide:
                                                         const BorderSide(
                                                             color: Color(
-                                                                0xFFe2e8f0),
+                                                                0xFFcbd5e1),
                                                             width: 0.5),
                                                     borderRadius:
                                                         BorderRadius.circular(
@@ -648,7 +650,7 @@ class _AddProductState extends State<AddProduct> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                        color: const Color(0xFF94a3b8),
+                                        color: const Color(0xFFcbd5e1),
                                         width: 0.5),
                                   ),
                                 ),
@@ -702,7 +704,7 @@ class _AddProductState extends State<AddProduct> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                        color: const Color(0xFF94a3b8),
+                                        color: const Color(0xFFcbd5e1),
                                         width: 0.5),
                                   ),
                                 ),
@@ -744,7 +746,7 @@ class _AddProductState extends State<AddProduct> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: const Color(0xFF94a3b8), width: 0.5),
+                                  color: const Color(0xFFcbd5e1), width: 0.5),
                             ),
                           ),
                         ],

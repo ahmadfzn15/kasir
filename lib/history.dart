@@ -338,7 +338,11 @@ class _HistoryState extends State<History> {
                                         borderRadius:
                                             BorderRadius.circular(10)),
                                     title: Text(
-                                        "Rp.${history[index]['total_pembayaran'].toString()}"),
+                                      "Rp.${history[index]['total_pembayaran'].toString()}",
+                                      style: const TextStyle(
+                                          color: Colors.deepOrange,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                                     subtitle: Text(
                                         history[index]['metode_pembayaran']),
                                   )),

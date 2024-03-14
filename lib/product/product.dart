@@ -115,8 +115,10 @@ Route _toCheckoutPage(List order) {
 }
 
 class _ProductState extends State<Product> {
+  final TextEditingController _search = TextEditingController();
   List order = [];
   List<Products> products = [];
+  List<Products> searchResult = [];
   List<dynamic> category = [];
   Map<String, dynamic> user = {};
   String url = dotenv.env['API_URL']!;
@@ -170,6 +172,15 @@ class _ProductState extends State<Product> {
     });
   }
 
+  void searchProduct(String value) {
+    setState(() {
+      searchResult = products
+          .where((element) =>
+              element.namaProduk.toLowerCase().contains(value.toLowerCase()))
+          .toList();
+    });
+  }
+
   Future<void> fetchDataProduct() async {
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
@@ -190,6 +201,9 @@ class _ProductState extends State<Product> {
         products = (res['data'] as List<dynamic>)
             .map((data) => Products.fromJson({...data, "selected": false}))
             .toList();
+        setState(() {
+          searchResult = products;
+        });
       } else {
         throw Exception(res['message']);
       }
@@ -223,13 +237,12 @@ class _ProductState extends State<Product> {
     await fetchDataCategory();
   }
 
-  void _addOrder(BuildContext context, int id) {
+  void _addOrder(BuildContext context, Products product) {
     setState(() {
       order.add({
-        "id": id,
-        "idProduk": products[id].id,
-        "namaProduk": products[id].namaProduk,
-        "harga": products[id].harga_jual,
+        "id": product.id,
+        "namaProduk": product.namaProduk,
+        "harga": product.harga_jual,
         "qty": 1
       });
     });
@@ -525,6 +538,7 @@ class _ProductState extends State<Product> {
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
       // ignore: use_build_context_synchronously
       Popup().show(context, res['message'], false);
@@ -587,24 +601,25 @@ class _ProductState extends State<Product> {
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: SizedBox(
                   height: 45,
-                  child: SearchAnchor.bar(
-                    barLeading: const Icon(
-                      Icons.search,
-                      color: Colors.grey,
-                      size: 30,
+                  child: CupertinoTextField(
+                    controller: _search,
+                    prefix: const Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Icon(
+                        Icons.search,
+                        color: Colors.deepOrange,
+                      ),
                     ),
-                    barBackgroundColor:
-                        const MaterialStatePropertyAll(Colors.white),
-                    barElevation: const MaterialStatePropertyAll(0),
-                    barHintText: "Search product",
-                    suggestionsBuilder: (context, controller) {
-                      return [
-                        const Center(
-                          child: Text('No search history.',
-                              style: TextStyle(color: Colors.grey)),
-                        )
-                      ];
+                    onChanged: (value) {
+                      searchProduct(value);
                     },
+                    placeholder: "Cari Produk",
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
                   ),
                 ),
               ),
@@ -735,7 +750,7 @@ class _ProductState extends State<Product> {
                                   ? ListView.builder(
                                       padding:
                                           const EdgeInsets.only(bottom: 80),
-                                      itemCount: products.length,
+                                      itemCount: searchResult.length,
                                       shrinkWrap: true,
                                       itemBuilder: (context, index) {
                                         return GestureDetector(
@@ -751,7 +766,7 @@ class _ProductState extends State<Product> {
                                                         horizontal: 10,
                                                         vertical: 5),
                                                 child: Dismissible(
-                                                  key: Key(products[index]
+                                                  key: Key(searchResult[index]
                                                       .id
                                                       .toString()),
                                                   direction: DismissDirection
@@ -789,7 +804,7 @@ class _ProductState extends State<Product> {
                                                               Navigator.of(
                                                                       context)
                                                                   .push(_toEditProduct(
-                                                                      products[
+                                                                      searchResult[
                                                                           index]));
                                                             },
                                                             icon: const Icon(
@@ -805,7 +820,8 @@ class _ProductState extends State<Product> {
                                                             onPressed: () {
                                                               openDeleteProduct(
                                                                   context, [
-                                                                products[index]
+                                                                searchResult[
+                                                                        index]
                                                                     .id
                                                               ]);
                                                             },
@@ -838,11 +854,12 @@ class _ProductState extends State<Product> {
                                                                     .circular(
                                                                         10),
                                                           ),
-                                                          child: products[index]
+                                                          child: searchResult[
+                                                                          index]
                                                                       .foto !=
                                                                   null
                                                               ? Image.network(
-                                                                  "$url/storage/img/${products[index].foto}",
+                                                                  "$url/storage/img/${searchResult[index].foto}",
                                                                   fit: BoxFit
                                                                       .cover,
                                                                 )
@@ -873,7 +890,7 @@ class _ProductState extends State<Product> {
                                                                             .start,
                                                                     children: [
                                                                       Text(
-                                                                        products[index]
+                                                                        searchResult[index]
                                                                             .namaProduk,
                                                                         style: const TextStyle(
                                                                             fontSize:
@@ -883,7 +900,7 @@ class _ProductState extends State<Product> {
                                                                             overflow: TextOverflow.ellipsis),
                                                                       ),
                                                                       Text(
-                                                                        "Rp.${products[index].harga_jual}",
+                                                                        "Rp.${searchResult[index].harga_jual}",
                                                                         style: const TextStyle(
                                                                             fontSize:
                                                                                 12),
@@ -897,7 +914,7 @@ class _ProductState extends State<Product> {
                                                                           onTap:
                                                                               () {
                                                                             _openOptionProduct(context,
-                                                                                products[index]);
+                                                                                searchResult[index]);
                                                                           },
                                                                           child:
                                                                               const Icon(Icons.menu),
@@ -912,23 +929,23 @@ class _ProductState extends State<Product> {
                                                                 children: [
                                                                   order.isNotEmpty &&
                                                                           order
-                                                                              .where((element) => element['id'] == index)
+                                                                              .where((element) => element['id'] == products[index].id)
                                                                               .isNotEmpty
                                                                       ? Row(
                                                                           children: [
                                                                             IconButton(
                                                                               onPressed: () {
-                                                                                _decrement(context, index);
+                                                                                _decrement(context, products[index].id);
                                                                               },
                                                                               icon: const Icon(Icons.remove),
                                                                             ),
                                                                             Text(
-                                                                              order.firstWhere((element) => element['id'] == index)['qty'].toString(),
+                                                                              order.firstWhere((element) => element['id'] == products[index].id)['qty'].toString(),
                                                                               style: const TextStyle(fontSize: 20),
                                                                             ),
                                                                             IconButton(
                                                                               onPressed: () {
-                                                                                _increment(context, index);
+                                                                                _increment(context, products[index].id);
                                                                               },
                                                                               icon: const Icon(Icons.add),
                                                                             ),
@@ -944,7 +961,7 @@ class _ProductState extends State<Product> {
                                                                           onPressed:
                                                                               () {
                                                                             _addOrder(context,
-                                                                                index);
+                                                                                searchResult[index]);
                                                                           },
                                                                           child:
                                                                               const Text("Tambah"),
@@ -963,7 +980,7 @@ class _ProductState extends State<Product> {
                                       },
                                     )
                                   : GridView.builder(
-                                      itemCount: products.length,
+                                      itemCount: searchResult.length,
                                       shrinkWrap: true,
                                       padding: const EdgeInsets.only(
                                           left: 10, right: 10, bottom: 80),
@@ -978,31 +995,34 @@ class _ProductState extends State<Product> {
                                           onLongPress: () {
                                             setState(() {
                                               vibrateDevices();
-                                              products[index].selected = true;
+                                              searchResult[index].selected =
+                                                  true;
                                               _select = true;
-                                              if (products.every((element) =>
-                                                  element.selected)) {
+                                              if (searchResult.every(
+                                                  (element) =>
+                                                      element.selected)) {
                                                 _selectAll = true;
                                               }
                                             });
                                             _openOptionProduct(
-                                                context, products[index]);
+                                                context, searchResult[index]);
                                           },
                                           onTap: () {
-                                            if (products.any((element) =>
+                                            if (searchResult.any((element) =>
                                                     element.selected) ||
                                                 _select) {
-                                              if (products[index].selected) {
+                                              if (searchResult[index]
+                                                  .selected) {
                                                 setState(() {
-                                                  products[index].selected =
+                                                  searchResult[index].selected =
                                                       false;
                                                   _selectAll = false;
                                                 });
                                               } else {
                                                 setState(() {
-                                                  products[index].selected =
+                                                  searchResult[index].selected =
                                                       true;
-                                                  if (products.every(
+                                                  if (searchResult.every(
                                                       (element) =>
                                                           element.selected)) {
                                                     _selectAll = true;
@@ -1013,7 +1033,7 @@ class _ProductState extends State<Product> {
                                           },
                                           child: Card(
                                             surfaceTintColor:
-                                                products[index].selected
+                                                searchResult[index].selected
                                                     ? const Color.fromARGB(
                                                         96, 197, 30, 30)
                                                     : Colors.white,
@@ -1031,19 +1051,20 @@ class _ProductState extends State<Product> {
                                                   SizedBox(
                                                       height: 100,
                                                       child: Center(
-                                                        child: products[index]
-                                                                    .foto !=
-                                                                null
-                                                            ? Image.network(
-                                                                "$url/storage/img/${products[index].foto}",
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                              )
-                                                            : Image.asset(
-                                                                "assets/img/food.png",
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                              ),
+                                                        child:
+                                                            searchResult[index]
+                                                                        .foto !=
+                                                                    null
+                                                                ? Image.network(
+                                                                    "$url/storage/img/${searchResult[index].foto}",
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  )
+                                                                : Image.asset(
+                                                                    "assets/img/food.png",
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  ),
                                                       )),
                                                   const SizedBox(
                                                     height: 10,
@@ -1053,10 +1074,10 @@ class _ProductState extends State<Product> {
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      Text(products[index]
+                                                      Text(searchResult[index]
                                                           .namaProduk),
                                                       Text(
-                                                        "Rp.${products[index].harga_jual.toString()}",
+                                                        "Rp.${searchResult[index].harga_jual.toString()}",
                                                         style: const TextStyle(
                                                             fontSize: 15,
                                                             fontWeight:
@@ -1077,7 +1098,9 @@ class _ProductState extends State<Product> {
                                                                   .where((element) =>
                                                                       element[
                                                                           'id'] ==
-                                                                      index)
+                                                                      searchResult[
+                                                                              index]
+                                                                          .id)
                                                                   .isNotEmpty
                                                           ? Expanded(
                                                               child: Row(
@@ -1090,7 +1113,8 @@ class _ProductState extends State<Product> {
                                                                       () {
                                                                     _decrement(
                                                                         context,
-                                                                        index);
+                                                                        searchResult[index]
+                                                                            .id);
                                                                   },
                                                                   icon: const Icon(
                                                                       Icons
@@ -1098,10 +1122,11 @@ class _ProductState extends State<Product> {
                                                                 ),
                                                                 Text(
                                                                   order
-                                                                      .firstWhere(
-                                                                          (element) =>
-                                                                              element['id'] ==
-                                                                              index)[
+                                                                      .firstWhere((element) =>
+                                                                          element[
+                                                                              'id'] ==
+                                                                          searchResult[index]
+                                                                              .id)[
                                                                           'qty']
                                                                       .toString(),
                                                                   style: const TextStyle(
@@ -1113,7 +1138,8 @@ class _ProductState extends State<Product> {
                                                                       () {
                                                                     _increment(
                                                                         context,
-                                                                        index);
+                                                                        searchResult[index]
+                                                                            .id);
                                                                   },
                                                                   icon: const Icon(
                                                                       Icons
@@ -1137,11 +1163,11 @@ class _ProductState extends State<Product> {
                                                                               .white)),
                                                                       onPressed:
                                                                           () {
-                                                                        if (!products[index]
+                                                                        if (!searchResult[index]
                                                                             .selected) {
                                                                           _addOrder(
                                                                               context,
-                                                                              index);
+                                                                              searchResult[index]);
                                                                         }
                                                                         return;
                                                                       },

@@ -80,7 +80,7 @@ class _RegisterState extends State<Register> {
                       children: [
                         Text("Username",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold)),
                       ],
                     ),
@@ -109,7 +109,7 @@ class _RegisterState extends State<Register> {
                       children: [
                         Text("Kata Sandi",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold)),
                       ],
                     ),
@@ -151,7 +151,7 @@ class _RegisterState extends State<Register> {
                       children: [
                         Text("Ulang Kata Sandi",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold)),
                       ],
                     ),
@@ -211,7 +211,7 @@ class _RegisterState extends State<Register> {
                       children: [
                         const Text("Sudah punya akun? ",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold)),
                         GestureDetector(
                           onTap: () {
@@ -222,7 +222,7 @@ class _RegisterState extends State<Register> {
                           child: const Text(
                             "Masuk",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold),
                           ),
                         )

@@ -21,6 +21,8 @@ class _AddEmployeeState extends State<AddEmployee> {
   final TextEditingController _noTlp = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _repeatPassword = TextEditingController();
+  bool showPwd = false;
+  bool showRepeatPwd = false;
   bool loading = false;
 
   Future<void> _uploadToDatabase(BuildContext context) async {
@@ -84,24 +86,20 @@ class _AddEmployeeState extends State<AddEmployee> {
                         const SizedBox(
                           height: 6,
                         ),
-                        TextFormField(
+                        CupertinoTextField(
                           controller: _username,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Username wajib diisi!';
-                            }
-                            return null;
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Masukkan username karyawan",
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 10),
-                            border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFe2e8f0), width: 0.5),
-                                borderRadius: BorderRadius.circular(10)),
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Icon(Icons.person),
+                          ),
+                          placeholder: "Masukkan username",
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFcbd5e1), width: 0.5),
                           ),
                         ),
                         const SizedBox(
@@ -117,26 +115,21 @@ class _AddEmployeeState extends State<AddEmployee> {
                         const SizedBox(
                           height: 6,
                         ),
-                        TextFormField(
+                        CupertinoTextField(
                           controller: _email,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email wajib diisi!';
-                            }
-                            return null;
-                          },
-                          maxLines: null,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: "Masukkan email",
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 10),
-                            border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFe2e8f0), width: 0.5),
-                                borderRadius: BorderRadius.circular(10)),
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Icon(Icons.email),
+                          ),
+                          placeholder: "Masukkan alamat email",
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFcbd5e1), width: 0.5),
                           ),
                         ),
                         const SizedBox(
@@ -152,19 +145,21 @@ class _AddEmployeeState extends State<AddEmployee> {
                         const SizedBox(
                           height: 6,
                         ),
-                        TextFormField(
+                        CupertinoTextField(
                           controller: _noTlp,
                           keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            hintText: "Masukkan nomor telepon",
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 10),
-                            border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFe2e8f0), width: 0.5),
-                                borderRadius: BorderRadius.circular(10)),
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Icon(Icons.phone),
+                          ),
+                          placeholder: "Masukkan nomor telepon",
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFcbd5e1), width: 0.5),
                           ),
                         ),
                         const SizedBox(
@@ -180,26 +175,34 @@ class _AddEmployeeState extends State<AddEmployee> {
                         const SizedBox(
                           height: 6,
                         ),
-                        TextFormField(
+                        CupertinoTextField(
                           controller: _password,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Kata sandi wajib diisi!';
-                            }
-                            return null;
-                          },
                           obscureText: true,
-                          decoration: InputDecoration(
-                            hintText: "Masukkan kata sandi",
-                            filled: true,
-                            fillColor: Colors.white,
-                            suffixIcon: const Icon(CupertinoIcons.eye),
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 10),
-                            border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFe2e8f0), width: 0.5),
-                                borderRadius: BorderRadius.circular(10)),
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Icon(Icons.lock),
+                          ),
+                          suffix: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    showPwd = !showPwd;
+                                  });
+                                },
+                                child: showPwd
+                                    ? const Icon(CupertinoIcons.eye_fill)
+                                    : const Icon(
+                                        CupertinoIcons.eye_slash_fill)),
+                          ),
+                          placeholder: "Masukkan kata sandi",
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFcbd5e1), width: 0.5),
                           ),
                         ),
                         const SizedBox(
@@ -215,26 +218,34 @@ class _AddEmployeeState extends State<AddEmployee> {
                         const SizedBox(
                           height: 6,
                         ),
-                        TextFormField(
+                        CupertinoTextField(
                           controller: _repeatPassword,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Kata sandi wajib diisi!';
-                            }
-                            return null;
-                          },
                           obscureText: true,
-                          decoration: InputDecoration(
-                            hintText: "Masukkan ulang kata sandi",
-                            filled: true,
-                            fillColor: Colors.white,
-                            suffixIcon: const Icon(CupertinoIcons.eye),
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 10),
-                            border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFe2e8f0), width: 0.5),
-                                borderRadius: BorderRadius.circular(10)),
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Icon(Icons.lock),
+                          ),
+                          suffix: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    showRepeatPwd = !showRepeatPwd;
+                                  });
+                                },
+                                child: showRepeatPwd
+                                    ? const Icon(CupertinoIcons.eye_fill)
+                                    : const Icon(
+                                        CupertinoIcons.eye_slash_fill)),
+                          ),
+                          placeholder: "Masukkan ulang kata sandi",
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFcbd5e1), width: 0.5),
                           ),
                         ),
                       ],

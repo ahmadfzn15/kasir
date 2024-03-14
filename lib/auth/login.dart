@@ -111,7 +111,7 @@ class _LoginState extends State<Login> {
                         children: [
                           Text("Username",
                               style: TextStyle(
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFFcbd5e1),
                                   fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -140,7 +140,7 @@ class _LoginState extends State<Login> {
                         children: [
                           Text("Kata sandi",
                               style: TextStyle(
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFFcbd5e1),
                                   fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -183,7 +183,7 @@ class _LoginState extends State<Login> {
                           Text(
                             "Lupa kata sandi?",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -213,7 +213,7 @@ class _LoginState extends State<Login> {
                           const Text(
                             "Belum punya akun? ",
                             style: TextStyle(
-                                color: Color(0xFF475569),
+                                color: Color(0xFFcbd5e1),
                                 fontWeight: FontWeight.bold),
                           ),
                           GestureDetector(
@@ -225,7 +225,7 @@ class _LoginState extends State<Login> {
                             child: const Text(
                               "Daftar",
                               style: TextStyle(
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFFcbd5e1),
                                   fontWeight: FontWeight.bold),
                             ),
                           )
