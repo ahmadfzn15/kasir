@@ -1,10 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,10 +20,12 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  final TextEditingController _username = TextEditingController();
-  final TextEditingController _email = TextEditingController();
-  final TextEditingController _noTlp = TextEditingController();
-  XFile? _image = XFile("");
+  final TextEditingController _username = TextEditingController(text: "");
+  final TextEditingController _email = TextEditingController(text: "");
+  final TextEditingController _noTlp = TextEditingController(text: "");
+  XFile? _image;
+  String? _img;
+  String url = dotenv.env['API_URL']!;
 
   @override
   void initState() {
@@ -40,7 +42,8 @@ class _ProfileState extends State<Profile> {
   Future<void> getUser() async {
     Map<String, dynamic> res = await AuthUser().getCurrentUser();
 
-    _username.value = TextEditingValue(text: res['username']);
+    _img = res['foto'];
+    _username.value = TextEditingValue(text: res['username'] ?? "");
     _email.value = TextEditingValue(text: res['email'] ?? "");
     _noTlp.value = TextEditingValue(text: res['no_tlp'] ?? "");
   }
@@ -194,26 +197,29 @@ class _ProfileState extends State<Profile> {
 
   Future<void> updateData() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
-    var request = http.MultipartRequest(
-        "put", Uri.parse("${dotenv.env['API_URL']!}/api/user"));
-    request.files.add(await http.MultipartFile.fromPath('foto', _image!.path));
-    request.fields['id'] = id!;
+    var request =
+        http.MultipartRequest("PUT", Uri.parse("$url/api/user/update"));
+    if (_image != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('foto', _image!.path));
+    }
     request.fields['username'] = _username.text;
     request.fields['email'] = _email.text;
     request.fields['no_tlp'] = _noTlp.text;
     request.headers['Content-Type'] = "application/json";
     request.headers['Authorization'] = "Bearer $token";
-    var res = await request.send();
+    var streamedResponse = await request.send();
+    var res = await http.Response.fromStream(streamedResponse);
+    var message = jsonDecode(res.body)['message'];
 
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
-      Popup().show(context, 'Profil berhasil diupdate', true);
+      Popup().show(context, message, true);
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
       // ignore: use_build_context_synchronously
-      Popup().show(context, 'Profil gagal diupdate', false);
+      Popup().show(context, message, false);
     }
   }
 
@@ -241,40 +247,52 @@ class _ProfileState extends State<Profile> {
                   alignment: Alignment.bottomRight,
                   children: [
                     _image != null
-                        ? Container(
+                        ? _img != null || _image == null
+                            ? Container(
+                                width: 150,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(75),
+                                    border: Border.all(color: Colors.grey)),
+                                clipBehavior: Clip.antiAlias,
+                                child: Image.network("$url/storage/img/$_img",
+                                    fit: BoxFit.cover),
+                              )
+                            : Container(
+                                width: 150,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(75),
+                                    border: Border.all(color: Colors.grey)),
+                                clipBehavior: Clip.antiAlias,
+                                child: Image.file(File(_image!.path),
+                                    fit: BoxFit.cover),
+                              )
+                        : Container(
                             width: 150,
                             height: 150,
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(75),
                                 border: Border.all(color: Colors.grey)),
                             clipBehavior: Clip.antiAlias,
-                            child: Image.file(File(_image!.path),
+                            child: Image.asset("assets/img/user.png",
                                 fit: BoxFit.cover),
-                          )
-                        : Container(
-                            width: 150,
-                            height: 150,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(75),
-                                border: Border.all(color: Colors.grey),
-                                color: Colors.grey),
-                            clipBehavior: Clip.antiAlias,
                           ),
                     GestureDetector(
                       onTap: () async {
                         _openDialogImage(context);
                       },
                       child: Container(
-                        width: 35,
-                        height: 35,
+                        width: 40,
+                        height: 40,
                         margin: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white,
                             boxShadow: [
-                              BoxShadow(color: Colors.black, blurRadius: 2)
+                              BoxShadow(color: Colors.grey, blurRadius: 1)
                             ]),
-                        child: const Icon(Icons.edit),
+                        child: const Icon(Icons.add_photo_alternate_rounded),
                       ),
                     )
                   ],
@@ -297,18 +315,20 @@ class _ProfileState extends State<Profile> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextField(
+                      CupertinoTextField(
                         controller: _username,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan username",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        placeholder: "Masukkan username",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.person),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                       const SizedBox(
@@ -324,19 +344,21 @@ class _ProfileState extends State<Profile> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextField(
+                      CupertinoTextField(
                         controller: _email,
+                        placeholder: "Masukkan email",
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan email",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.email),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                       const SizedBox(
@@ -352,19 +374,21 @@ class _ProfileState extends State<Profile> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextField(
+                      CupertinoTextField(
                         controller: _noTlp,
+                        placeholder: "Masukkan nomor telepon",
                         keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan nomor telepon",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.phone),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       )
                     ],
@@ -377,12 +401,8 @@ class _ProfileState extends State<Profile> {
         padding: const EdgeInsets.all(20),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: const ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
+          child: CupertinoButton(
+              color: Colors.orange,
               onPressed: () {
                 updateData();
               },

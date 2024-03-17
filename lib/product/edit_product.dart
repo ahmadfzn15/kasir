@@ -32,6 +32,7 @@ class _EditProductState extends State<EditProduct> {
   final TextEditingController _stok = TextEditingController();
   final TextEditingController _kategori = TextEditingController();
   XFile? _image;
+  String? _img;
   List<DropdownMenuEntry<dynamic>> _category = [];
   int _selectedOption = 1;
   bool allowStock = false;
@@ -44,8 +45,7 @@ class _EditProductState extends State<EditProduct> {
   void initState() {
     super.initState();
 
-    _image =
-        XFile("${dotenv.env['API_URL']}/storage/img/${widget.product.foto}");
+    _img = "${dotenv.env['API_URL']}/storage/img/${widget.product.foto}";
     _barcode.value = TextEditingValue(text: widget.product.barcode ?? "");
     _namaProduk.value = TextEditingValue(text: widget.product.namaProduk);
     _hargaBeli.value =
@@ -124,10 +124,9 @@ class _EditProductState extends State<EditProduct> {
   Future<void> fetchDataCategory() async {
     String url = dotenv.env['API_URL']!;
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final response = await http.get(
-      Uri.parse("$url/api/category/$id"),
+      Uri.parse("$url/api/category"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
@@ -280,11 +279,15 @@ class _EditProductState extends State<EditProduct> {
       loading = true;
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
+
     var request = http.MultipartRequest(
-        "put",
+        "PUT",
         Uri.parse(
             "${dotenv.env['API_URL']!}/api/product/${widget.product.id}"));
-    request.files.add(await http.MultipartFile.fromPath('foto', _image!.path));
+    // if (_image != null) {
+    //   request.files
+    //       .add(await http.MultipartFile.fromPath('foto', _image!.path));
+    // }
     request.fields['namaProduk'] = _namaProduk.text;
     request.fields['barcode'] = barcode ?? "";
     request.fields['id_kategori'] = _selectedOption.toString();
@@ -292,21 +295,23 @@ class _EditProductState extends State<EditProduct> {
     request.fields['harga_jual'] = _hargaJual.text;
     request.fields['deskripsi'] = _deskripsi.text;
     request.fields['stok'] = _stok.text;
-    request.headers['Content-Type'] = "application/json";
     request.headers['Authorization'] = "Bearer $token";
-    var res = await request.send();
+    var streamedResponse = await request.send();
+    var res = await http.Response.fromStream(streamedResponse);
+    var message = jsonDecode(res.body)['message'];
 
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
-      Popup().show(context, 'Produk berhasil diubah', true);
+      Popup().show(context, message, true);
       setState(() {
         loading = false;
       });
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
+      print(message);
       // ignore: use_build_context_synchronously
-      Popup().show(context, 'Produk gagal diubah', false);
+      // Popup().show(context, message, false);
     }
   }
 
@@ -343,7 +348,9 @@ class _EditProductState extends State<EditProduct> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              icon: const Icon(Icons.chevron_left)),
+              icon: const Icon(
+                CupertinoIcons.back,
+              )),
         ),
       ),
       body: SingleChildScrollView(
@@ -377,44 +384,64 @@ class _EditProductState extends State<EditProduct> {
                                 alignment: Alignment.bottomRight,
                                 children: [
                                   _image != null
-                                      ? Container(
-                                          width: 150,
-                                          height: 150,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                  color: Colors.black26)),
-                                          clipBehavior: Clip.antiAlias,
-                                          child: Image.file(File(_image!.path),
-                                              fit: BoxFit.cover),
-                                        )
+                                      ? _img != null || _image == null
+                                          ? Container(
+                                              width: 150,
+                                              height: 150,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  border: Border.all(
+                                                      color: Colors.grey)),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: Image.network(
+                                                  "$url/storage/img/$_img",
+                                                  fit: BoxFit.cover),
+                                            )
+                                          : Container(
+                                              width: 150,
+                                              height: 150,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  border: Border.all(
+                                                      color: Colors.grey)),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: Image.file(
+                                                  File(_image!.path),
+                                                  fit: BoxFit.cover),
+                                            )
                                       : Container(
                                           width: 150,
                                           height: 150,
                                           decoration: BoxDecoration(
                                               borderRadius:
                                                   BorderRadius.circular(10),
-                                              color: Colors.black12),
+                                              border: Border.all(
+                                                  color: Colors.grey)),
                                           clipBehavior: Clip.antiAlias,
+                                          child: Image.asset(
+                                              "assets/img/food.png",
+                                              fit: BoxFit.cover),
                                         ),
                                   GestureDetector(
                                     onTap: () async {
                                       _openDialogImage(context);
                                     },
                                     child: Container(
-                                      width: 35,
-                                      height: 35,
+                                      width: 40,
+                                      height: 40,
                                       margin: const EdgeInsets.all(8),
                                       decoration: const BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Colors.white,
                                           boxShadow: [
                                             BoxShadow(
-                                                color: Colors.black,
-                                                blurRadius: 2)
+                                                color: Colors.grey,
+                                                blurRadius: 1)
                                           ]),
-                                      child: const Icon(Icons.edit),
+                                      child: const Icon(
+                                          Icons.add_photo_alternate_rounded),
                                     ),
                                   )
                                 ],
@@ -601,6 +628,7 @@ class _EditProductState extends State<EditProduct> {
                                   child: SizedBox(
                                       width: double.infinity,
                                       child: DropdownMenu(
+                                        leadingIcon: const Icon(Icons.category),
                                         expandedInsets: const EdgeInsets.all(0),
                                         initialSelection: _category.isNotEmpty
                                             ? _category[0].value
@@ -794,16 +822,10 @@ class _EditProductState extends State<EditProduct> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: const ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
+          child: CupertinoButton(
+              color: Colors.orange,
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _uploadToDatabase(context);
-                }
+                _uploadToDatabase(context);
               },
               child: const Text("Simpan")),
         ),

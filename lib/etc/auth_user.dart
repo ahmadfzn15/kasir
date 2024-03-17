@@ -9,14 +9,13 @@ class AuthUser {
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
     String url = dotenv.env['API_URL']!;
 
     if (hasToken) {
       final response = await http.get(
-        Uri.parse("$url/api/user/$id"),
+        Uri.parse("$url/api/user"),
         headers: {
-          "Content-Type": "application/json; charset=UTF-8",
+          "Content-Type": "application/json",
           "Authorization": "Bearer $token"
         },
       );

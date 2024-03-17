@@ -122,7 +122,7 @@ class _CheckoutState extends State<Checkout> {
                         children: [
                           IconButton(
                             onPressed: () {
-                              _decrement(index);
+                              _decrement(widget.order[index]['id']);
                             },
                             icon: const Icon(Icons.remove),
                           ),
@@ -132,7 +132,7 @@ class _CheckoutState extends State<Checkout> {
                           ),
                           IconButton(
                             onPressed: () {
-                              _increment(index);
+                              _increment(widget.order[index]['id']);
                             },
                             icon: const Icon(Icons.add),
                           ),

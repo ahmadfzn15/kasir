@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:app/components/popup.dart';
 import 'package:app/employee/employee.dart';
 import 'package:app/etc/auth_user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 import 'auth/auth.dart';
 import 'help.dart';
@@ -61,7 +65,7 @@ Route _goPage(int id) {
 class _LayoutState extends State<Layout> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
   late List<SideItem> link;
   bool loading = false;
   Map<String, dynamic> user = {};
@@ -81,13 +85,13 @@ class _LayoutState extends State<Layout> {
           page: const Home()),
       SideItem(
           label: "Produk",
-          icon: Icons.shopping_bag_outlined,
-          iconSelected: Icons.shopping_bag,
+          icon: Icons.shopify_outlined,
+          iconSelected: Icons.shopify,
           page: const Product()),
       SideItem(
           label: "Karyawan",
-          icon: Icons.person_2_outlined,
-          iconSelected: Icons.person_2,
+          icon: Icons.group_outlined,
+          iconSelected: Icons.group,
           admin: true,
           page: const Employee()),
       SideItem(
@@ -129,23 +133,37 @@ class _LayoutState extends State<Layout> {
     });
   }
 
-  void _signOut() async {
+  Future<void> _signOut() async {
     try {
       loading = true;
 
-      await const FlutterSecureStorage().deleteAll();
-      // ignore: use_build_context_synchronously
-      Popup().show(context, "Sign out Successfully", true);
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return const Auth();
+      bool hasToken =
+          await const FlutterSecureStorage().containsKey(key: 'token');
+      String? token = await const FlutterSecureStorage().read(key: 'token');
+      String url = dotenv.env['API_URL']!;
+
+      if (hasToken) {
+        final response = await http.post(
+          Uri.parse("$url/api/logout"),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token"
           },
-        ),
-      );
-      loading = false;
+        );
+        await const FlutterSecureStorage().deleteAll();
+        // ignore: use_build_context_synchronously
+        Popup().show(context, jsonDecode(response.body)['message'], true);
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return const Auth();
+            },
+          ),
+        );
+        loading = false;
+      }
     } catch (e) {
       loading = false;
     }
@@ -337,12 +355,6 @@ class _LayoutState extends State<Layout> {
                   openDialog(context);
                 },
               ),
-              const SizedBox(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [Text("V.1.0")],
-                ),
-              )
             ],
           ),
         ),

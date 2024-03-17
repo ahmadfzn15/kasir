@@ -105,6 +105,12 @@ class _SettingState extends State<Setting> {
                             Navigator.of(context).push(_goPage(2, null));
                           },
                           hoverColor: Colors.white12,
+                          contentPadding: const EdgeInsets.all(0),
+                          horizontalTitleGap: 10,
+                          leading: const Icon(
+                            Icons.account_circle_outlined,
+                            size: 30,
+                          ),
                           title: const Text("Akun"),
                           trailing: const Icon(Icons.chevron_right,
                               size: 35, color: Colors.orange),
@@ -117,6 +123,12 @@ class _SettingState extends State<Setting> {
                             Navigator.of(context).push(_goPage(3, null));
                           },
                           hoverColor: Colors.white12,
+                          contentPadding: const EdgeInsets.all(0),
+                          horizontalTitleGap: 10,
+                          leading: const Icon(
+                            Icons.settings_display_outlined,
+                            size: 30,
+                          ),
                           title: const Text("Tampilan"),
                           trailing: const Icon(Icons.chevron_right,
                               size: 35, color: Colors.orange),
@@ -131,6 +143,12 @@ class _SettingState extends State<Setting> {
                                           .push(_goPage(4, null));
                                     },
                                     hoverColor: Colors.white12,
+                                    contentPadding: const EdgeInsets.all(0),
+                                    horizontalTitleGap: 10,
+                                    leading: const Icon(
+                                      Icons.shop_outlined,
+                                      size: 30,
+                                    ),
                                     title: const Text("Toko"),
                                     trailing: const Icon(Icons.chevron_right,
                                         size: 35, color: Colors.orange),

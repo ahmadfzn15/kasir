@@ -185,11 +185,10 @@ class _ProductState extends State<Product> {
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     if (hasToken) {
       final response = await http.get(
-        Uri.parse("$url/api/product/$id"),
+        Uri.parse("$url/api/product"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -212,10 +211,9 @@ class _ProductState extends State<Product> {
 
   Future<void> fetchDataCategory() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final response = await http.get(
-      Uri.parse("$url/api/category/$id"),
+      Uri.parse("$url/api/category"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"

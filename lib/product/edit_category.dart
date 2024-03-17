@@ -24,7 +24,7 @@ class _EditCategoryState extends State<EditCategory> {
   void initState() {
     super.initState();
 
-    _category.value = TextEditingValue(text: widget.category['category']);
+    _category.value = TextEditingValue(text: widget.category['kategori']);
   }
 
   Future<void> _uploadToDatabase(BuildContext context) async {
@@ -37,7 +37,7 @@ class _EditCategoryState extends State<EditCategory> {
         Uri.parse(
             "${dotenv.env['API_URL']!}/api/category/${widget.category['id']}"),
         body: jsonEncode({
-          "category": _category.text,
+          "kategori": _category.text,
         }),
         headers: {
           "Content-type": "application/json",
@@ -106,7 +106,7 @@ class _EditCategoryState extends State<EditCategory> {
                         controller: _category,
                         prefix: const Padding(
                           padding: EdgeInsets.only(left: 10),
-                          child: Icon(Icons.shopping_bag_rounded),
+                          child: Icon(Icons.category),
                         ),
                         placeholder: "Masukkan nama kategori",
                         padding: const EdgeInsets.symmetric(
@@ -128,12 +128,8 @@ class _EditCategoryState extends State<EditCategory> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: const ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
+          child: CupertinoButton(
+              color: Colors.orange,
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   _uploadToDatabase(context);

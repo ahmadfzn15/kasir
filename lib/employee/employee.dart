@@ -67,12 +67,11 @@ class _EmployeeState extends State<Employee> {
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
     String url = dotenv.env['API_URL']!;
 
     if (hasToken) {
       final response = await http.get(
-        Uri.parse("$url/api/cashier/$id"),
+        Uri.parse("$url/api/cashier"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -208,7 +207,7 @@ class _EmployeeState extends State<Employee> {
         title: const Padding(
           padding: EdgeInsets.only(right: 10),
           child: Text(
-            "Petugas",
+            "Karyawan",
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
           ),
         ),
@@ -226,7 +225,7 @@ class _EmployeeState extends State<Employee> {
         tooltip: "Tambah Karyawan",
         shape: const CircleBorder(eccentricity: 0),
         child: const Icon(
-          Icons.add,
+          Icons.person_add_alt_1,
           size: 30,
         ),
       ),
@@ -236,39 +235,42 @@ class _EmployeeState extends State<Employee> {
                   onRefresh: () {
                     return _handleRefresh();
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Card(
-                      surfaceTintColor: Colors.white,
-                      elevation: 4,
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: employee.length,
-                        itemBuilder: (context, index) {
-                          return Wrap(
-                            children: [
-                              ListTile(
-                                leading: const CircleAvatar(
-                                  backgroundImage:
-                                      AssetImage("assets/img/lusi.jpeg"),
+                  child: SizedBox(
+                    height: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Card(
+                        surfaceTintColor: Colors.white,
+                        elevation: 4,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: employee.length,
+                          itemBuilder: (context, index) {
+                            return Wrap(
+                              children: [
+                                ListTile(
+                                  leading: const CircleAvatar(
+                                    backgroundImage:
+                                        AssetImage("assets/img/lusi.jpeg"),
+                                  ),
+                                  title: Text(employee[index]['username']),
+                                  subtitle: Text(employee[index]['role']),
+                                  trailing: IconButton(
+                                      onPressed: () {
+                                        _openOption(
+                                            context, employee[index]['id']);
+                                      },
+                                      icon: const Icon(Icons.menu)),
                                 ),
-                                title: Text(employee[index]['username']),
-                                subtitle: Text(employee[index]['role']),
-                                trailing: IconButton(
-                                    onPressed: () {
-                                      _openOption(
-                                          context, employee[index]['id']);
-                                    },
-                                    icon: const Icon(Icons.menu)),
-                              ),
-                              if (index != employee.length - 1)
-                                const Divider(
-                                  indent: 15,
-                                  endIndent: 15,
-                                )
-                            ],
-                          );
-                        },
+                                if (index != employee.length - 1)
+                                  const Divider(
+                                    indent: 15,
+                                    endIndent: 15,
+                                  )
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),

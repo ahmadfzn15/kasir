@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:app/components/popup.dart';
@@ -9,7 +10,9 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 class Struk extends StatefulWidget {
-  const Struk({super.key});
+  const Struk({super.key, required this.data, required this.date});
+  final Map<String, dynamic> data;
+  final DateTime date;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -32,7 +35,8 @@ class _StrukState extends State<Struk> {
         if (devices.isNotEmpty) {
           BluetoothDevice device = devices.first;
           await bluetooth.connect(device);
-          // await bluetooth.printImage(image.toString());
+          final Uint8List? img = await _screenShot.capture();
+          await bluetooth.printImageBytes(img!);
           await bluetooth.disconnect();
           // ignore: use_build_context_synchronously
           Popup().show(context, "Cetak berhasil", true);
@@ -129,7 +133,9 @@ class _StrukState extends State<Struk> {
                       const SizedBox(
                         height: 20,
                       ),
-                      const Divider(),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [Text("Kasir"), Text("Ahmad Fauzan")],
@@ -137,9 +143,13 @@ class _StrukState extends State<Struk> {
                       const SizedBox(
                         height: 5,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text("Waktu"), Text("7 Maret 2024, 08:04")],
+                        children: [
+                          const Text("Waktu"),
+                          Text(
+                              "${widget.date.day}-${widget.date.month}-${widget.date.year}, ${widget.date.hour}:${widget.date.minute}:${widget.date.second}")
+                        ],
                       ),
                       const SizedBox(
                         height: 5,
@@ -151,11 +161,16 @@ class _StrukState extends State<Struk> {
                       const SizedBox(
                         height: 5,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text("Metode Pembayaran"), Text("Tunai")],
+                        children: [
+                          const Text("Metode Pembayaran"),
+                          Text(widget.data['metode_pembayaran'])
+                        ],
                       ),
-                      const Divider(),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
                       const SizedBox(
                         height: 10,
                       ),
@@ -163,69 +178,86 @@ class _StrukState extends State<Struk> {
                         "Lunas",
                         style: TextStyle(fontSize: 22),
                       ),
-                      const Divider(),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
                       ListView.builder(
-                        itemCount: 1,
+                        itemCount: widget.data['order'].length,
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
-                          return const ListTile(
-                            contentPadding: EdgeInsets.all(0),
+                          return ListTile(
+                            contentPadding: const EdgeInsets.all(0),
                             title: Text(
-                              "Chicken",
-                              style: TextStyle(fontSize: 15),
+                              widget.data['order'][index]['namaProduk'],
+                              style: const TextStyle(fontSize: 15),
                             ),
                             subtitle: Text(
-                              "Rp.9.000 x 2",
-                              style: TextStyle(fontSize: 15),
+                              "Rp.${widget.data['order'][index]['harga']} x ${widget.data['order'][index]['qty']}",
+                              style: const TextStyle(fontSize: 15),
                             ),
                             trailing: Text(
-                              "Rp.18.000",
-                              style: TextStyle(fontSize: 15),
+                              "Rp.${widget.data['order'][index]['harga'] * widget.data['order'][index]['qty']}",
+                              style: const TextStyle(fontSize: 15),
                             ),
                           );
                         },
                       ),
-                      const Divider(),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
                       const SizedBox(
                         height: 10,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text("Subtotal"), Text("Rp.18.000")],
+                        children: [
+                          const Text("Subtotal"),
+                          Text("Rp.${widget.data['total']}")
+                        ],
                       ),
-                      const Divider(),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
                       const SizedBox(
                         height: 5,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Total (2 Produk)",
-                            style: TextStyle(
+                            "Total (${widget.data['order'].fold(0, (previousValue, element) => previousValue + element['qty'] as int)} Produk)",
+                            style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 18),
                           ),
                           Text(
-                            "Rp.18.000",
-                            style: TextStyle(
+                            "Rp.${widget.data['total']}",
+                            style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 18),
                           )
                         ],
                       ),
-                      const Divider(),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
                       const SizedBox(
                         height: 15,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text("Bayar"), Text("Rp.20.000")],
+                        children: [
+                          const Text("Bayar"),
+                          Text("Rp.${widget.data['cash']}")
+                        ],
                       ),
                       const SizedBox(
                         height: 5,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text("Kembalian"), Text("Rp.2.000")],
+                        children: [
+                          const Text("Kembalian"),
+                          Text("Rp.${widget.data['cashback']}")
+                        ],
                       ),
                       const SizedBox(
                         height: 30,
@@ -243,12 +275,8 @@ class _StrukState extends State<Struk> {
           padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
           child: SizedBox(
             width: double.infinity,
-            child: FilledButton(
-                style: const ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(5)))),
-                    backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white)),
+            child: CupertinoButton(
+                color: Colors.orange,
                 onPressed: () {
                   _printReceipt();
                 },

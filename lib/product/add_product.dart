@@ -23,6 +23,7 @@ class _AddProductState extends State<AddProduct> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _barcode = TextEditingController();
   final TextEditingController _namaProduk = TextEditingController();
+  final TextEditingController _categoryField = TextEditingController();
   final TextEditingController _hargaBeli = TextEditingController();
   final TextEditingController _hargaJual = TextEditingController();
   final TextEditingController _deskripsi = TextEditingController();
@@ -108,10 +109,9 @@ class _AddProductState extends State<AddProduct> {
   Future<void> fetchDataCategory() async {
     String url = dotenv.env['API_URL']!;
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final response = await http.get(
-      Uri.parse("$url/api/category/$id"),
+      Uri.parse("$url/api/category"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
@@ -221,11 +221,12 @@ class _AddProductState extends State<AddProduct> {
       loading = true;
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
     var request = http.MultipartRequest(
         "post", Uri.parse("${dotenv.env['API_URL']!}/api/product"));
-    request.files.add(await http.MultipartFile.fromPath('foto', _image!.path));
-    request.fields['id'] = id!;
+    if (_image != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('foto', _image!.path));
+    }
     request.fields['namaProduk'] = _namaProduk.text;
     request.fields['barcode'] = barcode ?? "";
     request.fields['id_kategori'] = _selectedOption.toString();
@@ -235,7 +236,9 @@ class _AddProductState extends State<AddProduct> {
     request.fields['stok'] = _stok.text;
     request.headers['Content-Type'] = "application/json";
     request.headers['Authorization'] = "Bearer $token";
-    var res = await request.send();
+    var streamedResponse = await request.send();
+    var res = await http.Response.fromStream(streamedResponse);
+    var message = jsonDecode(res.body)['message'];
 
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
@@ -246,8 +249,9 @@ class _AddProductState extends State<AddProduct> {
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
+      print(message);
       // ignore: use_build_context_synchronously
-      Popup().show(context, 'Produk gagal ditambahkan', false);
+      // Popup().show(context, 'Produk gagal ditambahkan', false);
     }
   }
 
@@ -264,6 +268,7 @@ class _AddProductState extends State<AddProduct> {
                 height: 20,
               ),
               CupertinoTextField(
+                controller: _categoryField,
                 placeholder: "Masukkan kategori baru",
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
@@ -282,7 +287,9 @@ class _AddProductState extends State<AddProduct> {
                 child: CupertinoButton(
                   color: Colors.orange,
                   onPressed: () {
-                    Navigator.pop(context);
+                    if (_categoryField.text != "") {
+                      _addCategory();
+                    }
                   },
                   child: const Text("Simpan"),
                 ),
@@ -292,6 +299,35 @@ class _AddProductState extends State<AddProduct> {
         );
       },
     );
+  }
+
+  Future<void> _addCategory() async {
+    setState(() {
+      loading = true;
+    });
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+
+    final res = await http.post(
+        Uri.parse("${dotenv.env['API_URL']!}/api/category"),
+        body: jsonEncode({
+          "kategori": _categoryField.text,
+        }),
+        headers: {
+          "Content-type": "application/json",
+          "Authorization": "Bearer $token"
+        });
+
+    Map<String, dynamic> result = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      // ignore: use_build_context_synchronously
+      Popup().show(context, result['message'], true);
+      fetchDataCategory();
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      Popup().show(context, result['message'], false);
+    }
   }
 
   void scanBarcode() async {
@@ -370,18 +406,19 @@ class _AddProductState extends State<AddProduct> {
                                       _openDialogImage(context);
                                     },
                                     child: Container(
-                                      width: 35,
-                                      height: 35,
+                                      width: 40,
+                                      height: 40,
                                       margin: const EdgeInsets.all(8),
                                       decoration: const BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Colors.white,
                                           boxShadow: [
                                             BoxShadow(
-                                                color: Colors.black,
-                                                blurRadius: 2)
+                                                color: Colors.grey,
+                                                blurRadius: 1)
                                           ]),
-                                      child: const Icon(Icons.edit),
+                                      child: const Icon(
+                                          Icons.add_photo_alternate_rounded),
                                     ),
                                   )
                                 ],
@@ -568,6 +605,7 @@ class _AddProductState extends State<AddProduct> {
                                   child: SizedBox(
                                       width: double.infinity,
                                       child: DropdownMenu(
+                                        leadingIcon: const Icon(Icons.category),
                                         expandedInsets: const EdgeInsets.all(0),
                                         initialSelection: _category.isNotEmpty
                                             ? _category[0].value
@@ -657,10 +695,6 @@ class _AddProductState extends State<AddProduct> {
                                 const SizedBox(
                                   height: 10,
                                 ),
-                                const Divider(
-                                  indent: 10,
-                                  endIndent: 10,
-                                ),
                               ],
                             )
                           : Container(),
@@ -710,10 +744,6 @@ class _AddProductState extends State<AddProduct> {
                                 ),
                                 const SizedBox(
                                   height: 10,
-                                ),
-                                const Divider(
-                                  indent: 10,
-                                  endIndent: 10,
                                 ),
                               ],
                             )

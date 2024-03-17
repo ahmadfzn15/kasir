@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Toko extends StatefulWidget {
@@ -10,6 +11,8 @@ class Toko extends StatefulWidget {
 class _TokoState extends State<Toko> {
   final TextEditingController _namaToko = TextEditingController();
   final TextEditingController _alamatToko = TextEditingController();
+  final TextEditingController _usaha = TextEditingController();
+  final TextEditingController _noTlp = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,18 +38,20 @@ class _TokoState extends State<Toko> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
+                      CupertinoTextField(
                         controller: _namaToko,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan nama toko",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.shop),
+                        ),
+                        placeholder: "Masukkan nama toko",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                       const SizedBox(
@@ -62,20 +67,22 @@ class _TokoState extends State<Toko> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
+                      CupertinoTextField(
                         controller: _alamatToko,
-                        maxLines: null,
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.place),
+                        ),
                         keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan alamat toko",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        maxLines: null,
+                        placeholder: "Masukkan alamat toko",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                       const SizedBox(
@@ -91,18 +98,20 @@ class _TokoState extends State<Toko> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
-                        controller: _namaToko,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan bidang usaha",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                      CupertinoTextField(
+                        controller: _usaha,
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.business),
+                        ),
+                        placeholder: "Masukkan bidang usaha",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                       const SizedBox(
@@ -118,19 +127,21 @@ class _TokoState extends State<Toko> {
                       const SizedBox(
                         height: 6,
                       ),
-                      TextFormField(
-                        controller: _namaToko,
+                      CupertinoTextField(
+                        controller: _noTlp,
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(Icons.phone),
+                        ),
                         keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          hintText: "Masukkan nomor telepon",
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 10),
-                          border: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFe2e8f0), width: 0.5),
-                              borderRadius: BorderRadius.circular(10)),
+                        placeholder: "Masukkan nomor telepon",
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: const Color(0xFFcbd5e1), width: 0.5),
                         ),
                       ),
                       const SizedBox(
@@ -140,18 +151,14 @@ class _TokoState extends State<Toko> {
                   )))),
         ),
       ),
-      bottomNavigationBar: const Padding(
-        padding: EdgeInsets.all(20),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(20),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
-              onPressed: null,
-              child: Text("Simpan")),
+          child: CupertinoButton(
+              color: Colors.orange,
+              onPressed: () {},
+              child: const Text("Simpan")),
         ),
       ),
     );

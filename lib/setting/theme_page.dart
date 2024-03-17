@@ -31,6 +31,12 @@ class _ThemePageState extends State<ThemePage> {
                       });
                     },
                     hoverColor: Colors.white12,
+                    contentPadding: const EdgeInsets.all(0),
+                    horizontalTitleGap: 10,
+                    leading: const Icon(
+                      Icons.dark_mode_outlined,
+                      size: 30,
+                    ),
                     title: const Text("Dark Mode"),
                     trailing: Switch(
                       activeColor: Colors.blue,

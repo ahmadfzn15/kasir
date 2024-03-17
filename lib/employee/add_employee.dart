@@ -257,12 +257,8 @@ class _AddEmployeeState extends State<AddEmployee> {
         padding: const EdgeInsets.all(20),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: const ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
+          child: CupertinoButton(
+              color: Colors.orange,
               onPressed: () {
                 loading
                     ? null

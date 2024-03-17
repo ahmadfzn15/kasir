@@ -16,7 +16,9 @@ class DeleteAccount extends StatefulWidget {
 }
 
 class _DeleteAccountState extends State<DeleteAccount> {
+  final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
+  bool showPwd = false;
 
   Future<void> deleteAccount() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
@@ -64,36 +66,70 @@ class _DeleteAccountState extends State<DeleteAccount> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text("Masukkan kata sandi untuk menghapus akun",
+                        Text("Email Saat Ini",
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(
                       height: 6,
                     ),
-                    TextFormField(
+                    CupertinoTextField(
+                      controller: _email,
+                      placeholder: "Masukkan email saat ini",
+                      keyboardType: TextInputType.emailAddress,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 15),
+                      prefix: const Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Icon(Icons.email),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: const Color(0xFFcbd5e1), width: 0.5),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text("Kata Sandi",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 6,
+                    ),
+                    CupertinoTextField(
                       controller: _password,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Kata sandi wajib diisi!';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        hintText: "Masukkan kata sandi",
-                        filled: true,
-                        fillColor: Colors.white,
-                        suffixIcon: GestureDetector(
-                          onTap: null,
-                          child: const Icon(CupertinoIcons.eye),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Color(0xFFe2e8f0), width: 0.5),
-                            borderRadius: BorderRadius.circular(10)),
+                      prefix: const Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Icon(Icons.lock),
+                      ),
+                      placeholder: "Masukkan kata sandi saat ini",
+                      suffix: Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                showPwd = !showPwd;
+                              });
+                            },
+                            child: showPwd
+                                ? const Icon(CupertinoIcons.eye_fill)
+                                : const Icon(CupertinoIcons.eye_slash_fill)),
+                      ),
+                      obscureText: !showPwd,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: const Color(0xFFcbd5e1), width: 0.5),
                       ),
                     ),
                   ],
@@ -105,12 +141,8 @@ class _DeleteAccountState extends State<DeleteAccount> {
         padding: const EdgeInsets.all(20),
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(
-              style: const ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5)))),
-                  backgroundColor: MaterialStatePropertyAll(Colors.red),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white)),
+          child: CupertinoButton(
+              color: Colors.red,
               onPressed: () {
                 deleteAccount();
               },

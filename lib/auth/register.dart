@@ -79,9 +79,7 @@ class _RegisterState extends State<Register> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text("Username",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold)),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(
@@ -108,9 +106,7 @@ class _RegisterState extends State<Register> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text("Kata Sandi",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold)),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(
@@ -150,9 +146,7 @@ class _RegisterState extends State<Register> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text("Ulang Kata Sandi",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold)),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(
@@ -210,9 +204,7 @@ class _RegisterState extends State<Register> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text("Sudah punya akun? ",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold)),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         GestureDetector(
                           onTap: () {
                             widget.pageController.previousPage(
@@ -221,9 +213,7 @@ class _RegisterState extends State<Register> {
                           },
                           child: const Text(
                             "Masuk",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         )
                       ],

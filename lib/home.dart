@@ -240,6 +240,32 @@ class _HomeState extends State<Home> {
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
+                    ),
+                    Card(
+                      child: ListTile(
+                        title: Text(
+                          "Omset",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          "Rp.100000",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    Card(
+                      child: ListTile(
+                        title: Text(
+                          "Keuntungan",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          "Rp.20000",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     )
                   ]),
             ])),

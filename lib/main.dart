@@ -47,7 +47,7 @@ class _MainAppState extends State<MainApp> {
             if (snapshot.data![1]) {
               return const Layout();
             } else {
-              return const Layout();
+              return const Auth();
             }
           } else {
             return const Startup();

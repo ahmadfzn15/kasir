@@ -1,12 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app/components/popup.dart';
+import 'package:app/home.dart';
 import 'package:app/order/struk.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class History extends StatefulWidget {
   const History({super.key});
@@ -18,7 +22,7 @@ class History extends StatefulWidget {
 
 Route _goPage(int id) {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => const Struk(),
+    pageBuilder: (context, animation, secondaryAnimation) => const Home(),
     transitionDuration: const Duration(milliseconds: 500),
     reverseTransitionDuration: const Duration(milliseconds: 500),
     opaque: false,
@@ -62,11 +66,10 @@ class _HistoryState extends State<History> {
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     if (hasToken) {
       final response = await http.get(
-        Uri.parse("$url/api/sale/$id"),
+        Uri.parse("$url/api/sale"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -203,6 +206,38 @@ class _HistoryState extends State<History> {
     }
   }
 
+  Future<void> printExcel() async {
+    var excel = Excel.createExcel();
+    var sheet = excel['Sheet1'];
+
+    var head = ["Cash", "Cashback", "Total Harga"];
+
+    for (var i = 0; i < head.length; i++) {
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .value = TextCellValue(head[i]);
+    }
+
+    for (var i = 0; i < history.length; i++) {
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i))
+          .value = TextCellValue("Rp.${history[i]['cash']}");
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i))
+          .value = TextCellValue("Rp.${history[i]['cashback']}");
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i))
+          .value = TextCellValue("Rp.${history[i]['total_pembayaran']}");
+    }
+
+    var path = await getApplicationDocumentsDirectory();
+
+    var excelEncode = excel.encode();
+    File("$path/kasir.xlsx").writeAsBytesSync(excelEncode!);
+    // ignore: use_build_context_synchronously
+    Popup().show(context, "File berhasil didownload", true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -265,91 +300,120 @@ class _HistoryState extends State<History> {
                   onRefresh: () {
                     return _refresh();
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Card(
-                      surfaceTintColor: Colors.white,
-                      clipBehavior: Clip.antiAlias,
-                      elevation: 4,
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        itemCount: history.length,
-                        itemBuilder: (context, index) {
-                          return Wrap(
-                            children: [
-                              Dismissible(
-                                  key: Key(history[index]['id'].toString()),
-                                  direction: DismissDirection.endToStart,
-                                  confirmDismiss: (direction) async {
-                                    final details = await Future.delayed(
-                                      const Duration(seconds: 3),
-                                      () {
-                                        null;
-                                      },
-                                    );
+                  child: SizedBox(
+                    height: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        children: [
+                          Card(
+                              surfaceTintColor: Colors.white,
+                              clipBehavior: Clip.antiAlias,
+                              elevation: 4,
+                              child: CupertinoButton(
+                                color: Colors.orange,
+                                child: const Text("Download Excel"),
+                                onPressed: () {
+                                  printExcel();
+                                },
+                              )),
+                          Card(
+                            surfaceTintColor: Colors.white,
+                            clipBehavior: Clip.antiAlias,
+                            elevation: 4,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              padding: const EdgeInsets.all(0),
+                              itemCount: history.length,
+                              itemBuilder: (context, index) {
+                                return Wrap(
+                                  children: [
+                                    Dismissible(
+                                        key: Key(
+                                            history[index]['id'].toString()),
+                                        direction: DismissDirection.endToStart,
+                                        confirmDismiss: (direction) async {
+                                          final details = await Future.delayed(
+                                            const Duration(seconds: 3),
+                                            () {
+                                              null;
+                                            },
+                                          );
 
-                                    return details != null;
-                                  },
-                                  background: Container(
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20),
-                                    decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                    child: const Icon(
-                                      Icons.delete,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  onDismissed: (direction) {
-                                    history.removeAt(index);
-                                  },
-                                  child: ListTile(
-                                    onLongPress: () {
-                                      setState(() {
-                                        _select = true;
-                                        history[index]['selected'] = true;
-                                      });
-                                      showSheetOrder(context);
-                                    },
-                                    onTap: () {
-                                      if (history[index]['selected']) {
-                                        setState(() {
-                                          history[index]['selected'] = false;
-                                        });
-                                        showSheetOrder(context);
-                                      } else if (history.any(
-                                          (element) => element['selected'])) {
-                                        setState(() {
-                                          history[index]['selected'] = true;
-                                        });
-                                        showSheetOrder(context);
-                                      } else {
-                                        Navigator.of(context).push(
-                                            _goPage(history[index]['id']));
-                                      }
-                                    },
-                                    selected: history[index]['selected'],
-                                    selectedTileColor: Colors.black26,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                    title: Text(
-                                      "Rp.${history[index]['total_pembayaran'].toString()}",
-                                      style: const TextStyle(
-                                          color: Colors.deepOrange,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    subtitle: Text(
-                                        history[index]['metode_pembayaran']),
-                                  )),
-                              if (index != history.length - 1) const Divider()
-                            ],
-                          );
-                        },
+                                          return details != null;
+                                        },
+                                        background: Container(
+                                          alignment: Alignment.centerRight,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 20),
+                                          decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          child: const Icon(
+                                            Icons.delete,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        onDismissed: (direction) {
+                                          history.removeAt(index);
+                                        },
+                                        child: ListTile(
+                                          contentPadding:
+                                              const EdgeInsets.all(0),
+                                          onLongPress: () {
+                                            setState(() {
+                                              _select = true;
+                                              history[index]['selected'] = true;
+                                            });
+                                            showSheetOrder(context);
+                                          },
+                                          onTap: () {
+                                            if (history[index]['selected']) {
+                                              setState(() {
+                                                history[index]['selected'] =
+                                                    false;
+                                              });
+                                              showSheetOrder(context);
+                                            } else if (history.any((element) =>
+                                                element['selected'])) {
+                                              setState(() {
+                                                history[index]['selected'] =
+                                                    true;
+                                              });
+                                              showSheetOrder(context);
+                                            } else {
+                                              Navigator.of(context).push(
+                                                  _goPage(
+                                                      history[index]['id']));
+                                            }
+                                          },
+                                          selected: history[index]['selected'],
+                                          selectedTileColor: Colors.black26,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          leading: Container(
+                                            color: Colors.orange,
+                                            width: 50,
+                                          ),
+                                          title: Text(
+                                            "Rp.${history[index]['total_pembayaran'].toString()}",
+                                            style: const TextStyle(
+                                                color: Colors.deepOrange,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          subtitle: Text(history[index]
+                                              ['metode_pembayaran']),
+                                        )),
+                                    if (index != history.length - 1)
+                                      const Divider()
+                                  ],
+                                );
+                              },
+                            ),
+                          )
+                        ],
                       ),
                     ),
                   ),

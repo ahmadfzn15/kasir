@@ -56,12 +56,10 @@ class _LoginState extends State<Login> {
           'password': _passwordController.text
         }));
 
+    Map<String, dynamic> result = jsonDecode(res.body);
     if (res.statusCode == 200) {
-      Map<String, dynamic> result = jsonDecode(res.body);
       await const FlutterSecureStorage()
           .write(key: 'token', value: result['data']['token']);
-      await const FlutterSecureStorage()
-          .write(key: 'id', value: result['data']['id'].toString());
       await const FlutterSecureStorage()
           .write(key: 'role', value: result['data']['role']);
 
@@ -70,10 +68,10 @@ class _LoginState extends State<Login> {
           context,
           _goPage());
       // ignore: use_build_context_synchronously
-      Popup().show(context, "Login berhasil.", true);
+      Popup().show(context, result['message'], true);
     } else {
       // ignore: use_build_context_synchronously
-      Popup().show(context, "Login gagal.", false);
+      Popup().show(context, result['message'], false);
     }
   }
 
@@ -110,9 +108,7 @@ class _LoginState extends State<Login> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Username",
-                              style: TextStyle(
-                                  color: Color(0xFFcbd5e1),
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(
@@ -139,9 +135,7 @@ class _LoginState extends State<Login> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Kata sandi",
-                              style: TextStyle(
-                                  color: Color(0xFFcbd5e1),
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(
@@ -182,9 +176,7 @@ class _LoginState extends State<Login> {
                         children: [
                           Text(
                             "Lupa kata sandi?",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -193,12 +185,8 @@ class _LoginState extends State<Login> {
                           width: double.infinity,
                           height: 50,
                           child: CupertinoButton(
-                            onPressed: () => loading
-                                ? null
-                                : {
-                                    if (_formKey.currentState!.validate())
-                                      _loginUser(context)
-                                  },
+                            onPressed: () =>
+                                loading ? null : {_loginUser(context)},
                             color: Colors.orange,
                             child: const Text("Masuk",
                                 style: TextStyle(
@@ -212,9 +200,7 @@ class _LoginState extends State<Login> {
                         children: [
                           const Text(
                             "Belum punya akun? ",
-                            style: TextStyle(
-                                color: Color(0xFFcbd5e1),
-                                fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           GestureDetector(
                             onTap: () {
@@ -224,9 +210,7 @@ class _LoginState extends State<Login> {
                             },
                             child: const Text(
                               "Daftar",
-                              style: TextStyle(
-                                  color: Color(0xFFcbd5e1),
-                                  fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           )
                         ],

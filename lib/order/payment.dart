@@ -90,10 +90,13 @@ class _PaymentState extends State<Payment> {
       });
       // ignore: use_build_context_synchronously
       Navigator.of(context).push(_goPage(Success(detail: {
-        "metode_pembayaran": _metode[_selectedOption].label,
-        "total": total == 0 ? widget.total.toString() : total.toString(),
-        "cash": _cash.text,
-        "cashback": _cashback.text,
+        "data": {
+          "metode_pembayaran": _metode[_selectedOption].label,
+          "total": total == 0 ? widget.total.toString() : total.toString(),
+          "cash": _cash.text,
+          "cashback": _cashback.text,
+          "order": widget.order
+        }
       })));
     } else {
       // ignore: use_build_context_synchronously
@@ -162,6 +165,7 @@ class _PaymentState extends State<Payment> {
                   SizedBox(
                       width: double.infinity,
                       child: DropdownMenu(
+                        leadingIcon: const Icon(Icons.payment),
                         expandedInsets: const EdgeInsets.all(0),
                         initialSelection:
                             _metode.isNotEmpty ? _metode[0].value : 0,
@@ -181,18 +185,30 @@ class _PaymentState extends State<Payment> {
                         dropdownMenuEntries: _metode,
                       )),
                   const SizedBox(
-                    height: 6,
+                    height: 10,
                   ),
                   SwitchListTile(
                     activeColor: Colors.orange,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                     value: _discount,
-                    title: const Text(
-                      "Diskon",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    title: const Wrap(
+                      direction: Axis.horizontal,
+                      children: [
+                        Icon(Icons.discount),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          "Diskon",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
                     ),
                     onChanged: (value) {
                       setState(() {
                         _discount = value;
+                        _discountValue.clear();
+                        total = 0;
                       });
                     },
                   ),
@@ -244,9 +260,8 @@ class _PaymentState extends State<Payment> {
                             ),
                           ),
                           const SizedBox(
-                            height: 6,
+                            height: 10,
                           ),
-                          const Divider()
                         ])
                       : Container(),
                   const SizedBox(
@@ -254,10 +269,20 @@ class _PaymentState extends State<Payment> {
                   ),
                   SwitchListTile(
                     activeColor: Colors.orange,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                     value: _etc,
-                    title: const Text(
-                      "Biaya Tambahan",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    title: const Wrap(
+                      direction: Axis.horizontal,
+                      children: [
+                        Icon(Icons.add_card),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          "Biaya Tambahan",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -297,9 +322,8 @@ class _PaymentState extends State<Payment> {
                               ),
                             ),
                             const SizedBox(
-                              height: 6,
+                              height: 10,
                             ),
-                            const Divider()
                           ],
                         )
                       : Container(),
@@ -380,7 +404,21 @@ class _PaymentState extends State<Payment> {
                     ],
                   ),
                   const SizedBox(
-                    height: 12,
+                    height: 10,
+                  ),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                    title: const Text(
+                      "Jumlah Kembalian",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    trailing: Text(
+                      "Rp.${_cashback.text}",
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,7 +461,9 @@ class _PaymentState extends State<Payment> {
           height: 100,
           child: Column(
             children: [
-              const Divider(),
+              const Divider(
+                color: Color(0xFFcbd5e1),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -441,19 +481,13 @@ class _PaymentState extends State<Payment> {
               ),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton(
-                    style: const ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5)))),
-                        backgroundColor:
-                            MaterialStatePropertyAll(Colors.orange),
-                        foregroundColor:
-                            MaterialStatePropertyAll(Colors.white)),
-                    onPressed: () {
-                      _uploadToDatabase(context);
-                    },
-                    child: const Text("Bayar")),
+                child: CupertinoButton(
+                  color: Colors.orange,
+                  child: const Text("Bayar"),
+                  onPressed: () {
+                    _uploadToDatabase(context);
+                  },
+                ),
               ),
             ],
           ),
