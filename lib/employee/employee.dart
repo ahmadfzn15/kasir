@@ -239,38 +239,34 @@ class _EmployeeState extends State<Employee> {
                     height: double.infinity,
                     child: Padding(
                       padding: const EdgeInsets.all(10),
-                      child: Card(
-                        surfaceTintColor: Colors.white,
-                        elevation: 4,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: employee.length,
-                          itemBuilder: (context, index) {
-                            return Wrap(
-                              children: [
-                                ListTile(
-                                  leading: const CircleAvatar(
-                                    backgroundImage:
-                                        AssetImage("assets/img/lusi.jpeg"),
-                                  ),
-                                  title: Text(employee[index]['username']),
-                                  subtitle: Text(employee[index]['role']),
-                                  trailing: IconButton(
-                                      onPressed: () {
-                                        _openOption(
-                                            context, employee[index]['id']);
-                                      },
-                                      icon: const Icon(Icons.menu)),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: employee.length,
+                        itemBuilder: (context, index) {
+                          return Wrap(
+                            children: [
+                              ListTile(
+                                leading: const CircleAvatar(
+                                  backgroundImage:
+                                      AssetImage("assets/img/lusi.jpeg"),
                                 ),
-                                if (index != employee.length - 1)
-                                  const Divider(
-                                    indent: 15,
-                                    endIndent: 15,
-                                  )
-                              ],
-                            );
-                          },
-                        ),
+                                title: Text(employee[index]['nama']),
+                                subtitle: Text(employee[index]['role']),
+                                trailing: IconButton(
+                                    onPressed: () {
+                                      _openOption(
+                                          context, employee[index]['id']);
+                                    },
+                                    icon: const Icon(Icons.menu)),
+                              ),
+                              if (index != employee.length - 1)
+                                const Divider(
+                                  indent: 15,
+                                  endIndent: 15,
+                                )
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),

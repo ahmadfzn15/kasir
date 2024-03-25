@@ -6,6 +6,7 @@ import 'package:app/profile.dart';
 import 'package:app/setting/account.dart';
 import 'package:app/setting/change_password.dart';
 import 'package:app/setting/delete_account.dart';
+import 'package:app/setting/other.dart';
 import 'package:app/setting/theme_page.dart';
 import 'package:app/setting/toko.dart';
 import 'package:flutter/cupertino.dart';
@@ -47,6 +48,7 @@ class _SublayoutState extends State<Sublayout> {
       Pages(page: const DeleteAccount(), title: "Hapus Akun"),
       Pages(page: const AddEmployee(), title: "Tambah Karyawan"),
       Pages(page: const AddCategory(), title: "Tambah Kategori"),
+      Pages(page: const Other(), title: "Lainnya"),
     ];
   }
 

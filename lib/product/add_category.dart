@@ -24,12 +24,10 @@ class _AddCategoryState extends State<AddCategory> {
       loading = true;
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final res = await http.post(
         Uri.parse("${dotenv.env['API_URL']!}/api/category"),
         body: jsonEncode({
-          "id": id,
           "kategori": _kategori.text,
         }),
         headers: {

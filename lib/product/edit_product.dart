@@ -53,7 +53,9 @@ class _EditProductState extends State<EditProduct> {
     _hargaJual.value =
         TextEditingValue(text: widget.product.harga_jual.toString());
     _deskripsi.value = TextEditingValue(text: widget.product.deskripsi ?? "");
-    _stok.value = TextEditingValue(text: widget.product.stok.toString());
+    _stok.value = TextEditingValue(
+        text:
+            widget.product.stok != null ? widget.product.stok.toString() : "0");
     _kategori.value =
         TextEditingValue(text: widget.product.id_kategori.toString());
     fetchDataCategory();
@@ -281,13 +283,13 @@ class _EditProductState extends State<EditProduct> {
     String? token = await const FlutterSecureStorage().read(key: 'token');
 
     var request = http.MultipartRequest(
-        "PUT",
+        "post",
         Uri.parse(
             "${dotenv.env['API_URL']!}/api/product/${widget.product.id}"));
-    // if (_image != null) {
-    //   request.files
-    //       .add(await http.MultipartFile.fromPath('foto', _image!.path));
-    // }
+    if (_image != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('foto', _image!.path));
+    }
     request.fields['namaProduk'] = _namaProduk.text;
     request.fields['barcode'] = barcode ?? "";
     request.fields['id_kategori'] = _selectedOption.toString();
@@ -295,6 +297,7 @@ class _EditProductState extends State<EditProduct> {
     request.fields['harga_jual'] = _hargaJual.text;
     request.fields['deskripsi'] = _deskripsi.text;
     request.fields['stok'] = _stok.text;
+    request.headers['Content-Type'] = "application/json";
     request.headers['Authorization'] = "Bearer $token";
     var streamedResponse = await request.send();
     var res = await http.Response.fromStream(streamedResponse);
@@ -309,9 +312,9 @@ class _EditProductState extends State<EditProduct> {
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
-      print(message);
+      // print(message);
       // ignore: use_build_context_synchronously
-      // Popup().show(context, message, false);
+      Popup().show(context, message, false);
     }
   }
 
@@ -383,47 +386,29 @@ class _EditProductState extends State<EditProduct> {
                               Stack(
                                 alignment: Alignment.bottomRight,
                                 children: [
-                                  _image != null
-                                      ? _img != null || _image == null
-                                          ? Container(
-                                              width: 150,
-                                              height: 150,
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  border: Border.all(
-                                                      color: Colors.grey)),
-                                              clipBehavior: Clip.antiAlias,
-                                              child: Image.network(
-                                                  "$url/storage/img/$_img",
-                                                  fit: BoxFit.cover),
-                                            )
-                                          : Container(
-                                              width: 150,
-                                              height: 150,
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  border: Border.all(
-                                                      color: Colors.grey)),
-                                              clipBehavior: Clip.antiAlias,
-                                              child: Image.file(
-                                                  File(_image!.path),
-                                                  fit: BoxFit.cover),
-                                            )
-                                      : Container(
-                                          width: 150,
-                                          height: 150,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                  color: Colors.grey)),
-                                          clipBehavior: Clip.antiAlias,
-                                          child: Image.asset(
-                                              "assets/img/food.png",
-                                              fit: BoxFit.cover),
-                                        ),
+                                  Container(
+                                    width: 150,
+                                    height: 150,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.grey),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: _img != null && _image == null
+                                        ? Image.network(
+                                            _img!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : _image != null
+                                            ? Image.file(
+                                                File(_image!.path),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Image.asset(
+                                                "assets/img/food.png",
+                                                fit: BoxFit.cover,
+                                              ),
+                                  ),
                                   GestureDetector(
                                     onTap: () async {
                                       _openDialogImage(context);
@@ -731,16 +716,22 @@ class _EditProductState extends State<EditProduct> {
                       SwitchListTile(
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 0),
-                        value: allowStock,
+                        value: allowStock && _stok.text.isNotEmpty,
                         title: const Text("Manajemen Stok"),
                         activeColor: Colors.orange,
                         onChanged: (value) {
                           setState(() {
                             allowStock = value;
+                            if (!value) {
+                              _stok.clear();
+                            } else {
+                              _stok.value = TextEditingValue(
+                                  text: widget.product.stok.toString());
+                            }
                           });
                         },
                       ),
-                      allowStock
+                      allowStock && _stok.text.isNotEmpty
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

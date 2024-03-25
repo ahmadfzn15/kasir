@@ -1,6 +1,12 @@
+import 'dart:convert';
+
 import 'package:app/components/banners.dart';
+import 'package:app/product/product.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class WidgetIcon {
   IconData icon;
@@ -23,15 +29,47 @@ class _HomeState extends State<Home> {
     Banners(img: "assets/img/sprite.jpg"),
     Banners(img: "assets/img/burger.jpeg")
   ];
+  Map<String, dynamic> sale = {};
+  bool loading = false;
+  String url = dotenv.env['API_URL']!;
   DateTime time = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+
+    fetchDataSale();
   }
 
   Future<void> _refresh() async {
     await Future.delayed(const Duration(seconds: 1));
+  }
+
+  Future<void> fetchDataSale() async {
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+
+    final response = await http.get(
+      Uri.parse("$url/api/sale/statistics"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+    );
+
+    Map<String, dynamic> res = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      setState(() {
+        sale = res['data'];
+      });
+      setState(() {
+        loading = false;
+      });
+    } else {
+      setState(() {
+        loading = false;
+      });
+      throw Exception(res['message']);
+    }
   }
 
   @override
@@ -50,6 +88,9 @@ class _HomeState extends State<Home> {
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
           ),
         ),
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications))
+        ],
         centerTitle: true,
         titleSpacing: 0,
         backgroundColor: Colors.orange,
@@ -88,28 +129,16 @@ class _HomeState extends State<Home> {
                                 ),
                                 Expanded(
                                     child: PieChart(PieChartData(
-                                  sections: [
-                                    PieChartSectionData(
-                                      color: Colors.red,
-                                      value: 50,
-                                      title: '50%',
-                                    ),
-                                    PieChartSectionData(
-                                      color: Colors.green,
-                                      value: 10,
-                                      title: '10%',
-                                    ),
-                                    PieChartSectionData(
-                                      color: Colors.blue,
-                                      value: 25,
-                                      title: '25%',
-                                    ),
-                                    PieChartSectionData(
-                                      color: Colors.yellow,
-                                      value: 15,
-                                      title: '15%',
-                                    ),
-                                  ],
+                                  sections: sale.isNotEmpty
+                                      ? sale['produk_terjual']['data']
+                                          .map<PieChartSectionData>((value) {
+                                          return PieChartSectionData(
+                                            color: Colors.orange,
+                                            value: value['jumlah'].toDouble(),
+                                            title: value['namaProduk'],
+                                          );
+                                        }).toList()
+                                      : [],
                                 )))
                               ],
                             ),
@@ -139,43 +168,47 @@ class _HomeState extends State<Home> {
                                   barGroups: [
                                     BarChartGroupData(x: 1, barRods: [
                                       BarChartRodData(
-                                          toY: 10,
+                                          toY: sale.isNotEmpty
+                                              ? sale['produk_terjual']
+                                                      ['produk_perhari']
+                                                  .toDouble()
+                                              : 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
                                     BarChartGroupData(x: 2, barRods: [
                                       BarChartRodData(
-                                          toY: 15,
+                                          toY: 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
                                     BarChartGroupData(x: 3, barRods: [
                                       BarChartRodData(
-                                          toY: 25,
+                                          toY: 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
                                     BarChartGroupData(x: 4, barRods: [
                                       BarChartRodData(
-                                          toY: 20,
+                                          toY: 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
                                     BarChartGroupData(x: 5, barRods: [
                                       BarChartRodData(
-                                          toY: 15,
+                                          toY: 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
                                     BarChartGroupData(x: 6, barRods: [
                                       BarChartRodData(
-                                          toY: 25,
+                                          toY: 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
                                     BarChartGroupData(x: 7, barRods: [
                                       BarChartRodData(
-                                          toY: 30,
+                                          toY: 0,
                                           color: Colors.orange,
                                           width: 25),
                                     ]),
@@ -214,55 +247,59 @@ class _HomeState extends State<Home> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 5,
                       mainAxisSpacing: 5),
-                  children: const [
+                  children: [
                     Card(
                       child: ListTile(
-                        title: Text(
+                        title: const Text(
                           "Transaksi Lunas",
                           style: TextStyle(fontSize: 13),
                         ),
                         subtitle: Text(
-                          "1",
-                          style: TextStyle(
+                          sale.isNotEmpty
+                              ? sale['transaksi_lunas'].toString()
+                              : "0",
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
                     Card(
                       child: ListTile(
-                        title: Text(
+                        title: const Text(
                           "Produk Terjual",
                           style: TextStyle(fontSize: 13),
                         ),
                         subtitle: Text(
-                          "3",
-                          style: TextStyle(
+                          sale.isNotEmpty
+                              ? sale['produk_terjual']['jumlah'].toString()
+                              : "0",
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
                     Card(
                       child: ListTile(
-                        title: Text(
+                        title: const Text(
                           "Omset",
                           style: TextStyle(fontSize: 13),
                         ),
                         subtitle: Text(
-                          "Rp.100000",
-                          style: TextStyle(
+                          "Rp.${sale.isNotEmpty ? sale['omset'].toString() : "0"}",
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
                     Card(
                       child: ListTile(
-                        title: Text(
+                        title: const Text(
                           "Keuntungan",
                           style: TextStyle(fontSize: 13),
                         ),
                         subtitle: Text(
-                          "Rp.20000",
-                          style: TextStyle(
+                          "Rp.${sale.isNotEmpty ? sale['laba'].toString() : "0"}",
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),

@@ -92,74 +92,85 @@ class _SettingState extends State<Setting> {
       body: role != null
           ? SafeArea(
               child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Card(
-                surfaceTintColor: Colors.white,
-                elevation: 4,
-                child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Wrap(
-                      children: [
-                        ListTile(
-                          onTap: () {
-                            Navigator.of(context).push(_goPage(2, null));
-                          },
-                          hoverColor: Colors.white12,
-                          contentPadding: const EdgeInsets.all(0),
-                          horizontalTitleGap: 10,
-                          leading: const Icon(
-                            Icons.account_circle_outlined,
-                            size: 30,
-                          ),
-                          title: const Text("Akun"),
-                          trailing: const Icon(Icons.chevron_right,
-                              size: 35, color: Colors.orange),
+                  padding: const EdgeInsets.all(10),
+                  child: Wrap(
+                    children: [
+                      ListTile(
+                        onTap: () {
+                          Navigator.of(context).push(_goPage(2, null));
+                        },
+                        hoverColor: Colors.white12,
+                        contentPadding: const EdgeInsets.all(0),
+                        horizontalTitleGap: 10,
+                        leading: const Icon(
+                          Icons.account_circle_outlined,
+                          size: 30,
                         ),
-                        const Divider(
-                          color: Color(0xFFcbd5e1),
+                        title: const Text("Akun"),
+                        trailing: const Icon(Icons.chevron_right,
+                            size: 35, color: Colors.orange),
+                      ),
+                      const Divider(
+                        color: Color(0xFFcbd5e1),
+                      ),
+                      ListTile(
+                        onTap: () {
+                          Navigator.of(context).push(_goPage(3, null));
+                        },
+                        hoverColor: Colors.white12,
+                        contentPadding: const EdgeInsets.all(0),
+                        horizontalTitleGap: 10,
+                        leading: const Icon(
+                          Icons.settings_display_outlined,
+                          size: 30,
                         ),
-                        ListTile(
-                          onTap: () {
-                            Navigator.of(context).push(_goPage(3, null));
-                          },
-                          hoverColor: Colors.white12,
-                          contentPadding: const EdgeInsets.all(0),
-                          horizontalTitleGap: 10,
-                          leading: const Icon(
-                            Icons.settings_display_outlined,
-                            size: 30,
-                          ),
-                          title: const Text("Tampilan"),
-                          trailing: const Icon(Icons.chevron_right,
-                              size: 35, color: Colors.orange),
-                        ),
-                        const Divider(color: Color(0xFFcbd5e1)),
-                        role != null && role == 'admin'
-                            ? Wrap(
-                                children: [
-                                  ListTile(
-                                    onTap: () {
-                                      Navigator.of(context)
-                                          .push(_goPage(4, null));
-                                    },
-                                    hoverColor: Colors.white12,
-                                    contentPadding: const EdgeInsets.all(0),
-                                    horizontalTitleGap: 10,
-                                    leading: const Icon(
-                                      Icons.shop_outlined,
-                                      size: 30,
-                                    ),
-                                    title: const Text("Toko"),
-                                    trailing: const Icon(Icons.chevron_right,
-                                        size: 35, color: Colors.orange),
+                        title: const Text("Tampilan"),
+                        trailing: const Icon(Icons.chevron_right,
+                            size: 35, color: Colors.orange),
+                      ),
+                      const Divider(color: Color(0xFFcbd5e1)),
+                      role != null && role == 'admin'
+                          ? Wrap(
+                              children: [
+                                ListTile(
+                                  onTap: () {
+                                    Navigator.of(context)
+                                        .push(_goPage(4, null));
+                                  },
+                                  hoverColor: Colors.white12,
+                                  contentPadding: const EdgeInsets.all(0),
+                                  horizontalTitleGap: 10,
+                                  leading: const Icon(
+                                    Icons.shop_outlined,
+                                    size: 30,
                                   ),
-                                ],
-                              )
-                            : Container()
-                      ],
-                    )),
-              ),
-            ))
+                                  title: const Text("Toko"),
+                                  trailing: const Icon(Icons.chevron_right,
+                                      size: 35, color: Colors.orange),
+                                ),
+                                const Divider(
+                                  color: Color(0xFFcbd5e1),
+                                ),
+                              ],
+                            )
+                          : Container(),
+                      ListTile(
+                        onTap: () {
+                          Navigator.of(context).push(_goPage(9, null));
+                        },
+                        hoverColor: Colors.white12,
+                        contentPadding: const EdgeInsets.all(0),
+                        horizontalTitleGap: 10,
+                        leading: const Icon(
+                          Icons.settings_outlined,
+                          size: 30,
+                        ),
+                        title: const Text("Lainnya"),
+                        trailing: const Icon(Icons.chevron_right,
+                            size: 35, color: Colors.orange),
+                      ),
+                    ],
+                  )))
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.orange,

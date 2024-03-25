@@ -20,7 +20,7 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  final TextEditingController _username = TextEditingController(text: "");
+  final TextEditingController _nama = TextEditingController(text: "");
   final TextEditingController _email = TextEditingController(text: "");
   final TextEditingController _noTlp = TextEditingController(text: "");
   XFile? _image;
@@ -32,6 +32,11 @@ class _ProfileState extends State<Profile> {
     super.initState();
 
     getUser();
+    setState(() {
+      _image = null;
+    });
+    print(_image);
+    print(_img);
   }
 
   @override
@@ -39,11 +44,15 @@ class _ProfileState extends State<Profile> {
     super.dispose();
   }
 
+  Future<void> refresh() async {
+    getUser();
+  }
+
   Future<void> getUser() async {
     Map<String, dynamic> res = await AuthUser().getCurrentUser();
 
     _img = res['foto'];
-    _username.value = TextEditingValue(text: res['username'] ?? "");
+    _nama.value = TextEditingValue(text: res['nama'] ?? "");
     _email.value = TextEditingValue(text: res['email'] ?? "");
     _noTlp.value = TextEditingValue(text: res['no_tlp'] ?? "");
   }
@@ -198,28 +207,29 @@ class _ProfileState extends State<Profile> {
   Future<void> updateData() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
     var request =
-        http.MultipartRequest("PUT", Uri.parse("$url/api/user/update"));
+        http.MultipartRequest("post", Uri.parse("$url/api/user/update"));
     if (_image != null) {
       request.files
           .add(await http.MultipartFile.fromPath('foto', _image!.path));
     }
-    request.fields['username'] = _username.text;
+    request.fields['nama'] = _nama.text;
     request.fields['email'] = _email.text;
     request.fields['no_tlp'] = _noTlp.text;
     request.headers['Content-Type'] = "application/json";
     request.headers['Authorization'] = "Bearer $token";
     var streamedResponse = await request.send();
     var res = await http.Response.fromStream(streamedResponse);
-    var message = jsonDecode(res.body)['message'];
+    var message = jsonDecode(res.body);
 
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
-      Popup().show(context, message, true);
+      Popup().show(context, message['message'], true);
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
+      print(message);
       // ignore: use_build_context_synchronously
-      Popup().show(context, message, false);
+      // Popup().show(context, message['message'], false);
     }
   }
 
@@ -227,11 +237,13 @@ class _ProfileState extends State<Profile> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
+        child: RefreshIndicator(
+          color: Colors.orange,
+          onRefresh: () {
+            return refresh();
+          },
           child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Card(
-            surfaceTintColor: Colors.white,
-            elevation: 5,
+            padding: const EdgeInsets.all(20),
             child: Form(
                 child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -246,38 +258,29 @@ class _ProfileState extends State<Profile> {
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
-                    _image != null
-                        ? _img != null || _image == null
-                            ? Container(
-                                width: 150,
-                                height: 150,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(75),
-                                    border: Border.all(color: Colors.grey)),
-                                clipBehavior: Clip.antiAlias,
-                                child: Image.network("$url/storage/img/$_img",
-                                    fit: BoxFit.cover),
-                              )
-                            : Container(
-                                width: 150,
-                                height: 150,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(75),
-                                    border: Border.all(color: Colors.grey)),
-                                clipBehavior: Clip.antiAlias,
-                                child: Image.file(File(_image!.path),
-                                    fit: BoxFit.cover),
-                              )
-                        : Container(
-                            width: 150,
-                            height: 150,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(75),
-                                border: Border.all(color: Colors.grey)),
-                            clipBehavior: Clip.antiAlias,
-                            child: Image.asset("assets/img/user.png",
-                                fit: BoxFit.cover),
-                          ),
+                    Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(75),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: _img != null && _image == null
+                          ? Image.network(
+                              "$url/storage/img/$_img",
+                              fit: BoxFit.cover,
+                            )
+                          : _image != null
+                              ? Image.file(
+                                  File(_image!.path),
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  "assets/img/user.png",
+                                  fit: BoxFit.cover,
+                                ),
+                    ),
                     GestureDetector(
                       onTap: () async {
                         _openDialogImage(context);
@@ -308,7 +311,7 @@ class _ProfileState extends State<Profile> {
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Text("Username",
+                          Text("Nama",
                               style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -316,8 +319,8 @@ class _ProfileState extends State<Profile> {
                         height: 6,
                       ),
                       CupertinoTextField(
-                        controller: _username,
-                        placeholder: "Masukkan username",
+                        controller: _nama,
+                        placeholder: "Masukkan nama",
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 15),
                         prefix: const Padding(
@@ -395,8 +398,10 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ],
-            ))),
-      )),
+            )),
+          ),
+        ),
+      ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20),
         child: SizedBox(

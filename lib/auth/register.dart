@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:app/add_toko.dart';
 import 'package:app/components/popup.dart';
+import 'package:app/setting/toko.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -16,10 +18,32 @@ class Register extends StatefulWidget {
   _RegisterState createState() => _RegisterState();
 }
 
+Route _goPage(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionDuration: const Duration(milliseconds: 500),
+    reverseTransitionDuration: const Duration(milliseconds: 500),
+    opaque: false,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
+
 class _RegisterState extends State<Register> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _passwordControllerConfirmation =
       TextEditingController();
@@ -32,19 +56,32 @@ class _RegisterState extends State<Register> {
     final res = await http
         .post(Uri.parse("${dotenv.env['API_URL']!}/api/auth/register"),
             body: jsonEncode({
-              "username": _usernameController.text,
+              "nama": _namaController.text,
+              "email": _emailController.text,
               "password": _passwordController.text,
             }),
             headers: {"Content-type": "application/json"});
 
+    final result = jsonDecode(res.body);
     if (res.statusCode == 200) {
+      await const FlutterSecureStorage()
+          .write(key: 'token', value: result['data']['token']);
+      await const FlutterSecureStorage()
+          .write(key: 'role', value: result['data']['role']);
       // ignore: use_build_context_synchronously
-      Popup().show(context, "Daftar berhasil. Silahkan login!", true);
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
+      Popup().show(context, result['message'], true);
+      Navigator.pushAndRemoveUntil(
+        // ignore: use_build_context_synchronously
+        context,
+        _goPage(const AddToko()),
+        (route) => false,
+      );
     } else {
+      setState(() {
+        _passwordController.clear();
+      });
       // ignore: use_build_context_synchronously
-      Popup().show(context, "Daftar gagal", false);
+      Popup().show(context, result['message'], false);
     }
   }
 
@@ -78,7 +115,7 @@ class _RegisterState extends State<Register> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text("Username",
+                        Text("Nama",
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
@@ -86,12 +123,40 @@ class _RegisterState extends State<Register> {
                       height: 6,
                     ),
                     CupertinoTextField(
-                      controller: _usernameController,
+                      controller: _namaController,
                       prefix: const Padding(
                         padding: EdgeInsets.only(left: 10),
                         child: Icon(Icons.person),
                       ),
-                      placeholder: "Masukkan username",
+                      placeholder: "Masukkan nama",
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: const Color(0xFF94a3b8), width: 0.5),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text("Email",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 6,
+                    ),
+                    CupertinoTextField(
+                      controller: _emailController,
+                      prefix: const Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Icon(Icons.email),
+                      ),
+                      placeholder: "Masukkan email",
+                      keyboardType: TextInputType.emailAddress,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 15),
                       decoration: BoxDecoration(

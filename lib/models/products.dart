@@ -15,7 +15,7 @@ class Products {
 
   Products(
       {required this.id,
-      required this.foto,
+      this.foto,
       required this.namaProduk,
       this.barcode,
       // ignore: non_constant_identifier_names

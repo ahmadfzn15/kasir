@@ -44,6 +44,7 @@ class _PaymentState extends State<Payment> {
   final TextEditingController _cashback = TextEditingController(text: "0");
   final TextEditingController _discountValue = TextEditingController(text: "0");
   final TextEditingController _etcValue = TextEditingController(text: "0");
+  final TextEditingController _deskripsi = TextEditingController(text: "");
   final TextEditingController _ket = TextEditingController(text: "");
   final List<DropdownMenuEntry<dynamic>> _metode = [
     const DropdownMenuEntry(value: 0, label: "Tunai"),
@@ -62,15 +63,15 @@ class _PaymentState extends State<Payment> {
       loading = true;
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final res = await http.post(Uri.parse("${dotenv.env['API_URL']!}/api/sale"),
         body: jsonEncode({
-          "id": id,
           "cash": _cash.text,
           "cashback": _cashback.text,
           "total_harga": widget.total,
-          "metode_pembayaran": _metode[_selectedOption].label,
+          "status": _metode[_selectedOption].label,
+          "biaya_tambahan": _etcValue.text,
+          "deskripsi_biaya_tambahan": _deskripsi.text,
           "diskon": _discountValue.text,
           "total_pembayaran": total == 0 ? widget.total : total,
           "ket": _ket.text,
@@ -89,15 +90,9 @@ class _PaymentState extends State<Payment> {
         loading = false;
       });
       // ignore: use_build_context_synchronously
-      Navigator.of(context).push(_goPage(Success(detail: {
-        "data": {
-          "metode_pembayaran": _metode[_selectedOption].label,
-          "total": total == 0 ? widget.total.toString() : total.toString(),
-          "cash": _cash.text,
-          "cashback": _cashback.text,
-          "order": widget.order
-        }
-      })));
+      Navigator.of(context).push(_goPage(Success(
+        detail: result['data'],
+      )));
     } else {
       // ignore: use_build_context_synchronously
       Popup().show(context, result['message'], false);

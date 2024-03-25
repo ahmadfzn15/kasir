@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:app/components/popup.dart';
 import 'package:app/employee/employee.dart';
 import 'package:app/etc/auth_user.dart';
+import 'package:app/help.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,7 +11,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import 'auth/auth.dart';
-import 'help.dart';
 import 'history.dart';
 import 'home.dart';
 import 'product/product.dart';
@@ -33,8 +33,7 @@ class SideItem {
 }
 
 class Layout extends StatefulWidget {
-  const Layout({super.key, this.user});
-  final Map<String, dynamic>? user;
+  const Layout({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -64,6 +63,7 @@ Route _goPage(int id) {
 
 class _LayoutState extends State<Layout> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  String url = dotenv.env['API_URL']!;
 
   int _selectedIndex = 0;
   late List<SideItem> link;
@@ -143,25 +143,27 @@ class _LayoutState extends State<Layout> {
       String url = dotenv.env['API_URL']!;
 
       if (hasToken) {
-        final response = await http.post(
+        await http.post(
           Uri.parse("$url/api/logout"),
           headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer $token"
           },
-        );
-        await const FlutterSecureStorage().deleteAll();
-        // ignore: use_build_context_synchronously
-        Popup().show(context, jsonDecode(response.body)['message'], true);
-        Navigator.pushReplacement(
+        ).then((response) async {
+          await const FlutterSecureStorage().deleteAll();
+          Navigator.pushAndRemoveUntil(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return const Auth();
+              },
+            ),
+            (route) => false,
+          );
           // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return const Auth();
-            },
-          ),
-        );
+          Popup().show(context, jsonDecode(response.body)['message'], true);
+        });
         loading = false;
       }
     } catch (e) {
@@ -213,6 +215,16 @@ class _LayoutState extends State<Layout> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      user.isNotEmpty ? user['market']['nama_toko'] : "",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
                     GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
@@ -224,17 +236,23 @@ class _LayoutState extends State<Layout> {
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(
-                                radius: 35,
-                                backgroundImage:
-                                    AssetImage("assets/img/user.png"),
-                              ),
+                              user['foto'] != null
+                                  ? CircleAvatar(
+                                      radius: 35,
+                                      backgroundImage: NetworkImage(
+                                          "$url/storage/img/${user['foto']}"),
+                                    )
+                                  : const CircleAvatar(
+                                      radius: 35,
+                                      backgroundImage:
+                                          AssetImage("assets/img/user.png"),
+                                    ),
                               const SizedBox(width: 10),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    user.isNotEmpty ? user['username'] : "",
+                                    user.isNotEmpty ? user['nama'] : "",
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,

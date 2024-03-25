@@ -24,7 +24,6 @@ dependencies:
   share_plus: ^7.2.2
   excel: ^4.0.2
   screenshot: ^2.1.0
-  camera: ^0.10.5+9
   path_provider: ^2.1.2
   audioplayers: ^5.2.1
 
@@ -38,4 +37,5 @@ flutter:
   assets:
     - .env
     - assets/img/
+    - assets/sound/
     - assets/fonts/

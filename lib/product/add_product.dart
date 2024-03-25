@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:app/components/popup.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -243,6 +244,15 @@ class _AddProductState extends State<AddProduct> {
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
       Popup().show(context, 'Produk baru berhasil ditambahkan', true);
+      final notif = AudioPlayer();
+      notif.play(AssetSource("sound/sound.mp3"));
+      bool? hasVibration = await Vibration.hasVibrator();
+      if (hasVibration!) {
+        Vibration.vibrate(
+          duration: 100,
+          amplitude: 100,
+        );
+      }
       setState(() {
         loading = false;
       });
@@ -346,18 +356,49 @@ class _AddProductState extends State<AddProduct> {
     });
   }
 
+  void _showBackDialog() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text("Tinggalkan halaman"),
+        content:
+            const Text("Apakah yakin anda ingin meninggalkan halaman ini?"),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("Tidak"),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("Ya"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Center(
-            child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Card(
-            surfaceTintColor: Colors.white,
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
+      body: PopScope(
+          canPop: _namaProduk.text.isEmpty,
+          onPopInvoked: (didPop) {
+            if (didPop) {
+              return;
+            }
+            _showBackDialog();
+          },
+          child: SingleChildScrollView(
+            child: Center(
+                child: Padding(
+              padding: const EdgeInsets.all(20),
               child: Form(
                   key: _formKey,
                   child: Column(
@@ -783,10 +824,8 @@ class _AddProductState extends State<AddProduct> {
                       ),
                     ],
                   )),
-            ),
-          ),
-        )),
-      ),
+            )),
+          )),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: SizedBox(

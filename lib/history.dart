@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:app/components/popup.dart';
-import 'package:app/home.dart';
-import 'package:app/order/struk.dart';
+import 'package:app/etc/auth_user.dart';
+import 'package:app/etc/format_time.dart';
+import 'package:app/order/receipt.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:vibration/vibration.dart';
 
 class History extends StatefulWidget {
   const History({super.key});
@@ -20,9 +24,9 @@ class History extends StatefulWidget {
   _HistoryState createState() => _HistoryState();
 }
 
-Route _goPage(int id) {
+Route _goPage(Widget page) {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => const Home(),
+    pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionDuration: const Duration(milliseconds: 500),
     reverseTransitionDuration: const Duration(milliseconds: 500),
     opaque: false,
@@ -43,6 +47,7 @@ Route _goPage(int id) {
 
 class _HistoryState extends State<History> {
   String url = dotenv.env['API_URL']!;
+  Map<String, dynamic> user = {};
   List<dynamic> history = [];
   bool loading = false;
   bool _selectAll = false;
@@ -52,7 +57,15 @@ class _HistoryState extends State<History> {
   void initState() {
     super.initState();
 
+    getUser();
     fetchDataHistory();
+  }
+
+  Future<void> getUser() async {
+    Map<String, dynamic> res = await AuthUser().getCurrentUser();
+    setState(() {
+      user = res;
+    });
   }
 
   Future<void> _refresh() async {
@@ -210,7 +223,14 @@ class _HistoryState extends State<History> {
     var excel = Excel.createExcel();
     var sheet = excel['Sheet1'];
 
-    var head = ["Cash", "Cashback", "Total Harga"];
+    var head = [
+      "No",
+      "Nomor Struk",
+      "Diterima",
+      "Kembalian",
+      "Status",
+      "Total Pembayaran"
+    ];
 
     for (var i = 0; i < head.length; i++) {
       sheet
@@ -220,22 +240,64 @@ class _HistoryState extends State<History> {
 
     for (var i = 0; i < history.length; i++) {
       sheet
-          .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i))
+          .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1))
+          .value = TextCellValue((i + 1).toString());
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1))
+          .value = TextCellValue(history[i]['nomor_struk']);
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1))
           .value = TextCellValue("Rp.${history[i]['cash']}");
       sheet
-          .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i))
+          .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i + 1))
           .value = TextCellValue("Rp.${history[i]['cashback']}");
       sheet
-          .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i))
+          .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1))
+          .value = TextCellValue(history[i]['status']);
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
           .value = TextCellValue("Rp.${history[i]['total_pembayaran']}");
     }
 
-    var path = await getApplicationDocumentsDirectory();
+    var fileBytes = excel.save();
+    var status = await Permission.storage.request();
+    var vibrate = await const FlutterSecureStorage().read(key: 'vibrate');
+    var sound = await const FlutterSecureStorage().read(key: 'sound');
 
-    var excelEncode = excel.encode();
-    File("$path/kasir.xlsx").writeAsBytesSync(excelEncode!);
-    // ignore: use_build_context_synchronously
-    Popup().show(context, "File berhasil didownload", true);
+    if (status.isGranted) {
+      var date = DateTime.now();
+      var path = await getApplicationDocumentsDirectory();
+
+      String outputFile =
+          "${path.path}/data_penjualan_${date.toIso8601String()}.xlsx";
+
+      if (fileBytes != null) {
+        File(outputFile)
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(fileBytes);
+
+        if (sound == "1") {
+          final notif = AudioPlayer();
+          await notif.play(AssetSource("sound/sound.mp3"));
+        }
+        bool? hasVibration = await Vibration.hasVibrator();
+
+        if (hasVibration! && vibrate == "1") {
+          Vibration.vibrate(duration: 200, amplitude: 100);
+        }
+
+        // ignore: use_build_context_synchronously
+        Popup().show(context, "File berhasil didownload", true);
+      } else {
+        // ignore: use_build_context_synchronously
+        Popup().show(context, "File gagal didownload", false);
+      }
+      // ignore: use_build_context_synchronously
+    } else if (status.isDenied) {
+      openAppSettings();
+      // ignore: use_build_context_synchronously
+      Popup().show(context, "File gagal didownload", false);
+    }
   }
 
   @override
@@ -300,35 +362,31 @@ class _HistoryState extends State<History> {
                   onRefresh: () {
                     return _refresh();
                   },
-                  child: SizedBox(
-                    height: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          Card(
-                              surfaceTintColor: Colors.white,
-                              clipBehavior: Clip.antiAlias,
-                              elevation: 4,
-                              child: CupertinoButton(
-                                color: Colors.orange,
-                                child: const Text("Download Excel"),
-                                onPressed: () {
-                                  printExcel();
-                                },
-                              )),
-                          Card(
-                            surfaceTintColor: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Card(
+                            surfaceTintColor:
+                                const Color.fromRGBO(255, 255, 255, 1),
                             clipBehavior: Clip.antiAlias,
                             elevation: 4,
+                            child: CupertinoButton(
+                              color: Colors.orange,
+                              child: const Text("Download Excel"),
+                              onPressed: () {
+                                printExcel();
+                              },
+                            )),
+                        Expanded(
                             child: ListView.builder(
-                              shrinkWrap: true,
-                              padding: const EdgeInsets.all(0),
-                              itemCount: history.length,
-                              itemBuilder: (context, index) {
-                                return Wrap(
-                                  children: [
-                                    Dismissible(
+                          shrinkWrap: true,
+                          itemCount: history.length,
+                          itemBuilder: (context, index) {
+                            return Wrap(
+                              children: [
+                                user.isNotEmpty && user['role'] == 'admin'
+                                    ? Dismissible(
                                         key: Key(
                                             history[index]['id'].toString()),
                                         direction: DismissDirection.endToStart,
@@ -360,7 +418,8 @@ class _HistoryState extends State<History> {
                                         },
                                         child: ListTile(
                                           contentPadding:
-                                              const EdgeInsets.all(0),
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 0, horizontal: 5),
                                           onLongPress: () {
                                             setState(() {
                                               _select = true;
@@ -384,8 +443,9 @@ class _HistoryState extends State<History> {
                                               showSheetOrder(context);
                                             } else {
                                               Navigator.of(context).push(
-                                                  _goPage(
-                                                      history[index]['id']));
+                                                  _goPage(Receipt(
+                                                      id: history[index]
+                                                          ['id'])));
                                             }
                                           },
                                           selected: history[index]['selected'],
@@ -393,28 +453,101 @@ class _HistoryState extends State<History> {
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10)),
-                                          leading: Container(
-                                            color: Colors.orange,
-                                            width: 50,
-                                          ),
                                           title: Text(
-                                            "Rp.${history[index]['total_pembayaran'].toString()}",
-                                            style: const TextStyle(
-                                                color: Colors.deepOrange,
-                                                fontWeight: FontWeight.bold),
+                                            history[index]['kode'].toString(),
                                           ),
-                                          subtitle: Text(history[index]
-                                              ['metode_pembayaran']),
-                                        )),
-                                    if (index != history.length - 1)
-                                      const Divider()
-                                  ],
-                                );
-                              },
-                            ),
-                          )
-                        ],
-                      ),
+                                          subtitle: Text(
+                                              "Rp.${history[index]['total_pembayaran']}",
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  color: Colors.orange,
+                                                  fontWeight: FontWeight.bold)),
+                                          trailing: Wrap(
+                                            direction: Axis.vertical,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.end,
+                                            children: [
+                                              Text(history[index]['status'],
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                  )),
+                                              Text(
+                                                formatTime(history[index]
+                                                    ['created_at']),
+                                              ),
+                                              Text(
+                                                  "Dibuat oleh ${history[index]['cashier']['nama']}"),
+                                            ],
+                                          ),
+                                        ))
+                                    : ListTile(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                vertical: 0, horizontal: 5),
+                                        onLongPress: () {
+                                          setState(() {
+                                            _select = true;
+                                            history[index]['selected'] = true;
+                                          });
+                                          showSheetOrder(context);
+                                        },
+                                        onTap: () {
+                                          if (history[index]['selected']) {
+                                            setState(() {
+                                              history[index]['selected'] =
+                                                  false;
+                                            });
+                                            showSheetOrder(context);
+                                          } else if (history.any((element) =>
+                                              element['selected'])) {
+                                            setState(() {
+                                              history[index]['selected'] = true;
+                                            });
+                                            showSheetOrder(context);
+                                          } else {
+                                            Navigator.of(context).push(_goPage(
+                                                Receipt(
+                                                    id: history[index]['id'])));
+                                          }
+                                        },
+                                        selected: history[index]['selected'],
+                                        selectedTileColor: Colors.black26,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        title: Text(
+                                          history[index]['kode'].toString(),
+                                        ),
+                                        subtitle: Text(
+                                            "Rp.${history[index]['total_pembayaran']}",
+                                            style: const TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.orange,
+                                                fontWeight: FontWeight.bold)),
+                                        trailing: Wrap(
+                                          direction: Axis.vertical,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.end,
+                                          children: [
+                                            Text(history[index]['status'],
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                )),
+                                            Text(
+                                              formatTime(
+                                                  history[index]['created_at']),
+                                            ),
+                                            Text(
+                                                "Dibuat oleh ${history[index]['cashier']['nama']}"),
+                                          ],
+                                        ),
+                                      ),
+                                if (index != history.length - 1) const Divider()
+                              ],
+                            );
+                          },
+                        ))
+                      ],
                     ),
                   ),
                 )

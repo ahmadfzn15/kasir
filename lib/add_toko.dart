@@ -1,48 +1,48 @@
 import 'dart:convert';
 
 import 'package:app/components/popup.dart';
-import 'package:app/etc/auth_user.dart';
+import 'package:app/layout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class Toko extends StatefulWidget {
-  const Toko({super.key});
+class AddToko extends StatefulWidget {
+  const AddToko({super.key});
 
   @override
-  State<Toko> createState() => _TokoState();
+  State<AddToko> createState() => _AddTokoState();
 }
 
-class _TokoState extends State<Toko> {
+Route _goPage(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionDuration: const Duration(milliseconds: 500),
+    reverseTransitionDuration: const Duration(milliseconds: 500),
+    opaque: false,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
+
+class _AddTokoState extends State<AddToko> {
   final TextEditingController _namaToko = TextEditingController();
   final TextEditingController _alamatToko = TextEditingController();
   final TextEditingController _usaha = TextEditingController();
   final TextEditingController _noTlp = TextEditingController();
-  int? id;
-  String url = dotenv.env['API_URL']!;
+
   bool loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    fetchDataMarket();
-  }
-
-  Future<void> fetchDataMarket() async {
-    Map<String, dynamic> res = await AuthUser().getCurrentUser();
-
-    var market = res['market'];
-    _namaToko.value = TextEditingValue(text: market['nama_toko'] ?? "");
-    _alamatToko.value = TextEditingValue(text: market['alamat'] ?? "");
-    _usaha.value = TextEditingValue(text: market['bidang_usaha'] ?? "");
-    _noTlp.value = TextEditingValue(text: market['no_tlp'] ?? "");
-    setState(() {
-      id = market['id'];
-    });
-  }
 
   Future<void> _uploadToDatabase(BuildContext context) async {
     setState(() {
@@ -50,8 +50,8 @@ class _TokoState extends State<Toko> {
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
 
-    final res = await http.put(
-        Uri.parse("${dotenv.env['API_URL']!}/api/market/$id"),
+    final res = await http.post(
+        Uri.parse("${dotenv.env['API_URL']!}/api/market"),
         body: jsonEncode({
           "nama_toko": _namaToko.text,
           "alamat": _alamatToko.text,
@@ -71,7 +71,12 @@ class _TokoState extends State<Toko> {
         loading = false;
       });
       // ignore: use_build_context_synchronously
-      Navigator.pop(context);
+      Navigator.pushAndRemoveUntil(
+        // ignore: use_build_context_synchronously
+        context,
+        _goPage(const Layout()),
+        (route) => false,
+      );
     } else {
       // ignore: use_build_context_synchronously
       Popup().show(context, result['message'], false);
@@ -81,6 +86,16 @@ class _TokoState extends State<Toko> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Colors.white,
+        shadowColor: Colors.grey,
+        elevation: 1,
+        title: const Text(
+          "Toko",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(10),

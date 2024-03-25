@@ -16,7 +16,7 @@ class AddEmployee extends StatefulWidget {
 
 class _AddEmployeeState extends State<AddEmployee> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _username = TextEditingController();
+  final TextEditingController _nama = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _noTlp = TextEditingController();
   final TextEditingController _password = TextEditingController();
@@ -30,13 +30,11 @@ class _AddEmployeeState extends State<AddEmployee> {
       loading = true;
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
     final res = await http.post(
         Uri.parse("${dotenv.env['API_URL']!}/api/cashier"),
         body: jsonEncode({
-          "id": id,
-          "username": _username.text,
+          "nama": _nama.text,
           "email": _email.text,
           "no_tlp": _noTlp.text,
           "password": _password.text,
@@ -79,7 +77,7 @@ class _AddEmployeeState extends State<AddEmployee> {
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Text("Username Karyawan",
+                            Text("Nama Karyawan",
                                 style: TextStyle(fontWeight: FontWeight.bold)),
                           ],
                         ),
@@ -87,12 +85,12 @@ class _AddEmployeeState extends State<AddEmployee> {
                           height: 6,
                         ),
                         CupertinoTextField(
-                          controller: _username,
+                          controller: _nama,
                           prefix: const Padding(
                             padding: EdgeInsets.only(left: 10),
                             child: Icon(Icons.person),
                           ),
-                          placeholder: "Masukkan username",
+                          placeholder: "Masukkan nama",
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 15),
                           decoration: BoxDecoration(
@@ -177,7 +175,7 @@ class _AddEmployeeState extends State<AddEmployee> {
                         ),
                         CupertinoTextField(
                           controller: _password,
-                          obscureText: true,
+                          obscureText: !showPwd,
                           prefix: const Padding(
                             padding: EdgeInsets.only(left: 10),
                             child: Icon(Icons.lock),
@@ -220,7 +218,7 @@ class _AddEmployeeState extends State<AddEmployee> {
                         ),
                         CupertinoTextField(
                           controller: _repeatPassword,
-                          obscureText: true,
+                          obscureText: !showRepeatPwd,
                           prefix: const Padding(
                             padding: EdgeInsets.only(left: 10),
                             child: Icon(Icons.lock),
@@ -260,12 +258,7 @@ class _AddEmployeeState extends State<AddEmployee> {
           child: CupertinoButton(
               color: Colors.orange,
               onPressed: () {
-                loading
-                    ? null
-                    : {
-                        if (_formKey.currentState!.validate())
-                          _uploadToDatabase(context)
-                      };
+                !loading ? _uploadToDatabase(context) : null;
               },
               child: const Text("Simpan")),
         ),

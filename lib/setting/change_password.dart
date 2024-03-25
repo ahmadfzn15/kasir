@@ -15,7 +15,6 @@ class ChangePassword extends StatefulWidget {
 }
 
 class _ChangePasswordState extends State<ChangePassword> {
-  final TextEditingController _email = TextEditingController();
   final TextEditingController _currentPassword = TextEditingController();
   final TextEditingController _newPassword = TextEditingController();
   final TextEditingController _repeatPassword = TextEditingController();
@@ -26,12 +25,9 @@ class _ChangePasswordState extends State<ChangePassword> {
 
   Future<void> uploadData() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
-    final response = await http.put(
-        Uri.parse("$url/api/user/change-password/$id"),
+    final response = await http.put(Uri.parse("$url/api/user/change-password"),
         body: jsonEncode({
-          "email": _email.text,
           "current_password": _currentPassword.text,
           "new_password": _newPassword.text,
         }),
@@ -65,36 +61,6 @@ class _ChangePasswordState extends State<ChangePassword> {
                 padding: const EdgeInsets.all(10),
                 child: Column(
                   children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Email Saat Ini",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    CupertinoTextField(
-                      controller: _email,
-                      placeholder: "Masukkan email saat ini",
-                      keyboardType: TextInputType.emailAddress,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 15),
-                      prefix: const Padding(
-                        padding: EdgeInsets.only(left: 10),
-                        child: Icon(Icons.email),
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: const Color(0xFFcbd5e1), width: 0.5),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
