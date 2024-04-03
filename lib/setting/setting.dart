@@ -71,6 +71,7 @@ class _SettingState extends State<Setting> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKeys,
+      backgroundColor: const Color(0xFFf1f5f9),
       appBar: AppBar(
         leading: IconButton(
             onPressed: () {
@@ -110,24 +111,6 @@ class _SettingState extends State<Setting> {
                         trailing: const Icon(Icons.chevron_right,
                             size: 35, color: Colors.orange),
                       ),
-                      const Divider(
-                        color: Color(0xFFcbd5e1),
-                      ),
-                      ListTile(
-                        onTap: () {
-                          Navigator.of(context).push(_goPage(3, null));
-                        },
-                        hoverColor: Colors.white12,
-                        contentPadding: const EdgeInsets.all(0),
-                        horizontalTitleGap: 10,
-                        leading: const Icon(
-                          Icons.settings_display_outlined,
-                          size: 30,
-                        ),
-                        title: const Text("Tampilan"),
-                        trailing: const Icon(Icons.chevron_right,
-                            size: 35, color: Colors.orange),
-                      ),
                       const Divider(color: Color(0xFFcbd5e1)),
                       role != null && role == 'admin'
                           ? Wrap(
@@ -141,7 +124,7 @@ class _SettingState extends State<Setting> {
                                   contentPadding: const EdgeInsets.all(0),
                                   horizontalTitleGap: 10,
                                   leading: const Icon(
-                                    Icons.shop_outlined,
+                                    Icons.home_work_outlined,
                                     size: 30,
                                   ),
                                   title: const Text("Toko"),

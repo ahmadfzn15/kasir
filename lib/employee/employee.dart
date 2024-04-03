@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:app/components/popup.dart';
+import 'package:app/employee/edit_employee.dart';
 import 'package:app/sublayout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,10 +17,9 @@ class Employee extends StatefulWidget {
   _EmployeeState createState() => _EmployeeState();
 }
 
-Route _toAddPage() {
+Route _goPage(Widget page) {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) =>
-        const Sublayout(id: 7),
+    pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionDuration: const Duration(milliseconds: 500),
     reverseTransitionDuration: const Duration(milliseconds: 500),
     opaque: false,
@@ -90,7 +90,7 @@ class _EmployeeState extends State<Employee> {
     }
   }
 
-  void _openOption(BuildContext context, int id) {
+  void _openOption(BuildContext context, Map<String, dynamic> data) {
     showModalBottomSheet(
       showDragHandle: true,
       enableDrag: true,
@@ -105,6 +105,7 @@ class _EmployeeState extends State<Employee> {
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
+                  Navigator.push(context, _goPage(EditEmployee(data: data)));
                 },
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -123,7 +124,7 @@ class _EmployeeState extends State<Employee> {
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
-                  openDelete(context, id);
+                  openDelete(context, data['id']);
                 },
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -198,6 +199,7 @@ class _EmployeeState extends State<Employee> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFf1f5f9),
       appBar: AppBar(
         leading: IconButton(
             onPressed: () {
@@ -218,7 +220,7 @@ class _EmployeeState extends State<Employee> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(_toAddPage());
+          Navigator.of(context).push(_goPage(const Sublayout(id: 7)));
         },
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
@@ -245,25 +247,25 @@ class _EmployeeState extends State<Employee> {
                         itemBuilder: (context, index) {
                           return Wrap(
                             children: [
-                              ListTile(
-                                leading: const CircleAvatar(
-                                  backgroundImage:
-                                      AssetImage("assets/img/lusi.jpeg"),
+                              Card(
+                                surfaceTintColor: Colors.white,
+                                child: ListTile(
+                                  leading: const CircleAvatar(
+                                    backgroundImage:
+                                        AssetImage("assets/img/lusi.jpeg"),
+                                  ),
+                                  contentPadding:
+                                      const EdgeInsets.only(right: 0, left: 10),
+                                  title: Text(employee[index]['nama']),
+                                  subtitle: Text(employee[index]['role']),
+                                  trailing: IconButton(
+                                      onPressed: () {
+                                        _openOption(context, employee[index]);
+                                      },
+                                      icon: const Icon(
+                                          CupertinoIcons.ellipsis_vertical)),
                                 ),
-                                title: Text(employee[index]['nama']),
-                                subtitle: Text(employee[index]['role']),
-                                trailing: IconButton(
-                                    onPressed: () {
-                                      _openOption(
-                                          context, employee[index]['id']);
-                                    },
-                                    icon: const Icon(Icons.menu)),
                               ),
-                              if (index != employee.length - 1)
-                                const Divider(
-                                  indent: 15,
-                                  endIndent: 15,
-                                )
                             ],
                           );
                         },

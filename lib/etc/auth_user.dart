@@ -12,21 +12,28 @@ class AuthUser {
     String url = dotenv.env['API_URL']!;
 
     if (hasToken) {
-      final response = await http.get(
-        Uri.parse("$url/api/user"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token"
-        },
-      );
+      try {
+        final response = await http.get(
+          Uri.parse("$url/api/user"),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token"
+          },
+        );
 
-      Map<String, dynamic> res = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return res['data'];
-      } else {
+        Map<String, dynamic> res = jsonDecode(response.body);
+        if (response.statusCode == 200) {
+          return res['data'];
+        } else {
+          await const FlutterSecureStorage().deleteAll();
+          return {};
+        }
+      } catch (e) {
+        await const FlutterSecureStorage().deleteAll();
         return {};
       }
     } else {
+      await const FlutterSecureStorage().deleteAll();
       return {};
     }
   }

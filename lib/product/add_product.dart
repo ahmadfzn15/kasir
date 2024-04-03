@@ -230,6 +230,7 @@ class _AddProductState extends State<AddProduct> {
     }
     request.fields['namaProduk'] = _namaProduk.text;
     request.fields['barcode'] = barcode ?? "";
+    request.fields['variant'] = _variant.text;
     request.fields['id_kategori'] = _selectedOption.toString();
     request.fields['harga_beli'] = _hargaBeli.text;
     request.fields['harga_jual'] = _hargaJual.text;

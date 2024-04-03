@@ -7,14 +7,15 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class AddEmployee extends StatefulWidget {
-  const AddEmployee({super.key});
+class EditEmployee extends StatefulWidget {
+  const EditEmployee({super.key, required this.data});
+  final Map<String, dynamic> data;
 
   @override
-  State<AddEmployee> createState() => _AddEmployeeState();
+  State<EditEmployee> createState() => _EditEmployeeState();
 }
 
-class _AddEmployeeState extends State<AddEmployee> {
+class _EditEmployeeState extends State<EditEmployee> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nama = TextEditingController();
   final TextEditingController _email = TextEditingController();
@@ -31,21 +32,29 @@ class _AddEmployeeState extends State<AddEmployee> {
     const DropdownMenuEntry(value: 2, label: "Staff Inventaris"),
   ];
 
+  @override
+  initState() {
+    super.initState();
+
+    _nama.value = TextEditingValue(text: widget.data['nama']);
+    _email.value = TextEditingValue(text: widget.data['email']);
+    _noTlp.value = TextEditingValue(text: widget.data['no_tlp'] ?? "");
+    _selectedOption = widget.data['role'] == "staff kasir" ? 1 : 2;
+  }
+
   Future<void> _uploadToDatabase(BuildContext context) async {
-    print(_selectedOption);
     setState(() {
       loading = true;
     });
     String? token = await const FlutterSecureStorage().read(key: 'token');
 
-    final res = await http.post(
-        Uri.parse("${dotenv.env['API_URL']!}/api/cashier"),
+    final res = await http.put(
+        Uri.parse("${dotenv.env['API_URL']!}/api/cashier/${widget.data['id']}"),
         body: jsonEncode({
           "nama": _nama.text,
-          "role": _selectedOption,
           "email": _email.text,
           "no_tlp": _noTlp.text,
-          "password": _password.text,
+          "role": _selectedOption,
         }),
         headers: {
           "Content-type": "application/json",
@@ -73,6 +82,25 @@ class _AddEmployeeState extends State<AddEmployee> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Colors.white,
+        shadowColor: Colors.grey,
+        elevation: 1,
+        title: const Text(
+          "Edit Karyawan",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: GestureDetector(
+          child: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                CupertinoIcons.back,
+              )),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
             padding: const EdgeInsets.all(15),

@@ -243,7 +243,7 @@ class _ProfileState extends State<Profile> {
             return refresh();
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(10),
             child: Form(
                 child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,

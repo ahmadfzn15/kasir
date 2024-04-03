@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:math';
+import 'dart:ui';
 
 import 'package:app/components/banners.dart';
+import 'package:app/etc/auth_user.dart';
 import 'package:app/product/product.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -29,6 +33,7 @@ class _HomeState extends State<Home> {
     Banners(img: "assets/img/sprite.jpg"),
     Banners(img: "assets/img/burger.jpeg")
   ];
+  Map<String, dynamic> user = {};
   Map<String, dynamic> sale = {};
   bool loading = false;
   String url = dotenv.env['API_URL']!;
@@ -38,11 +43,30 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
 
+    getUser();
     fetchDataSale();
   }
 
+  Future<void> getUser() async {
+    Map<String, dynamic> res = await AuthUser().getCurrentUser();
+    setState(() {
+      user = res;
+    });
+  }
+
+  Color getRandomColor() {
+    var rand = Random();
+
+    int red = rand.nextInt(256);
+    int green = rand.nextInt(256);
+    int blue = rand.nextInt(256);
+
+    return Color.fromRGBO(red, green, blue, 1);
+  }
+
   Future<void> _refresh() async {
-    await Future.delayed(const Duration(seconds: 1));
+    getUser();
+    fetchDataSale();
   }
 
   Future<void> fetchDataSale() async {
@@ -75,170 +99,291 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-            icon: const Icon(Icons.menu)),
-        title: const Padding(
-          padding: EdgeInsets.only(right: 10),
-          child: Text(
-            "Beranda",
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-          ),
-        ),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications))
-        ],
-        centerTitle: true,
-        titleSpacing: 0,
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: const Color(0xFFf1f5f9),
       body: SingleChildScrollView(
         child: RefreshIndicator(
             onRefresh: () {
               return _refresh();
             },
             child: Column(children: [
-              SizedBox(
-                  height: 300,
-                  child: PageView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      children: [
-                        Card(
-                          margin: const EdgeInsets.all(20),
-                          elevation: 5,
-                          clipBehavior: Clip.antiAlias,
-                          surfaceTintColor: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.all(15),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Produk Terjual",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Expanded(
-                                    child: PieChart(PieChartData(
-                                  sections: sale.isNotEmpty
-                                      ? sale['produk_terjual']['data']
-                                          .map<PieChartSectionData>((value) {
-                                          return PieChartSectionData(
-                                            color: Colors.orange,
-                                            value: value['jumlah'].toDouble(),
-                                            title: value['namaProduk'],
-                                          );
-                                        }).toList()
-                                      : [],
-                                )))
-                              ],
-                            ),
-                          ),
-                        ),
-                        Card(
-                          margin: const EdgeInsets.all(20),
-                          elevation: 5,
-                          clipBehavior: Clip.antiAlias,
-                          surfaceTintColor: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.all(15),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Produk Terjual",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17),
-                                ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                Expanded(
-                                    child: BarChart(BarChartData(
-                                  barGroups: [
-                                    BarChartGroupData(x: 1, barRods: [
-                                      BarChartRodData(
-                                          toY: sale.isNotEmpty
-                                              ? sale['produk_terjual']
-                                                      ['produk_perhari']
-                                                  .toDouble()
-                                              : 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
-                                    BarChartGroupData(x: 2, barRods: [
-                                      BarChartRodData(
-                                          toY: 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
-                                    BarChartGroupData(x: 3, barRods: [
-                                      BarChartRodData(
-                                          toY: 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
-                                    BarChartGroupData(x: 4, barRods: [
-                                      BarChartRodData(
-                                          toY: 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
-                                    BarChartGroupData(x: 5, barRods: [
-                                      BarChartRodData(
-                                          toY: 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
-                                    BarChartGroupData(x: 6, barRods: [
-                                      BarChartRodData(
-                                          toY: 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
-                                    BarChartGroupData(x: 7, barRods: [
-                                      BarChartRodData(
-                                          toY: 0,
-                                          color: Colors.orange,
-                                          width: 25),
-                                    ]),
+              Stack(
+                children: [
+                  Container(
+                    height: 270,
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 30, horizontal: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              IconButton(
+                                  onPressed: () {
+                                    Scaffold.of(context).openDrawer();
+                                  },
+                                  icon: const Icon(
+                                    Icons.menu,
+                                    size: 30,
+                                    color: Colors.white,
+                                  )),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 10, top: 5),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Selamat Datang Kembali",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    Text(
+                                      user.isNotEmpty
+                                          ? user['nama']
+                                          : 'Ahmad Fauzan',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    )
                                   ],
-                                  borderData: FlBorderData(
-                                    show: false,
-                                  ),
-                                  titlesData: const FlTitlesData(
-                                      bottomTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: true),
-                                      ),
-                                      leftTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: true),
-                                      ),
-                                      rightTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
-                                      topTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      )),
-                                ))),
-                              ],
-                            ),
+                                ),
+                              ),
+                            ],
                           ),
-                        )
-                      ])),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 15, top: 20),
+                            child: user['foto'] != null
+                                ? CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: NetworkImage(
+                                        "$url/storage/img/${user['foto']}"),
+                                  )
+                                : const CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage:
+                                        AssetImage("assets/img/user.png"),
+                                  ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                      margin: const EdgeInsets.only(top: 150),
+                      height: 250,
+                      child: PageView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: BackdropFilter(
+                                  filter:
+                                      ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(15),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Produk Terjual",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        Expanded(
+                                            child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: PieChart(
+                                                PieChartData(
+                                                  sections: sale.isNotEmpty
+                                                      ? sale['produk_terjual']
+                                                              ['data']
+                                                          .map<PieChartSectionData>(
+                                                              (value) {
+                                                          return PieChartSectionData(
+                                                            title:
+                                                                value['jumlah']
+                                                                    .toString(),
+                                                            color:
+                                                                getRandomColor(),
+                                                            value:
+                                                                value['jumlah']
+                                                                    .toDouble(),
+                                                          );
+                                                        }).toList()
+                                                      : [],
+                                                ),
+                                              ),
+                                            ),
+                                            SingleChildScrollView(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: sale.isNotEmpty
+                                                    ? sale['produk_terjual']
+                                                            ['data']
+                                                        .map<Widget>((value) {
+                                                        return Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Container(
+                                                              width: 10,
+                                                              height: 10,
+                                                              decoration: BoxDecoration(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              10),
+                                                                  color:
+                                                                      getRandomColor()),
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 7,
+                                                            ),
+                                                            Text(value[
+                                                                'namaProduk'])
+                                                          ],
+                                                        );
+                                                      }).toList()
+                                                    : [],
+                                              ),
+                                            )
+                                          ],
+                                        )),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Card(
+                              margin: const EdgeInsets.all(20),
+                              elevation: 3,
+                              shadowColor: const Color(0xFFf1f5f9),
+                              clipBehavior: Clip.antiAlias,
+                              surfaceTintColor: Colors.white,
+                              child: Padding(
+                                padding: const EdgeInsets.all(15),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Omset Perhari",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17),
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    Expanded(
+                                        child: BarChart(BarChartData(
+                                      barGroups: [
+                                        BarChartGroupData(x: 1, barRods: [
+                                          BarChartRodData(
+                                              toY: sale.isNotEmpty
+                                                  ? double.parse(
+                                                      sale['omset'].toString())
+                                                  : 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                        BarChartGroupData(x: 2, barRods: [
+                                          BarChartRodData(
+                                              toY: 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                        BarChartGroupData(x: 3, barRods: [
+                                          BarChartRodData(
+                                              toY: 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                        BarChartGroupData(x: 4, barRods: [
+                                          BarChartRodData(
+                                              toY: 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                        BarChartGroupData(x: 5, barRods: [
+                                          BarChartRodData(
+                                              toY: 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                        BarChartGroupData(x: 6, barRods: [
+                                          BarChartRodData(
+                                              toY: 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                        BarChartGroupData(x: 7, barRods: [
+                                          BarChartRodData(
+                                              toY: 0,
+                                              color: Colors.orange,
+                                              width: 25),
+                                        ]),
+                                      ],
+                                      borderData: FlBorderData(
+                                        show: false,
+                                      ),
+                                      titlesData: const FlTitlesData(
+                                          bottomTitles: AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: true),
+                                          ),
+                                          leftTitles: AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: true),
+                                          ),
+                                          rightTitles: AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false),
+                                          ),
+                                          topTitles: AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false),
+                                          )),
+                                    ))),
+                                  ],
+                                ),
+                              ),
+                            )
+                          ])),
+                ],
+              ),
               GridView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -249,6 +394,8 @@ class _HomeState extends State<Home> {
                       mainAxisSpacing: 5),
                   children: [
                     Card(
+                      surfaceTintColor: Colors.white,
+                      shadowColor: const Color(0xFFf1f5f9),
                       child: ListTile(
                         title: const Text(
                           "Transaksi Lunas",
@@ -264,6 +411,8 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                     Card(
+                      surfaceTintColor: Colors.white,
+                      shadowColor: const Color(0xFFf1f5f9),
                       child: ListTile(
                         title: const Text(
                           "Produk Terjual",
@@ -279,6 +428,8 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                     Card(
+                      surfaceTintColor: Colors.white,
+                      shadowColor: const Color(0xFFf1f5f9),
                       child: ListTile(
                         title: const Text(
                           "Omset",
@@ -292,6 +443,8 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                     Card(
+                      surfaceTintColor: Colors.white,
+                      shadowColor: const Color(0xFFf1f5f9),
                       child: ListTile(
                         title: const Text(
                           "Keuntungan",

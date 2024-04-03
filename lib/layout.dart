@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:ui';
 
+import 'package:app/add_toko.dart';
 import 'package:app/components/popup.dart';
 import 'package:app/employee/employee.dart';
 import 'package:app/etc/auth_user.dart';
+import 'package:app/etc/startup.dart';
 import 'package:app/help.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -40,9 +43,9 @@ class Layout extends StatefulWidget {
   _LayoutState createState() => _LayoutState();
 }
 
-Route _goPage(int id) {
+Route _goPage(Widget page) {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => Sublayout(id: id),
+    pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionDuration: const Duration(milliseconds: 500),
     reverseTransitionDuration: const Duration(milliseconds: 500),
     opaque: false,
@@ -65,9 +68,10 @@ class _LayoutState extends State<Layout> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   String url = dotenv.env['API_URL']!;
 
-  int _selectedIndex = 0;
+  int? _selectedIndex;
   late List<SideItem> link;
   bool loading = false;
+  bool hasToko = false;
   Map<String, dynamic> user = {};
   String? role;
 
@@ -85,8 +89,8 @@ class _LayoutState extends State<Layout> {
           page: const Home()),
       SideItem(
           label: "Produk",
-          icon: Icons.shopify_outlined,
-          iconSelected: Icons.shopify,
+          icon: Icons.shopping_bag_outlined,
+          iconSelected: Icons.shopping_bag,
           page: const Product()),
       SideItem(
           label: "Karyawan",
@@ -114,20 +118,40 @@ class _LayoutState extends State<Layout> {
 
   Future<void> getUser() async {
     Map<String, dynamic> res = await AuthUser().getCurrentUser();
-    setState(() {
-      user = res;
-    });
+    if (res.isNotEmpty) {
+      if (res['id_toko'] != null) {
+        setState(() {
+          user = res;
+        });
+      } else {
+        Navigator.pushAndRemoveUntil(
+            // ignore: use_build_context_synchronously
+            context,
+            _goPage(const AddToko()),
+            (route) => false);
+      }
+    } else {
+      Navigator.pushAndRemoveUntil(
+          // ignore: use_build_context_synchronously
+          context,
+          _goPage(const Auth()),
+          (route) => false);
+    }
   }
 
   Future<void> getRole() async {
     String? roles = await const FlutterSecureStorage().read(key: 'role');
     setState(() {
       role = roles;
+      if (roles == "admin") {
+        _selectedIndex = 0;
+      } else {
+        _selectedIndex = 1;
+      }
     });
   }
 
   void _onItemTapped(int index) {
-    // Navigator.maybePop(context);
     setState(() {
       _selectedIndex = index;
     });
@@ -167,6 +191,7 @@ class _LayoutState extends State<Layout> {
         loading = false;
       }
     } catch (e) {
+      print(e);
       loading = false;
     }
   }
@@ -201,9 +226,10 @@ class _LayoutState extends State<Layout> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFf1f5f9),
       drawerEdgeDragWidth: 50,
       drawer: Drawer(
+        surfaceTintColor: Colors.white,
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
           child: Column(
@@ -228,7 +254,8 @@ class _LayoutState extends State<Layout> {
                     GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).push(_goPage(0));
+                        Navigator.of(context)
+                            .push(_goPage(const Sublayout(id: 0)));
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -284,19 +311,20 @@ class _LayoutState extends State<Layout> {
                   ],
                 ),
               ),
-              ListTile(
-                leading: _selectedIndex == 0
-                    ? Icon(link[0].iconSelected)
-                    : Icon(link[0].icon),
-                title: const Text("Beranda"),
-                selected: _selectedIndex == 0,
-                selectedColor: Colors.orange,
-                splashColor: Colors.orange,
-                onTap: () {
-                  Navigator.pop(context);
-                  _onItemTapped(0);
-                },
-              ),
+              role != null && role == 'admin'
+                  ? ListTile(
+                      leading: _selectedIndex == 0
+                          ? Icon(link[0].iconSelected)
+                          : Icon(link[0].icon),
+                      title: const Text("Beranda"),
+                      selected: _selectedIndex == 0,
+                      selectedColor: Colors.orange,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _onItemTapped(0);
+                      },
+                    )
+                  : Container(),
               ListTile(
                 leading: _selectedIndex == 1
                     ? Icon(link[1].iconSelected)
@@ -304,7 +332,6 @@ class _LayoutState extends State<Layout> {
                 title: const Text("Produk"),
                 selected: _selectedIndex == 1,
                 selectedColor: Colors.orange,
-                splashColor: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);
                   _onItemTapped(1);
@@ -318,7 +345,6 @@ class _LayoutState extends State<Layout> {
                       title: const Text("Karyawan"),
                       selected: _selectedIndex == 2,
                       selectedColor: Colors.orange,
-                      splashColor: Colors.orange,
                       onTap: () {
                         Navigator.pop(context);
                         _onItemTapped(2);
@@ -332,7 +358,6 @@ class _LayoutState extends State<Layout> {
                 title: const Text("Histori"),
                 selected: _selectedIndex == 3,
                 selectedColor: Colors.orange,
-                splashColor: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);
                   _onItemTapped(3);
@@ -345,7 +370,6 @@ class _LayoutState extends State<Layout> {
                 title: const Text("Pengaturan"),
                 selected: _selectedIndex == 4,
                 selectedColor: Colors.orange,
-                splashColor: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);
                   _onItemTapped(4);
@@ -358,7 +382,6 @@ class _LayoutState extends State<Layout> {
                 title: const Text("Bantuan"),
                 selected: _selectedIndex == 5,
                 selectedColor: Colors.orange,
-                splashColor: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);
                   _onItemTapped(5);
@@ -377,7 +400,7 @@ class _LayoutState extends State<Layout> {
           ),
         ),
       ),
-      body: link[_selectedIndex].page!,
+      body: role != null ? link[_selectedIndex!].page : const Startup(),
     );
   }
 }

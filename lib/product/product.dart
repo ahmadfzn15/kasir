@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:app/order/checkout.dart';
 import 'package:app/components/popup.dart';
@@ -50,6 +51,9 @@ class _ProductState extends State<Product> {
   List<Products> products = [];
   List<Products> searchResult = [];
   List<dynamic> category = [];
+  List<Map<String, dynamic>> filterCategory = [];
+  String _selectedCategory = "Semua Kategori";
+  int _selectedCategoryId = 0;
   Map<String, dynamic> user = {};
   String url = dotenv.env['API_URL']!;
   bool row = true;
@@ -120,7 +124,7 @@ class _ProductState extends State<Product> {
 
     if (hasToken) {
       final response = await http.get(
-        Uri.parse("$url/api/product"),
+        Uri.parse("$url/api/product?category=$_selectedCategoryId"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -162,6 +166,17 @@ class _ProductState extends State<Product> {
     if (response.statusCode == 200) {
       setState(() {
         category = res['data'];
+        filterCategory.clear();
+
+        filterCategory = [
+          {"id": 0, "kategori": "Semua Kategori"}
+        ];
+        for (var element in res['data']) {
+          filterCategory.add({
+            "id": element['id'],
+            "kategori": element['kategori'],
+          });
+        }
       });
       setState(() {
         loadingProduct = false;
@@ -184,6 +199,10 @@ class _ProductState extends State<Product> {
     });
     // ignore: use_build_context_synchronously
     await Navigator.maybePop(context);
+  }
+
+  Future<void> refreshFilter() async {
+    await fetchDataProduct();
   }
 
   void _addOrder(BuildContext context, Products product) {
@@ -386,20 +405,6 @@ class _ProductState extends State<Product> {
     );
   }
 
-  void showAddCategory() {
-    showModalBottomSheet(
-      backgroundColor: Colors.white,
-      context: context,
-      enableDrag: false,
-      showDragHandle: true,
-      isScrollControlled: true,
-      constraints: const BoxConstraints.expand(),
-      builder: (context) {
-        return const Padding(padding: EdgeInsets.all(20), child: Text("Hello"));
-      },
-    );
-  }
-
   void _increment(BuildContext context, int id) {
     Iterable data = order.where((element) => element['id'] == id);
     if (data.first['stok'] != null) {
@@ -572,22 +577,30 @@ class _ProductState extends State<Product> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFf1f5f9),
       appBar: AppBar(
+        leadingWidth: _select ? 150 : 50,
         leading: _select
-            ? Checkbox(
-                value: _selectAll,
-                checkColor: Colors.orange,
-                fillColor: const MaterialStatePropertyAll(Colors.white),
-                onChanged: (value) {
-                  setState(() {
-                    _selectAll = value!;
-                    if (_selectAll) {
-                      products.map((e) => e.selected = true).toList();
-                    } else {
-                      products.map((e) => e.selected = false).toList();
-                    }
-                  });
-                },
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Checkbox(
+                    value: _selectAll,
+                    checkColor: Colors.orange,
+                    fillColor: const MaterialStatePropertyAll(Colors.white),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectAll = value!;
+                        if (_selectAll) {
+                          products.map((e) => e.selected = true).toList();
+                        } else {
+                          products.map((e) => e.selected = false).toList();
+                        }
+                      });
+                    },
+                  ),
+                  const Text("Pilih Semua")
+                ],
               )
             : IconButton(
                 onPressed: () {
@@ -690,6 +703,7 @@ class _ProductState extends State<Product> {
                     )),
                 body: TabBarView(children: [
                   Scaffold(
+                    backgroundColor: const Color(0xFFf1f5f9),
                     floatingActionButton: FloatingActionButton(
                       onPressed: () {
                         Navigator.of(context).push(_goPage(const Sublayout(
@@ -708,53 +722,89 @@ class _ProductState extends State<Product> {
                         ? RefreshIndicator(
                             onRefresh: _handleRefresh,
                             color: Colors.orange,
-                            child: searchResult.isNotEmpty
-                                ? Column(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 15),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 15),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            const Text("Atur Tampilan"),
-                                            MenuAnchor(
-                                                builder: (context, controller,
-                                                    child) {
-                                                  return IconButton(
+                                      MenuAnchor(
+                                          builder:
+                                              (context, controller, child) {
+                                            return GestureDetector(
+                                              onTap: () {
+                                                if (controller.isOpen) {
+                                                  controller.close();
+                                                } else {
+                                                  controller.open();
+                                                }
+                                              },
+                                              child: Wrap(
+                                                crossAxisAlignment:
+                                                    WrapCrossAlignment.center,
+                                                direction: Axis.horizontal,
+                                                children: [
+                                                  Text(_selectedCategory),
+                                                  const Icon(
+                                                      Icons.chevron_right)
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                          menuChildren: filterCategory
+                                              .map((e) => MenuItemButton(
                                                     onPressed: () {
-                                                      if (controller.isOpen) {
-                                                        controller.close();
-                                                      } else {
-                                                        controller.open();
-                                                      }
+                                                      setState(() {
+                                                        _selectedCategory =
+                                                            e['kategori'];
+                                                        _selectedCategoryId =
+                                                            e['id'];
+                                                      });
+                                                      refreshFilter();
                                                     },
-                                                    icon: const Icon(
-                                                        Icons.window_outlined),
-                                                  );
+                                                    child: Text(e['kategori']),
+                                                  ))
+                                              .toList()),
+                                      MenuAnchor(
+                                          builder:
+                                              (context, controller, child) {
+                                            return IconButton(
+                                              onPressed: () {
+                                                if (controller.isOpen) {
+                                                  controller.close();
+                                                } else {
+                                                  controller.open();
+                                                }
+                                              },
+                                              icon: const Icon(
+                                                  Icons.window_outlined),
+                                            );
+                                          },
+                                          menuChildren: [
+                                            MenuItemButton(
+                                                onPressed: () {
+                                                  setView(true);
                                                 },
-                                                menuChildren: [
-                                                  MenuItemButton(
-                                                      onPressed: () {
-                                                        setView(true);
-                                                      },
-                                                      child: const Text(
-                                                          "Tampilan Baris")),
-                                                  MenuItemButton(
-                                                      onPressed: () {
-                                                        setView(false);
-                                                      },
-                                                      child: const Text(
-                                                          "Tampilan Kolom"))
-                                                ]),
-                                          ],
-                                        ),
-                                      ),
-                                      Expanded(
-                                          child: SizedBox(
+                                                child: const Text(
+                                                    "Tampilan Baris")),
+                                            MenuItemButton(
+                                                onPressed: () {
+                                                  setView(false);
+                                                },
+                                                child: const Text(
+                                                    "Tampilan Kolom"))
+                                          ]),
+                                    ],
+                                  ),
+                                ),
+                                searchResult.isNotEmpty
+                                    ? Expanded(
+                                        child: SizedBox(
                                         height: double.infinity,
                                         child: row
                                             ? ListView.builder(
@@ -928,7 +978,7 @@ class _ProductState extends State<Product> {
                                                                               onTap: () {
                                                                                 _openOptionProduct(context, searchResult[index]);
                                                                               },
-                                                                              child: const Icon(Icons.menu),
+                                                                              child: const Icon(CupertinoIcons.ellipsis_vertical),
                                                                             )
                                                                           ],
                                                                         ),
@@ -996,8 +1046,8 @@ class _ProductState extends State<Product> {
                                                     const SliverGridDelegateWithFixedCrossAxisCount(
                                                         mainAxisExtent: 240,
                                                         crossAxisCount: 2,
-                                                        crossAxisSpacing: 10,
-                                                        mainAxisSpacing: 10),
+                                                        crossAxisSpacing: 5,
+                                                        mainAxisSpacing: 5),
                                                 itemBuilder: (context, index) {
                                                   return GestureDetector(
                                                     onLongPress: () {
@@ -1052,7 +1102,7 @@ class _ProductState extends State<Product> {
                                                                   .fromARGB(96,
                                                                   197, 30, 30)
                                                               : Colors.white,
-                                                      elevation: 4,
+                                                      elevation: 3,
                                                       clipBehavior:
                                                           Clip.antiAlias,
                                                       child: Padding(
@@ -1190,19 +1240,20 @@ class _ProductState extends State<Product> {
                                                 },
                                               ),
                                       ))
-                                    ],
-                                  )
-                                : const SizedBox(
-                                    height: double.infinity,
-                                    child: Center(
-                                        child: Text("Data masih kosong")),
-                                  ))
+                                    : const Expanded(
+                                        child: SizedBox(
+                                        child: Center(
+                                            child: Text("Data masih kosong")),
+                                      ))
+                              ],
+                            ))
                         : const Center(
                             child: CircularProgressIndicator(
                             color: Colors.orange,
                           )),
                   ),
                   Scaffold(
+                      backgroundColor: const Color(0xFFf1f5f9),
                       floatingActionButton: FloatingActionButton(
                         onPressed: () {
                           Navigator.of(context)
@@ -1231,22 +1282,25 @@ class _ProductState extends State<Product> {
                                         itemBuilder: (context, index) {
                                           return Column(
                                             children: [
-                                              ListTile(
-                                                title: Text(category[index]
-                                                    ['kategori']),
-                                                trailing: GestureDetector(
-                                                  onTap: () {
-                                                    _openOptionCategory(context,
-                                                        category[index]);
-                                                  },
-                                                  child: const Icon(Icons.menu),
+                                              Card(
+                                                surfaceTintColor: Colors.white,
+                                                child: ListTile(
+                                                  contentPadding:
+                                                      const EdgeInsets.only(
+                                                          left: 10),
+                                                  title: Text(category[index]
+                                                      ['kategori']),
+                                                  trailing: IconButton(
+                                                      onPressed: () {
+                                                        _openOptionCategory(
+                                                            context,
+                                                            category[index]);
+                                                      },
+                                                      icon: const Icon(
+                                                          CupertinoIcons
+                                                              .ellipsis_vertical)),
                                                 ),
                                               ),
-                                              if (index != category.length - 1)
-                                                const Divider(
-                                                  indent: 15,
-                                                  endIndent: 15,
-                                                )
                                             ],
                                           );
                                         },
@@ -1263,57 +1317,84 @@ class _ProductState extends State<Product> {
                 ]),
               ))
           : Scaffold(
+              backgroundColor: const Color(0xFFf1f5f9),
               body: !loadingProduct
                   ? RefreshIndicator(
                       onRefresh: _handleRefresh,
                       color: Colors.orange,
-                      child: searchResult.isNotEmpty
-                          ? Column(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text("Atur Tampilan"),
-                                      MenuAnchor(
-                                          builder:
-                                              (context, controller, child) {
-                                            return IconButton(
+                                MenuAnchor(
+                                    builder: (context, controller, child) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if (controller.isOpen) {
+                                            controller.close();
+                                          } else {
+                                            controller.open();
+                                          }
+                                        },
+                                        child: Wrap(
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          direction: Axis.horizontal,
+                                          children: [
+                                            Text(_selectedCategory),
+                                            const Icon(Icons.chevron_right)
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    menuChildren: filterCategory
+                                        .map((e) => MenuItemButton(
                                               onPressed: () {
-                                                if (controller.isOpen) {
-                                                  controller.close();
-                                                } else {
-                                                  controller.open();
-                                                }
+                                                setState(() {
+                                                  _selectedCategory =
+                                                      e['kategori'];
+                                                  _selectedCategoryId = e['id'];
+                                                });
+                                                refreshFilter();
                                               },
-                                              icon: const Icon(
-                                                  Icons.window_outlined),
-                                            );
+                                              child: Text(e['kategori']),
+                                            ))
+                                        .toList()),
+                                MenuAnchor(
+                                    builder: (context, controller, child) {
+                                      return IconButton(
+                                        onPressed: () {
+                                          if (controller.isOpen) {
+                                            controller.close();
+                                          } else {
+                                            controller.open();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.window_outlined),
+                                      );
+                                    },
+                                    menuChildren: [
+                                      MenuItemButton(
+                                          onPressed: () {
+                                            setView(true);
                                           },
-                                          menuChildren: [
-                                            MenuItemButton(
-                                                onPressed: () {
-                                                  setView(true);
-                                                },
-                                                child: const Text(
-                                                    "Tampilan Baris")),
-                                            MenuItemButton(
-                                                onPressed: () {
-                                                  setView(false);
-                                                },
-                                                child: const Text(
-                                                    "Tampilan Kolom"))
-                                          ]),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                    child: SizedBox(
+                                          child: const Text("Tampilan Baris")),
+                                      MenuItemButton(
+                                          onPressed: () {
+                                            setView(false);
+                                          },
+                                          child: const Text("Tampilan Kolom"))
+                                    ]),
+                              ],
+                            ),
+                          ),
+                          searchResult.isNotEmpty
+                              ? Expanded(
+                                  child: SizedBox(
                                   height: double.infinity,
                                   child: row
                                       ? ListView.builder(
@@ -1481,8 +1562,8 @@ class _ProductState extends State<Product> {
                                               const SliverGridDelegateWithFixedCrossAxisCount(
                                                   mainAxisExtent: 240,
                                                   crossAxisCount: 2,
-                                                  crossAxisSpacing: 10,
-                                                  mainAxisSpacing: 10),
+                                                  crossAxisSpacing: 5,
+                                                  mainAxisSpacing: 5),
                                           itemBuilder: (context, index) {
                                             return GestureDetector(
                                               child: Card(
@@ -1491,8 +1572,8 @@ class _ProductState extends State<Product> {
                                                         ? const Color.fromARGB(
                                                             96, 197, 30, 30)
                                                         : Colors.white,
-                                                elevation: 4,
                                                 clipBehavior: Clip.antiAlias,
+                                                elevation: 3,
                                                 child: Padding(
                                                   padding:
                                                       const EdgeInsets.all(10),
@@ -1645,12 +1726,13 @@ class _ProductState extends State<Product> {
                                           },
                                         ),
                                 ))
-                              ],
-                            )
-                          : const SizedBox(
-                              height: double.infinity,
-                              child: Center(child: Text("Data masih kosong")),
-                            ))
+                              : const Expanded(
+                                  child: SizedBox(
+                                  child:
+                                      Center(child: Text("Data masih kosong")),
+                                ))
+                        ],
+                      ))
                   : const Center(
                       child: CircularProgressIndicator(
                       color: Colors.orange,
