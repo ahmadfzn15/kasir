@@ -40,6 +40,8 @@ Route _goPage(Widget page) {
 
 class _EmployeeState extends State<Employee> {
   List<dynamic> employee = [];
+  String url = dotenv.env['API_URL']!;
+  bool pwdNotSame = false;
   bool loading = false;
 
   @override
@@ -67,7 +69,6 @@ class _EmployeeState extends State<Employee> {
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String url = dotenv.env['API_URL']!;
 
     if (hasToken) {
       final response = await http.get(
@@ -172,7 +173,6 @@ class _EmployeeState extends State<Employee> {
   }
 
   Future<void> deleteEmployee(BuildContext context, int id) async {
-    String url = dotenv.env['API_URL']!;
     String? token = await const FlutterSecureStorage().read(key: 'token');
 
     final response = await http.delete(
@@ -250,10 +250,15 @@ class _EmployeeState extends State<Employee> {
                               Card(
                                 surfaceTintColor: Colors.white,
                                 child: ListTile(
-                                  leading: const CircleAvatar(
-                                    backgroundImage:
-                                        AssetImage("assets/img/lusi.jpeg"),
-                                  ),
+                                  leading: employee[index]['foto'] != null
+                                      ? CircleAvatar(
+                                          backgroundImage: NetworkImage(
+                                              "$url/storage/img/${employee[index]['foto']}"),
+                                        )
+                                      : const CircleAvatar(
+                                          backgroundImage:
+                                              AssetImage("assets/img/user.png"),
+                                        ),
                                   contentPadding:
                                       const EdgeInsets.only(right: 0, left: 10),
                                   title: Text(employee[index]['nama']),
@@ -273,9 +278,16 @@ class _EmployeeState extends State<Employee> {
                     ),
                   ),
                 )
-              : const Center(
-                  child: Text("Data Kosong"),
-                )
+              : RefreshIndicator(
+                  onRefresh: () {
+                    return _handleRefresh();
+                  },
+                  child: const SizedBox(
+                    height: double.infinity,
+                    child: Center(
+                      child: Text("Data Kosong"),
+                    ),
+                  ))
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.orange,

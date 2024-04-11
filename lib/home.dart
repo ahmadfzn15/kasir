@@ -3,13 +3,15 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:app/components/banners.dart';
+import 'package:app/employee/employee.dart';
 import 'package:app/etc/auth_user.dart';
-import 'package:app/product/product.dart';
+import 'package:app/etc/format_time.dart';
+import 'package:app/etc/label.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class WidgetIcon {
@@ -111,8 +113,9 @@ class _HomeState extends State<Home> {
                   Container(
                     height: 270,
                     decoration: const BoxDecoration(
-                      color: Colors.orange,
-                    ),
+                        color: Colors.orange,
+                        borderRadius:
+                            BorderRadius.vertical(bottom: Radius.circular(50))),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           vertical: 30, horizontal: 10),
@@ -138,19 +141,26 @@ class _HomeState extends State<Home> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      "Selamat Datang Kembali",
-                                      style: TextStyle(color: Colors.white),
+                                    Text(
+                                      Label.welcome,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                    const SizedBox(
+                                      height: 3,
                                     ),
                                     Text(
-                                      user.isNotEmpty
-                                          ? user['nama']
-                                          : 'Ahmad Fauzan',
+                                      user.isNotEmpty ? user['nama'] : '',
                                       style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold),
-                                    )
+                                    ),
+                                    Text(
+                                      user.isNotEmpty ? user['role'] : '',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 14),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -158,17 +168,28 @@ class _HomeState extends State<Home> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(right: 15, top: 20),
-                            child: user['foto'] != null
-                                ? CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: NetworkImage(
-                                        "$url/storage/img/${user['foto']}"),
-                                  )
-                                : const CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage:
-                                        AssetImage("assets/img/user.png"),
-                                  ),
+                            child: Column(
+                              children: [
+                                user['foto'] != null
+                                    ? CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage: NetworkImage(
+                                            "$url/storage/img/${user['foto']}"),
+                                      )
+                                    : const CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage:
+                                            AssetImage("assets/img/user.png"),
+                                      ),
+                                const SizedBox(
+                                  height: 5,
+                                ),
+                                Text(
+                                  formatTime2(DateTime.now()),
+                                  style: const TextStyle(color: Colors.white),
+                                )
+                              ],
+                            ),
                           )
                         ],
                       ),
@@ -397,6 +418,9 @@ class _HomeState extends State<Home> {
                       surfaceTintColor: Colors.white,
                       shadowColor: const Color(0xFFf1f5f9),
                       child: ListTile(
+                        onTap: () {
+                          Get.to(const Employee());
+                        },
                         title: const Text(
                           "Transaksi Lunas",
                           style: TextStyle(fontSize: 13),

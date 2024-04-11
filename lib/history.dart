@@ -50,7 +50,7 @@ class _HistoryState extends State<History> {
   Map<String, dynamic> sale = {};
   Map<String, dynamic> user = {};
   List<dynamic> history = [];
-  bool loading = false;
+  bool loading = true;
   bool _selectAll = false;
   bool _select = false;
 
@@ -89,8 +89,6 @@ class _HistoryState extends State<History> {
     if (response.statusCode == 200) {
       setState(() {
         sale = res['data'];
-      });
-      setState(() {
         loading = false;
       });
     } else {
@@ -102,9 +100,6 @@ class _HistoryState extends State<History> {
   }
 
   Future<void> fetchDataHistory() async {
-    setState(() {
-      loading = true;
-    });
     bool hasToken =
         await const FlutterSecureStorage().containsKey(key: 'token');
     String? token = await const FlutterSecureStorage().read(key: 'token');
@@ -120,14 +115,17 @@ class _HistoryState extends State<History> {
 
       Map<String, dynamic> res = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        history = (res['data'] as List<dynamic>)
-            .map((e) => {...e, "selected": false})
-            .toList();
-
         setState(() {
+          history = (res['data'] as List<dynamic>)
+              .map((e) => {...e, "selected": false})
+              .toList();
+
           loading = false;
         });
       } else {
+        setState(() {
+          loading = false;
+        });
         throw Exception(res['message']);
       }
     }
@@ -397,103 +395,108 @@ class _HistoryState extends State<History> {
                     child: Column(
                       children: [
                         user['role'] == 'admin'
-                            ? GridView(
-                                shrinkWrap: true,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                        mainAxisExtent: 80,
-                                        crossAxisCount: 2,
-                                        crossAxisSpacing: 5,
-                                        mainAxisSpacing: 5),
+                            ? Column(
                                 children: [
-                                    Card(
-                                      surfaceTintColor: Colors.white,
-                                      shadowColor: const Color(0xFFf1f5f9),
-                                      child: ListTile(
-                                        title: const Text(
-                                          "Transaksi Lunas",
-                                          style: TextStyle(fontSize: 13),
+                                  GridView(
+                                      shrinkWrap: true,
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                              mainAxisExtent: 80,
+                                              crossAxisCount: 2,
+                                              crossAxisSpacing: 5,
+                                              mainAxisSpacing: 5),
+                                      children: [
+                                        Card(
+                                          surfaceTintColor: Colors.white,
+                                          shadowColor: const Color(0xFFf1f5f9),
+                                          child: ListTile(
+                                            title: const Text(
+                                              "Transaksi Lunas",
+                                              style: TextStyle(fontSize: 13),
+                                            ),
+                                            subtitle: Text(
+                                              sale.isNotEmpty
+                                                  ? sale['transaksi_lunas']
+                                                      .toString()
+                                                  : "0",
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
                                         ),
-                                        subtitle: Text(
-                                          sale.isNotEmpty
-                                              ? sale['transaksi_lunas']
-                                                  .toString()
-                                              : "0",
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold),
+                                        Card(
+                                          surfaceTintColor: Colors.white,
+                                          shadowColor: const Color(0xFFf1f5f9),
+                                          child: ListTile(
+                                            title: const Text(
+                                              "Produk Terjual",
+                                              style: TextStyle(fontSize: 13),
+                                            ),
+                                            subtitle: Text(
+                                              sale.isNotEmpty
+                                                  ? sale['produk_terjual']
+                                                          ['jumlah']
+                                                      .toString()
+                                                  : "0",
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        Card(
+                                          surfaceTintColor: Colors.white,
+                                          shadowColor: const Color(0xFFf1f5f9),
+                                          child: ListTile(
+                                            title: const Text(
+                                              "Omset",
+                                              style: TextStyle(fontSize: 13),
+                                            ),
+                                            subtitle: Text(
+                                              "Rp.${sale.isNotEmpty ? sale['omset'].toString() : "0"}",
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                        Card(
+                                          surfaceTintColor: Colors.white,
+                                          shadowColor: const Color(0xFFf1f5f9),
+                                          child: ListTile(
+                                            title: const Text(
+                                              "Keuntungan",
+                                              style: TextStyle(fontSize: 13),
+                                            ),
+                                            subtitle: Text(
+                                              "Rp.${sale.isNotEmpty ? sale['laba'].toString() : "0"}",
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        )
+                                      ]),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: CupertinoButton(
+                                      color: Colors.orange,
+                                      onPressed: () {
+                                        printExcel();
+                                      },
+                                      child: const Text("Download Excel"),
                                     ),
-                                    Card(
-                                      surfaceTintColor: Colors.white,
-                                      shadowColor: const Color(0xFFf1f5f9),
-                                      child: ListTile(
-                                        title: const Text(
-                                          "Produk Terjual",
-                                          style: TextStyle(fontSize: 13),
-                                        ),
-                                        subtitle: Text(
-                                          sale.isNotEmpty
-                                              ? sale['produk_terjual']['jumlah']
-                                                  .toString()
-                                              : "0",
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ),
-                                    Card(
-                                      surfaceTintColor: Colors.white,
-                                      shadowColor: const Color(0xFFf1f5f9),
-                                      child: ListTile(
-                                        title: const Text(
-                                          "Omset",
-                                          style: TextStyle(fontSize: 13),
-                                        ),
-                                        subtitle: Text(
-                                          "Rp.${sale.isNotEmpty ? sale['omset'].toString() : "0"}",
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ),
-                                    Card(
-                                      surfaceTintColor: Colors.white,
-                                      shadowColor: const Color(0xFFf1f5f9),
-                                      child: ListTile(
-                                        title: const Text(
-                                          "Keuntungan",
-                                          style: TextStyle(fontSize: 13),
-                                        ),
-                                        subtitle: Text(
-                                          "Rp.${sale.isNotEmpty ? sale['laba'].toString() : "0"}",
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    )
-                                  ])
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  )
+                                ],
+                              )
                             : Container(),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: CupertinoButton(
-                            color: Colors.orange,
-                            onPressed: () {
-                              printExcel();
-                            },
-                            child: const Text("Download Excel"),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
                         Expanded(
                             child: ListView.builder(
                           shrinkWrap: true,
@@ -506,173 +509,111 @@ class _HistoryState extends State<History> {
                                     ? Card(
                                         clipBehavior: Clip.antiAlias,
                                         surfaceTintColor: Colors.white,
-                                        child: Dismissible(
-                                            key: Key(history[index]['id']
-                                                .toString()),
-                                            direction:
-                                                DismissDirection.endToStart,
-                                            confirmDismiss: (direction) async {
-                                              final details =
-                                                  await Future.delayed(
-                                                const Duration(seconds: 3),
-                                                () {
-                                                  null;
-                                                },
-                                              );
-
-                                              return details != null;
-                                            },
-                                            background: Container(
-                                              alignment: Alignment.centerRight,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20),
-                                              decoration: BoxDecoration(
-                                                  color: Colors.red,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: const Icon(
-                                                Icons.delete,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            onDismissed: (direction) {
-                                              history.removeAt(index);
-                                            },
-                                            child: ListTile(
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 0,
-                                                      horizontal: 10),
-                                              onLongPress: () {
-                                                setState(() {
-                                                  _select = true;
-                                                  history[index]['selected'] =
-                                                      true;
-                                                });
-                                                showSheetOrder(context);
-                                              },
-                                              onTap: () {
-                                                if (history[index]
-                                                    ['selected']) {
-                                                  setState(() {
-                                                    history[index]['selected'] =
-                                                        false;
-                                                  });
-                                                  showSheetOrder(context);
-                                                } else if (history.any(
-                                                    (element) =>
-                                                        element['selected'])) {
-                                                  setState(() {
-                                                    history[index]['selected'] =
-                                                        true;
-                                                  });
-                                                  showSheetOrder(context);
-                                                } else {
-                                                  Navigator.of(context).push(
-                                                      _goPage(Receipt(
-                                                          id: history[index]
-                                                              ['id'])));
-                                                }
-                                              },
-                                              selected: history[index]
-                                                  ['selected'],
-                                              selectedTileColor: Colors.black26,
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              title: Text(
-                                                history[index]['kode']
-                                                    .toString(),
-                                              ),
-                                              subtitle: Text(
-                                                  "Rp.${history[index]['total_pembayaran']}",
-                                                  style: const TextStyle(
-                                                      fontSize: 20,
-                                                      color: Colors.orange,
-                                                      fontWeight:
-                                                          FontWeight.bold)),
-                                              trailing: Wrap(
-                                                direction: Axis.vertical,
-                                                crossAxisAlignment:
-                                                    WrapCrossAlignment.end,
-                                                children: [
-                                                  Text(history[index]['status'],
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                      )),
-                                                  Text(
-                                                    formatTime(history[index]
-                                                        ['created_at']),
-                                                  ),
-                                                  Text(
-                                                      "Dibuat oleh ${history[index]['cashier']['nama']}"),
-                                                ],
-                                              ),
-                                            )),
-                                      )
-                                    : ListTile(
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 0, horizontal: 10),
-                                        onLongPress: () {
-                                          setState(() {
-                                            _select = true;
-                                            history[index]['selected'] = true;
-                                          });
-                                          showSheetOrder(context);
-                                        },
-                                        onTap: () {
-                                          if (history[index]['selected']) {
+                                        child: ListTile(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 0, horizontal: 10),
+                                          onLongPress: () {
                                             setState(() {
-                                              history[index]['selected'] =
-                                                  false;
-                                            });
-                                            showSheetOrder(context);
-                                          } else if (history.any((element) =>
-                                              element['selected'])) {
-                                            setState(() {
+                                              _select = true;
                                               history[index]['selected'] = true;
                                             });
                                             showSheetOrder(context);
-                                          } else {
+                                          },
+                                          onTap: () {
+                                            if (history[index]['selected']) {
+                                              setState(() {
+                                                history[index]['selected'] =
+                                                    false;
+                                              });
+                                              showSheetOrder(context);
+                                            } else if (history.any((element) =>
+                                                element['selected'])) {
+                                              setState(() {
+                                                history[index]['selected'] =
+                                                    true;
+                                              });
+                                              showSheetOrder(context);
+                                            } else {
+                                              Navigator.of(context).push(
+                                                  _goPage(Receipt(
+                                                      id: history[index]
+                                                          ['id'])));
+                                            }
+                                          },
+                                          selected: history[index]['selected'],
+                                          selectedTileColor: Colors.black26,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          title: Text(
+                                            history[index]['kode'].toString(),
+                                          ),
+                                          subtitle: Text(
+                                              "Rp.${history[index]['total_pembayaran']}",
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  color: Colors.orange,
+                                                  fontWeight: FontWeight.bold)),
+                                          trailing: Wrap(
+                                            direction: Axis.vertical,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.end,
+                                            children: [
+                                              Text(history[index]['status'],
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                  )),
+                                              Text(
+                                                formatTime(history[index]
+                                                    ['created_at']),
+                                              ),
+                                              Text(
+                                                  "Dibuat oleh ${history[index]['cashier']['nama']}"),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    : Card(
+                                        clipBehavior: Clip.antiAlias,
+                                        surfaceTintColor: Colors.white,
+                                        child: ListTile(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 0, horizontal: 10),
+                                          onTap: () {
                                             Navigator.of(context).push(_goPage(
                                                 Receipt(
                                                     id: history[index]['id'])));
-                                          }
-                                        },
-                                        selected: history[index]['selected'],
-                                        selectedTileColor: Colors.black26,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                        title: Text(
-                                          history[index]['kode'].toString(),
-                                        ),
-                                        subtitle: Text(
-                                            "Rp.${history[index]['total_pembayaran']}",
-                                            style: const TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.orange,
-                                                fontWeight: FontWeight.bold)),
-                                        trailing: Wrap(
-                                          direction: Axis.vertical,
-                                          crossAxisAlignment:
-                                              WrapCrossAlignment.end,
-                                          children: [
-                                            Text(history[index]['status'],
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                )),
-                                            Text(
-                                              formatTime(
-                                                  history[index]['created_at']),
-                                            ),
-                                            Text(
-                                                "Dibuat oleh ${history[index]['cashier']['nama']}"),
-                                          ],
+                                          },
+                                          selectedTileColor: Colors.black26,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          title: Text(
+                                            history[index]['kode'].toString(),
+                                          ),
+                                          subtitle: Text(
+                                              "Rp.${history[index]['total_pembayaran']}",
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  color: Colors.orange,
+                                                  fontWeight: FontWeight.bold)),
+                                          trailing: Wrap(
+                                            direction: Axis.vertical,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.end,
+                                            children: [
+                                              Text(history[index]['status'],
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                  )),
+                                              Text(
+                                                formatTime(history[index]
+                                                    ['created_at']),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                               ],

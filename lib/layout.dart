@@ -144,7 +144,7 @@ class _LayoutState extends State<Layout> {
     setState(() {
       role = roles;
       if (roles == "admin") {
-        _selectedIndex = 0;
+        _selectedIndex = 1;
       } else {
         _selectedIndex = 1;
       }

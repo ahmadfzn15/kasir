@@ -1,17 +1,18 @@
 import 'dart:convert';
 
 import 'package:app/components/popup.dart';
+import 'package:app/models/order_controller.dart';
 import 'package:app/order/success.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({super.key, required this.total, required this.order});
+  const Payment({super.key, required this.total});
   final int total;
-  final List order;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -40,6 +41,7 @@ Route _goPage(Widget page) {
 }
 
 class _PaymentState extends State<Payment> {
+  final orderController = Get.put(OrderController());
   final TextEditingController _cash = TextEditingController();
   final TextEditingController _cashback = TextEditingController(text: "0");
   final TextEditingController _discountValue = TextEditingController(text: "0");
@@ -55,8 +57,16 @@ class _PaymentState extends State<Payment> {
   bool _discount = false;
   bool _etc = false;
   bool _hargaKurang = false;
+  int harga = 0;
   double total = 0;
   bool loading = false;
+
+  @override
+  initState() {
+    super.initState();
+
+    harga = widget.total;
+  }
 
   Future<void> _uploadToDatabase(BuildContext context) async {
     setState(() {
@@ -73,9 +83,10 @@ class _PaymentState extends State<Payment> {
           "biaya_tambahan": _etcValue.text,
           "deskripsi_biaya_tambahan": _deskripsi.text,
           "diskon": _discountValue.text,
-          "total_pembayaran": total == 0 ? widget.total : total,
+          "total_pembayaran": total == 0 ? widget.total : harga,
           "ket": _ket.text,
-          "order": widget.order
+          "order":
+              orderController.order.map((element) => element.toMap()).toList()
         }),
         headers: {
           "Content-type": "application/json",
@@ -94,8 +105,9 @@ class _PaymentState extends State<Payment> {
         detail: result['data'],
       )));
     } else {
+      print(result['message']);
       // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], false);
+      // Popup().show(context, result['message'], false);
     }
   }
 
@@ -235,8 +247,8 @@ class _PaymentState extends State<Payment> {
                               if (int.parse(value) > 0 &&
                                   int.parse(value) <= 100) {
                                 setState(() {
-                                  total = widget.total *
-                                      ((100 - int.parse(value)) / 100);
+                                  total =
+                                      harga * ((100 - int.parse(value)) / 100);
                                 });
                               } else {
                                 setState(() {
@@ -282,6 +294,13 @@ class _PaymentState extends State<Payment> {
                     onChanged: (value) {
                       setState(() {
                         _etc = value;
+                        if (_etcValue.text.isNotEmpty) {
+                          if (total != 0) {
+                            total -= double.parse(_etcValue.text);
+                          }
+                          harga -= int.parse(_etcValue.text);
+                          _etcValue.clear();
+                        }
                       });
                     },
                   ),
@@ -302,6 +321,21 @@ class _PaymentState extends State<Payment> {
                             CupertinoTextField(
                               controller: _etcValue,
                               keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                setState(() {
+                                  if (value.isNotEmpty) {
+                                    if (total ==
+                                        harga + double.parse(_etcValue.text)) {
+                                      total -= double.parse(_etcValue.text);
+                                    }
+                                    total = double.parse(
+                                        (harga + int.parse(value)).toString());
+                                  } else {
+                                    total -= double.parse(
+                                        (int.parse(_etcValue.text)).toString());
+                                  }
+                                });
+                              },
                               prefix: const Padding(
                                 padding: EdgeInsets.only(left: 10),
                                 child: Text("Rp."),
@@ -465,8 +499,7 @@ class _PaymentState extends State<Payment> {
                   const Text("Total",
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(
-                      "Rp.${total == 0 ? widget.total.toString() : total.round()}",
+                  Text("Rp.${total == 0 ? harga.toString() : total.round()}",
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.bold))
                 ],

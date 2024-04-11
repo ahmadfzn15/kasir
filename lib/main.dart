@@ -1,9 +1,9 @@
 import 'package:app/auth/auth.dart';
-import 'package:app/auth/email_verify.dart';
 import 'package:app/layout.dart';
 import 'package:app/etc/startup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -27,7 +27,7 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: "Cashier",
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,

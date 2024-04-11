@@ -152,7 +152,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                         child: DropdownMenu(
                           leadingIcon: const Icon(Icons.person),
                           expandedInsets: const EdgeInsets.all(0),
-                          initialSelection: 1,
+                          initialSelection: _selectedOption,
                           inputDecorationTheme: InputDecorationTheme(
                               constraints: const BoxConstraints(maxHeight: 50),
                               contentPadding:

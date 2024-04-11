@@ -2,10 +2,12 @@ import 'dart:typed_data';
 
 import 'package:app/components/popup.dart';
 import 'package:app/etc/format_time.dart';
+import 'package:app/models/order_controller.dart';
 import 'package:app/order/receipt.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -40,6 +42,7 @@ Route _goPage(int id) {
 }
 
 class _SuccessState extends State<Success> {
+  final orderController = Get.put(OrderController());
   BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
   List<BluetoothDevice> _devices = [];
   BluetoothDevice? _device;
@@ -344,9 +347,12 @@ class _SuccessState extends State<Success> {
                   color: Colors.orange,
                   child: const Text("Transaksi Lagi"),
                   onPressed: () {
+                    orderController.sheetOrderOpen.value = false;
                     Navigator.pop(context);
                     Navigator.pop(context);
                     Navigator.pop(context);
+                    Navigator.pop(context);
+                    orderController.order.clear();
                   },
                 ),
               ),

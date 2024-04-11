@@ -3,7 +3,7 @@ import 'package:app/sublayout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-Route _goPage(int id, int? idProduk) {
+Route _goPage(int id) {
   return PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) => Sublayout(
       id: id,
@@ -93,67 +93,72 @@ class _SettingState extends State<Setting> {
       body: role != null
           ? SafeArea(
               child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Wrap(
-                    children: [
-                      ListTile(
-                        onTap: () {
-                          Navigator.of(context).push(_goPage(2, null));
-                        },
-                        hoverColor: Colors.white12,
-                        contentPadding: const EdgeInsets.all(0),
-                        horizontalTitleGap: 10,
-                        leading: const Icon(
-                          Icons.account_circle_outlined,
-                          size: 30,
+              padding: const EdgeInsets.all(10),
+              child: Card(
+                surfaceTintColor: Colors.white,
+                child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          onTap: () {
+                            Navigator.of(context).push(_goPage(2));
+                          },
+                          hoverColor: Colors.white12,
+                          contentPadding: const EdgeInsets.all(0),
+                          horizontalTitleGap: 10,
+                          leading: const Icon(
+                            Icons.account_circle_outlined,
+                            size: 30,
+                          ),
+                          title: const Text("Akun"),
+                          trailing: const Icon(Icons.chevron_right,
+                              size: 35, color: Colors.orange),
                         ),
-                        title: const Text("Akun"),
-                        trailing: const Icon(Icons.chevron_right,
-                            size: 35, color: Colors.orange),
-                      ),
-                      const Divider(color: Color(0xFFcbd5e1)),
-                      role != null && role == 'admin'
-                          ? Wrap(
-                              children: [
-                                ListTile(
-                                  onTap: () {
-                                    Navigator.of(context)
-                                        .push(_goPage(4, null));
-                                  },
-                                  hoverColor: Colors.white12,
-                                  contentPadding: const EdgeInsets.all(0),
-                                  horizontalTitleGap: 10,
-                                  leading: const Icon(
-                                    Icons.home_work_outlined,
-                                    size: 30,
+                        const Divider(color: Color(0xFFcbd5e1)),
+                        role != null && role == 'admin'
+                            ? Wrap(
+                                children: [
+                                  ListTile(
+                                    onTap: () {
+                                      Navigator.of(context).push(_goPage(4));
+                                    },
+                                    hoverColor: Colors.white12,
+                                    contentPadding: const EdgeInsets.all(0),
+                                    horizontalTitleGap: 10,
+                                    leading: const Icon(
+                                      Icons.home_work_outlined,
+                                      size: 30,
+                                    ),
+                                    title: const Text("Toko"),
+                                    trailing: const Icon(Icons.chevron_right,
+                                        size: 35, color: Colors.orange),
                                   ),
-                                  title: const Text("Toko"),
-                                  trailing: const Icon(Icons.chevron_right,
-                                      size: 35, color: Colors.orange),
-                                ),
-                                const Divider(
-                                  color: Color(0xFFcbd5e1),
-                                ),
-                              ],
-                            )
-                          : Container(),
-                      ListTile(
-                        onTap: () {
-                          Navigator.of(context).push(_goPage(9, null));
-                        },
-                        hoverColor: Colors.white12,
-                        contentPadding: const EdgeInsets.all(0),
-                        horizontalTitleGap: 10,
-                        leading: const Icon(
-                          Icons.settings_outlined,
-                          size: 30,
+                                  const Divider(
+                                    color: Color(0xFFcbd5e1),
+                                  ),
+                                ],
+                              )
+                            : Container(),
+                        ListTile(
+                          onTap: () {
+                            Navigator.of(context).push(_goPage(9));
+                          },
+                          hoverColor: Colors.white12,
+                          contentPadding: const EdgeInsets.all(0),
+                          horizontalTitleGap: 10,
+                          leading: const Icon(
+                            Icons.settings_outlined,
+                            size: 30,
+                          ),
+                          title: const Text("Lainnya"),
+                          trailing: const Icon(Icons.chevron_right,
+                              size: 35, color: Colors.orange),
                         ),
-                        title: const Text("Lainnya"),
-                        trailing: const Icon(Icons.chevron_right,
-                            size: 35, color: Colors.orange),
-                      ),
-                    ],
-                  )))
+                      ],
+                    )),
+              ),
+            ))
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.orange,

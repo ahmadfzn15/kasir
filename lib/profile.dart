@@ -35,8 +35,6 @@ class _ProfileState extends State<Profile> {
     setState(() {
       _image = null;
     });
-    print(_image);
-    print(_img);
   }
 
   @override
@@ -207,7 +205,7 @@ class _ProfileState extends State<Profile> {
   Future<void> updateData() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
     var request =
-        http.MultipartRequest("post", Uri.parse("$url/api/user/update"));
+        http.MultipartRequest("put", Uri.parse("$url/api/user/update"));
     if (_image != null) {
       request.files
           .add(await http.MultipartFile.fromPath('foto', _image!.path));
@@ -243,9 +241,8 @@ class _ProfileState extends State<Profile> {
             return refresh();
           },
           child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Form(
-                child: Column(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
@@ -304,7 +301,7 @@ class _ProfileState extends State<Profile> {
                   height: 10,
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(15),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -398,7 +395,7 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ],
-            )),
+            ),
           ),
         ),
       ),

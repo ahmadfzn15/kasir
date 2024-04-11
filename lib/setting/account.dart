@@ -38,59 +38,66 @@ class _AccountState extends State<Account> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKeys,
+      backgroundColor: const Color(0xFFf1f5f9),
       body: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Wrap(
-            children: [
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(_goPage(0, null));
-                },
-                hoverColor: Colors.white12,
-                contentPadding: const EdgeInsets.all(0),
-                horizontalTitleGap: 10,
-                leading: const Icon(
-                  Icons.person_outlined,
-                  size: 30,
-                ),
-                title: const Text("Profil"),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 35, color: Colors.orange),
-              ),
-              const Divider(color: Color(0xFFcbd5e1)),
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(_goPage(5, null));
-                },
-                hoverColor: Colors.white12,
-                contentPadding: const EdgeInsets.all(0),
-                horizontalTitleGap: 10,
-                leading: const Icon(
-                  Icons.lock_outline,
-                  size: 30,
-                ),
-                title: const Text("Ubah Kata Sandi"),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 35, color: Colors.orange),
-              ),
-              const Divider(color: Color(0xFFcbd5e1)),
-              ListTile(
-                onTap: () {
-                  Navigator.of(context).push(_goPage(6, null));
-                },
-                hoverColor: Colors.white12,
-                contentPadding: const EdgeInsets.all(0),
-                horizontalTitleGap: 10,
-                leading: const Icon(
-                  Icons.delete_forever_outlined,
-                  size: 30,
-                ),
-                title: const Text("Hapus Akun"),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 35, color: Colors.orange),
-              ),
-            ],
-          )),
+        padding: const EdgeInsets.all(10),
+        child: Card(
+          surfaceTintColor: Colors.white,
+          child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Wrap(
+                children: [
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(_goPage(0, null));
+                    },
+                    hoverColor: Colors.white12,
+                    contentPadding: const EdgeInsets.all(0),
+                    horizontalTitleGap: 10,
+                    leading: const Icon(
+                      Icons.person_outlined,
+                      size: 30,
+                    ),
+                    title: const Text("Profil"),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 35, color: Colors.orange),
+                  ),
+                  const Divider(color: Color(0xFFcbd5e1)),
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(_goPage(5, null));
+                    },
+                    hoverColor: Colors.white12,
+                    contentPadding: const EdgeInsets.all(0),
+                    horizontalTitleGap: 10,
+                    leading: const Icon(
+                      Icons.lock_outline,
+                      size: 30,
+                    ),
+                    title: const Text("Ubah Kata Sandi"),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 35, color: Colors.orange),
+                  ),
+                  const Divider(color: Color(0xFFcbd5e1)),
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(_goPage(6, null));
+                    },
+                    hoverColor: Colors.white12,
+                    contentPadding: const EdgeInsets.all(0),
+                    horizontalTitleGap: 10,
+                    leading: const Icon(
+                      Icons.delete_forever_outlined,
+                      size: 30,
+                    ),
+                    title: const Text("Hapus Akun"),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 35, color: Colors.orange),
+                  ),
+                ],
+              )),
+        ),
+      ),
     );
   }
 }

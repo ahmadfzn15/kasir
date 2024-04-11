@@ -1,6 +1,6 @@
-import 'dart:convert';
-import 'dart:ui';
-
+import 'package:app/models/category_controller.dart';
+import 'package:app/models/order_controller.dart';
+import 'package:app/models/product_controller.dart';
 import 'package:app/order/checkout.dart';
 import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
@@ -11,8 +11,7 @@ import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:app/sublayout.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
@@ -47,9 +46,11 @@ Route _goPage(Widget page) {
 
 class _ProductState extends State<Product> {
   final TextEditingController _search = TextEditingController();
+  final categoryController = Get.put(CategoryController());
+  final orderController = Get.put(OrderController());
+  final productController = Get.put(ProductController());
   List order = [];
   List<Products> products = [];
-  List<Products> searchResult = [];
   List<dynamic> category = [];
   List<Map<String, dynamic>> filterCategory = [];
   String _selectedCategory = "Semua Kategori";
@@ -60,6 +61,7 @@ class _ProductState extends State<Product> {
   bool loadingProduct = true;
   bool loadingCategory = true;
   bool _selectAll = false;
+  bool sheetOrderOpen = false;
   bool _select = false;
 
   @override
@@ -108,92 +110,41 @@ class _ProductState extends State<Product> {
     });
   }
 
-  void searchProduct(String value) {
+  Future<void> fetchDataProduct() async {
+    await productController.fetchDataProduct(categoryId: _selectedCategoryId);
     setState(() {
-      searchResult = products
-          .where((element) =>
-              element.namaProduk.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      loadingProduct = false;
     });
   }
 
-  Future<void> fetchDataProduct() async {
-    bool hasToken =
-        await const FlutterSecureStorage().containsKey(key: 'token');
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    if (hasToken) {
-      final response = await http.get(
-        Uri.parse("$url/api/product?category=$_selectedCategoryId"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token"
-        },
-      );
-
-      Map<String, dynamic> res = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        products = (res['data'] as List<dynamic>)
-            .map((data) => Products.fromJson({...data, "selected": false}))
-            .toList();
-        setState(() {
-          searchResult = products;
-        });
-        setState(() {
-          loadingProduct = false;
-        });
-      } else {
-        setState(() {
-          loadingProduct = false;
-        });
-        throw Exception(res['message']);
-      }
-    }
-  }
-
   Future<void> fetchDataCategory() async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
+    await categoryController.fetchDataCategory();
+    var res = categoryController.category;
 
-    final response = await http.get(
-      Uri.parse("$url/api/category"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-    );
+    setState(() {
+      filterCategory.clear();
 
-    Map<String, dynamic> res = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      setState(() {
-        category = res['data'];
-        filterCategory.clear();
-
-        filterCategory = [
-          {"id": 0, "kategori": "Semua Kategori"}
-        ];
-        for (var element in res['data']) {
-          filterCategory.add({
-            "id": element['id'],
-            "kategori": element['kategori'],
-          });
-        }
-      });
-      setState(() {
-        loadingProduct = false;
-      });
-    } else {
-      setState(() {
-        loadingProduct = false;
-      });
-      throw Exception(res['message']);
-    }
+      filterCategory = [
+        {"id": 0, "kategori": "Semua Kategori"}
+      ];
+      for (var element in res) {
+        filterCategory.add({
+          "id": element['id'],
+          "kategori": element['kategori'],
+        });
+      }
+    });
+    setState(() {
+      loadingCategory = false;
+    });
   }
 
   Future<void> _handleRefresh() async {
     await fetchDataProduct();
     await fetchDataCategory();
     setState(() {
-      order.clear();
+      sheetOrderOpen = false;
+      orderController.order.clear();
       products.map((e) => e.selected = false).toList();
       _select = false;
     });
@@ -201,26 +152,8 @@ class _ProductState extends State<Product> {
     await Navigator.maybePop(context);
   }
 
-  Future<void> refreshFilter() async {
-    await fetchDataProduct();
-  }
-
-  void _addOrder(BuildContext context, Products product) {
-    setState(() {
-      order.add({
-        "id": product.id,
-        "namaProduk": product.namaProduk,
-        "harga": product.harga_jual,
-        "stok": product.stok,
-        "qty": 1
-      });
-    });
-
-    showSheetOrder();
-  }
-
   void showSheetOrder() {
-    if (order.isNotEmpty) {
+    if (orderController.sheetOrderOpen.value) {
       showBottomSheet(
         backgroundColor: Colors.white,
         elevation: 5,
@@ -228,17 +161,16 @@ class _ProductState extends State<Product> {
         context: context,
         builder: (context) {
           return Padding(
-              padding: const EdgeInsets.only(top: 15, bottom: 15, right: 10),
+              padding: const EdgeInsets.only(top: 10, bottom: 10, right: 10),
               child: ListTile(
                 leading: Wrap(
                   direction: Axis.horizontal,
                   children: [
                     IconButton(
                         onPressed: () {
+                          orderController.sheetOrderOpen.value = false;
                           Navigator.pop(context);
-                          setState(() {
-                            order = [];
-                          });
+                          orderController.order.clear();
                         },
                         icon: const Icon(
                           Icons.close,
@@ -247,17 +179,17 @@ class _ProductState extends State<Product> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            "Total (${order.fold(0, (previousValue, element) => previousValue + element['qty'] as int)})",
+                        Obx(() => Text(
+                            "Total (${orderController.order.fold(0, (previousValue, element) => previousValue + (element.qty.value))})",
                             style: const TextStyle(
-                                fontSize: 17, fontWeight: FontWeight.bold)),
+                                fontSize: 17, fontWeight: FontWeight.bold))),
                         const SizedBox(
                           height: 3,
                         ),
-                        Text(
-                          "Rp.${order.fold(0, (previousValue, element) => previousValue + (element['harga'] * element['qty']) as int)}",
-                          style: const TextStyle(fontSize: 13),
-                        )
+                        Obx(() => Text(
+                              "Rp.${orderController.order.fold(0, (previousValue, element) => previousValue + (element.harga * (element.qty.value)))}",
+                              style: const TextStyle(fontSize: 13),
+                            ))
                       ],
                     ),
                   ],
@@ -268,10 +200,10 @@ class _ProductState extends State<Product> {
                         backgroundColor:
                             MaterialStatePropertyAll(Colors.orange)),
                     onPressed: () {
-                      Navigator.of(context)
-                          .push(_goPage(Checkout(order: order)));
+                      Navigator.of(context).push(
+                          _goPage(Checkout(order: orderController.order)));
                     },
-                    child: const Text("Lihat")),
+                    child: const Text("Lanjut")),
               ));
         },
       );
@@ -351,7 +283,7 @@ class _ProductState extends State<Product> {
     showModalBottomSheet(
       showDragHandle: true,
       enableDrag: true,
-      constraints: const BoxConstraints(maxHeight: 120),
+      constraints: const BoxConstraints(maxHeight: 110),
       context: context,
       builder: (context) {
         return Padding(
@@ -359,86 +291,56 @@ class _ProductState extends State<Product> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context)
-                      .push(_goPage(EditCategory(category: category)));
-                },
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.edit,
-                      size: 30,
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text("Edit")
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  openDeleteCategory(context, category['id']);
-                },
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      size: 30,
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text("Hapus")
-                  ],
-                ),
-              ),
+              TextButton(
+                  style: const ButtonStyle(
+                      foregroundColor: MaterialStatePropertyAll(Colors.black),
+                      padding: MaterialStatePropertyAll(
+                          EdgeInsets.symmetric(vertical: 0))),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.of(context)
+                        .push(_goPage(EditCategory(category: category)));
+                  },
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.edit,
+                        size: 30,
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Text("Edit")
+                    ],
+                  )),
+              TextButton(
+                  style: const ButtonStyle(
+                      foregroundColor: MaterialStatePropertyAll(Colors.red),
+                      padding: MaterialStatePropertyAll(
+                          EdgeInsets.symmetric(vertical: 0))),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    openDeleteCategory(context, category['id']);
+                  },
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.delete,
+                        size: 30,
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Text("Hapus")
+                    ],
+                  )),
             ],
           ),
         );
       },
     );
-  }
-
-  void _increment(BuildContext context, int id) {
-    Iterable data = order.where((element) => element['id'] == id);
-    if (data.first['stok'] != null) {
-      if (data.first['qty'] < data.first['stok']) {
-        showSheetOrder();
-        if (data.isNotEmpty) {
-          setState(() {
-            data.first['qty']++;
-          });
-        }
-      }
-    } else {
-      showSheetOrder();
-      if (data.isNotEmpty) {
-        setState(() {
-          data.first['qty']++;
-        });
-      }
-    }
-  }
-
-  void _decrement(BuildContext context, int id) {
-    Iterable data = order.where((element) => element['id'] == id);
-    if (data.isNotEmpty && data.first['qty'] > 0) {
-      setState(() {
-        data.first['qty']--;
-      });
-      if (data.first['qty'] == 0) {
-        setState(() {
-          order.removeWhere((element) => element['id'] == id);
-        });
-      }
-    }
-    showSheetOrder();
   }
 
   void openDeleteProduct(BuildContext context, List<int> id) {
@@ -458,7 +360,7 @@ class _ProductState extends State<Product> {
             CupertinoDialogAction(
                 isDestructiveAction: true,
                 onPressed: () {
-                  deleteProduct(context, id);
+                  productController.deleteProduct(context, id);
                 },
                 child: const Text("Yes"))
           ]),
@@ -482,95 +384,56 @@ class _ProductState extends State<Product> {
             CupertinoDialogAction(
                 isDestructiveAction: true,
                 onPressed: () {
-                  deleteCategory(context, id);
+                  categoryController.deleteCategory(context, id);
                 },
                 child: const Text("Yes"))
           ]),
     );
   }
 
-  Future<void> deleteProduct(BuildContext context, List<int> id) async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    final response = await http.post(Uri.parse("$url/api/product/delete"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token"
-        },
-        body: jsonEncode({"data": id}));
-
-    final res = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      _handleRefresh();
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], true);
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], false);
-    }
-  }
-
-  Future<void> deleteCategory(BuildContext context, int id) async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    final response = await http.delete(
-      Uri.parse("$url/api/category/$id"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-    );
-
-    final res = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      _handleRefresh();
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], true);
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], false);
-    }
-  }
-
   void scanBarcode() async {
     final res = await BarcodeScanner.scan();
-    bool? hasVibration = await Vibration.hasVibrator();
-    if (hasVibration!) {
-      Vibration.vibrate(
-        duration: 100,
-        amplitude: 100,
-      );
-    }
+    if (res.rawContent.isNotEmpty) {
+      bool? hasVibration = await Vibration.hasVibrator();
+      if (hasVibration!) {
+        Vibration.vibrate(
+          duration: 100,
+          amplitude: 100,
+        );
+      }
 
-    var product = searchResult
-        .where(
-          (element) => element.barcode! == res.rawContent,
-        )
-        .toList();
+      var product = productController.searchResult
+          .where(
+            (element) => element.barcode != null
+                ? element.barcode! == res.rawContent
+                : false,
+          )
+          .toList();
+      print(product);
 
-    if (product.isNotEmpty) {
-      if (order.where((element) => element['id'] == product.first.id).isEmpty) {
-        _addOrder(
-            // ignore: use_build_context_synchronously
-            context,
-            product.first);
+      if (product.isNotEmpty) {
+        if (orderController.order
+            .where((element) => element.id == product.first.id)
+            .isEmpty) {
+          if (orderController.order.isEmpty) {
+            orderController.addOrder(product.first);
+            orderController.sheetOrderOpen.value = true;
+            showSheetOrder();
+          } else {
+            orderController.addOrder(product.first);
+          }
+        } else {
+          // ignore: use_build_context_synchronously
+          Popup().show(context, "Produk sudah ditambahkan", true);
+        }
       } else {
         // ignore: use_build_context_synchronously
-        Popup().show(context, "Produk sudah ditambahkan", true);
+        Popup().show(
+            // ignore: use_build_context_synchronously
+            context,
+            "Produk belum didaftarkan, silahkan daftarkan terlebih dahulu!",
+            false);
       }
-    } else {
-      // ignore: use_build_context_synchronously
-      Popup().show(
-          // ignore: use_build_context_synchronously
-          context,
-          "Produk belum didaftarkan, silahkan daftarkan terlebih dahulu!",
-          false);
     }
   }
 
@@ -627,7 +490,7 @@ class _ProductState extends State<Product> {
                           ),
                         ),
                         onChanged: (value) {
-                          searchProduct(value);
+                          productController.searchProduct(value);
                         },
                         placeholder: "Cari Produk",
                         padding: const EdgeInsets.symmetric(
@@ -719,534 +582,566 @@ class _ProductState extends State<Product> {
                       ),
                     ),
                     body: !loadingProduct
-                        ? RefreshIndicator(
-                            onRefresh: _handleRefresh,
-                            color: Colors.orange,
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                        ? GetBuilder<ProductController>(
+                            builder: (controller) {
+                              return RefreshIndicator(
+                                  onRefresh: _handleRefresh,
+                                  color: Colors.orange,
+                                  child: Column(
                                     children: [
-                                      MenuAnchor(
-                                          builder:
-                                              (context, controller, child) {
-                                            return GestureDetector(
-                                              onTap: () {
-                                                if (controller.isOpen) {
-                                                  controller.close();
-                                                } else {
-                                                  controller.open();
-                                                }
-                                              },
-                                              child: Wrap(
-                                                crossAxisAlignment:
-                                                    WrapCrossAlignment.center,
-                                                direction: Axis.horizontal,
-                                                children: [
-                                                  Text(_selectedCategory),
-                                                  const Icon(
-                                                      Icons.chevron_right)
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                          menuChildren: filterCategory
-                                              .map((e) => MenuItemButton(
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        _selectedCategory =
-                                                            e['kategori'];
-                                                        _selectedCategoryId =
-                                                            e['id'];
-                                                      });
-                                                      refreshFilter();
-                                                    },
-                                                    child: Text(e['kategori']),
-                                                  ))
-                                              .toList()),
-                                      MenuAnchor(
-                                          builder:
-                                              (context, controller, child) {
-                                            return IconButton(
-                                              onPressed: () {
-                                                if (controller.isOpen) {
-                                                  controller.close();
-                                                } else {
-                                                  controller.open();
-                                                }
-                                              },
-                                              icon: const Icon(
-                                                  Icons.window_outlined),
-                                            );
-                                          },
-                                          menuChildren: [
-                                            MenuItemButton(
-                                                onPressed: () {
-                                                  setView(true);
-                                                },
-                                                child: const Text(
-                                                    "Tampilan Baris")),
-                                            MenuItemButton(
-                                                onPressed: () {
-                                                  setView(false);
-                                                },
-                                                child: const Text(
-                                                    "Tampilan Kolom"))
-                                          ]),
-                                    ],
-                                  ),
-                                ),
-                                searchResult.isNotEmpty
-                                    ? Expanded(
-                                        child: SizedBox(
-                                        height: double.infinity,
-                                        child: row
-                                            ? ListView.builder(
-                                                padding: const EdgeInsets.only(
-                                                    bottom: 80),
-                                                itemCount: searchResult.length,
-                                                shrinkWrap: true,
-                                                itemBuilder: (context, index) {
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 15),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            MenuAnchor(
+                                                builder: (context, controller,
+                                                    child) {
                                                   return GestureDetector(
-                                                    onLongPress: () {},
-                                                    child: SizedBox(
-                                                      height: 115,
-                                                      child: Card(
-                                                          surfaceTintColor:
-                                                              Colors.white,
-                                                          clipBehavior:
-                                                              Clip.antiAlias,
-                                                          elevation: 3,
-                                                          margin: const EdgeInsets
-                                                              .symmetric(
-                                                              horizontal: 10,
-                                                              vertical: 5),
-                                                          child: Dismissible(
-                                                            key: Key(
-                                                                searchResult[
-                                                                        index]
-                                                                    .id
-                                                                    .toString()),
-                                                            direction:
-                                                                DismissDirection
-                                                                    .endToStart,
-                                                            confirmDismiss:
-                                                                (direction) async {
-                                                              final details =
-                                                                  await Future
-                                                                      .delayed(
-                                                                const Duration(
-                                                                    seconds: 5),
-                                                                () {
-                                                                  null;
-                                                                },
-                                                              );
+                                                    onTap: () {
+                                                      if (controller.isOpen) {
+                                                        controller.close();
+                                                      } else {
+                                                        controller.open();
+                                                      }
+                                                    },
+                                                    child: Wrap(
+                                                      crossAxisAlignment:
+                                                          WrapCrossAlignment
+                                                              .center,
+                                                      direction:
+                                                          Axis.horizontal,
+                                                      children: [
+                                                        Text(
+                                                          _selectedCategory,
+                                                          style: const TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        const Icon(
+                                                            Icons.chevron_right)
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                                menuChildren: filterCategory
+                                                    .map((e) => MenuItemButton(
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              _selectedCategory =
+                                                                  e['kategori'];
+                                                              _selectedCategoryId =
+                                                                  e['id'];
+                                                            });
+                                                            fetchDataProduct();
+                                                          },
+                                                          child: Text(
+                                                              e['kategori']),
+                                                        ))
+                                                    .toList()),
+                                            MenuAnchor(
+                                                builder: (context, controller,
+                                                    child) {
+                                                  return IconButton(
+                                                    onPressed: () {
+                                                      if (controller.isOpen) {
+                                                        controller.close();
+                                                      } else {
+                                                        controller.open();
+                                                      }
+                                                    },
+                                                    icon: const Icon(
+                                                        Icons.window_outlined),
+                                                  );
+                                                },
+                                                menuChildren: [
+                                                  MenuItemButton(
+                                                      onPressed: () {
+                                                        setView(true);
+                                                      },
+                                                      child: const Text(
+                                                          "Tampilan Baris")),
+                                                  MenuItemButton(
+                                                      onPressed: () {
+                                                        setView(false);
+                                                      },
+                                                      child: const Text(
+                                                          "Tampilan Kolom"))
+                                                ]),
+                                          ],
+                                        ),
+                                      ),
+                                      productController.searchResult.isNotEmpty
+                                          ? Expanded(
+                                              child: SizedBox(
+                                              height: double.infinity,
+                                              child: row
+                                                  ? ListView.builder(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              bottom: 80),
+                                                      itemCount:
+                                                          productController
+                                                              .searchResult
+                                                              .length,
+                                                      shrinkWrap: true,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return GestureDetector(
+                                                          onLongPress: () {},
+                                                          child: SizedBox(
+                                                            height: 115,
+                                                            child: Card(
+                                                                surfaceTintColor:
+                                                                    Colors
+                                                                        .white,
+                                                                clipBehavior: Clip
+                                                                    .antiAlias,
+                                                                elevation: 3,
+                                                                margin: const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        10,
+                                                                    vertical:
+                                                                        5),
+                                                                child:
+                                                                    Dismissible(
+                                                                  key: Key(productController
+                                                                      .searchResult[
+                                                                          index]
+                                                                      .id
+                                                                      .toString()),
+                                                                  direction:
+                                                                      DismissDirection
+                                                                          .endToStart,
+                                                                  confirmDismiss:
+                                                                      (direction) async {
+                                                                    final details =
+                                                                        await Future
+                                                                            .delayed(
+                                                                      const Duration(
+                                                                          seconds:
+                                                                              5),
+                                                                      () {
+                                                                        null;
+                                                                      },
+                                                                    );
 
-                                                              return details !=
-                                                                  null;
-                                                            },
-                                                            background:
-                                                                Container(
-                                                              alignment: Alignment
-                                                                  .centerRight,
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .symmetric(
-                                                                      horizontal:
-                                                                          20),
-                                                              decoration: BoxDecoration(
-                                                                  color: Colors
-                                                                      .black12,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              10)),
-                                                              child: Wrap(
-                                                                direction: Axis
-                                                                    .horizontal,
-                                                                children: [
-                                                                  IconButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        Navigator.of(context).push(_goPage(EditProduct(
-                                                                            product:
-                                                                                searchResult[index])));
-                                                                      },
-                                                                      icon:
-                                                                          const Icon(
-                                                                        Icons
-                                                                            .edit,
+                                                                    return details !=
+                                                                        null;
+                                                                  },
+                                                                  background:
+                                                                      Container(
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .centerRight,
+                                                                    padding: const EdgeInsets
+                                                                        .symmetric(
+                                                                        horizontal:
+                                                                            20),
+                                                                    decoration: BoxDecoration(
                                                                         color: Colors
-                                                                            .green,
-                                                                        size:
-                                                                            40,
-                                                                      )),
-                                                                  const SizedBox(
-                                                                    width: 20,
+                                                                            .black12,
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(10)),
+                                                                    child: Wrap(
+                                                                      direction:
+                                                                          Axis.horizontal,
+                                                                      children: [
+                                                                        IconButton(
+                                                                            onPressed:
+                                                                                () {
+                                                                              Navigator.of(context).push(_goPage(EditProduct(product: productController.searchResult[index])));
+                                                                            },
+                                                                            icon:
+                                                                                const Icon(
+                                                                              Icons.edit,
+                                                                              color: Colors.green,
+                                                                              size: 40,
+                                                                            )),
+                                                                        const SizedBox(
+                                                                          width:
+                                                                              20,
+                                                                        ),
+                                                                        IconButton(
+                                                                            onPressed:
+                                                                                () {
+                                                                              openDeleteProduct(context, [
+                                                                                productController.searchResult[index].id
+                                                                              ]);
+                                                                            },
+                                                                            icon:
+                                                                                const Icon(
+                                                                              Icons.delete,
+                                                                              color: Colors.red,
+                                                                              size: 40,
+                                                                            ))
+                                                                      ],
+                                                                    ),
                                                                   ),
-                                                                  IconButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        openDeleteProduct(
-                                                                            context,
-                                                                            [
-                                                                              searchResult[index].id
-                                                                            ]);
-                                                                      },
-                                                                      icon:
-                                                                          const Icon(
-                                                                        Icons
-                                                                            .delete,
-                                                                        color: Colors
-                                                                            .red,
-                                                                        size:
-                                                                            40,
-                                                                      ))
-                                                                ],
-                                                              ),
-                                                            ),
+                                                                  child:
+                                                                      Padding(
+                                                                    padding:
+                                                                        const EdgeInsets
+                                                                            .all(
+                                                                            10),
+                                                                    child: Row(
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .center,
+                                                                      children: [
+                                                                        Container(
+                                                                          width:
+                                                                              80,
+                                                                          height:
+                                                                              80,
+                                                                          clipBehavior:
+                                                                              Clip.antiAlias,
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10),
+                                                                          ),
+                                                                          child: productController.searchResult[index].foto != null
+                                                                              ? Image.network(
+                                                                                  "$url/storage/img/${productController.searchResult[index].foto}",
+                                                                                  fit: BoxFit.cover,
+                                                                                )
+                                                                              : Image.asset(
+                                                                                  "assets/img/food.png",
+                                                                                  fit: BoxFit.cover,
+                                                                                ),
+                                                                        ),
+                                                                        const SizedBox(
+                                                                            width:
+                                                                                10),
+                                                                        Expanded(
+                                                                          child:
+                                                                              Column(
+                                                                            crossAxisAlignment:
+                                                                                CrossAxisAlignment.start,
+                                                                            children: [
+                                                                              Row(
+                                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                                children: [
+                                                                                  Flexible(
+                                                                                      child: Column(
+                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                    children: [
+                                                                                      Text(
+                                                                                        productController.searchResult[index].namaProduk,
+                                                                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+                                                                                      ),
+                                                                                      Text(
+                                                                                        "Rp.${productController.searchResult[index].harga_jual}",
+                                                                                        style: const TextStyle(fontSize: 12),
+                                                                                      ),
+                                                                                    ],
+                                                                                  )),
+                                                                                  GestureDetector(
+                                                                                    onTap: () {
+                                                                                      _openOptionProduct(context, productController.searchResult[index]);
+                                                                                    },
+                                                                                    child: const Icon(CupertinoIcons.ellipsis_vertical),
+                                                                                  )
+                                                                                ],
+                                                                              ),
+                                                                              Obx(() => Row(
+                                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                                                    children: [
+                                                                                      productController.searchResult[index].stok != null ? Text(productController.searchResult[index].stok != 0 ? "Stok : ${productController.searchResult[index].stok}" : "Stok Habis") : Container(),
+                                                                                      orderController.order.isNotEmpty && orderController.order.where((element) => element.id == productController.searchResult[index].id).isNotEmpty
+                                                                                          ? Row(
+                                                                                              children: [
+                                                                                                IconButton(
+                                                                                                  onPressed: () {
+                                                                                                    orderController.decrementOrder(products[index].id);
+                                                                                                    if (orderController.order.isEmpty) {
+                                                                                                      showSheetOrder();
+                                                                                                    }
+                                                                                                  },
+                                                                                                  icon: const Icon(Icons.remove),
+                                                                                                ),
+                                                                                                Text(
+                                                                                                  orderController.order.firstWhere((element) => element.id == products[index].id).qty.toString(),
+                                                                                                  style: const TextStyle(fontSize: 20),
+                                                                                                ),
+                                                                                                IconButton(
+                                                                                                  onPressed: () {
+                                                                                                    orderController.incrementOrder(products[index].id);
+                                                                                                  },
+                                                                                                  icon: const Icon(Icons.add),
+                                                                                                ),
+                                                                                              ],
+                                                                                            )
+                                                                                          : CupertinoButton(
+                                                                                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                                                                              color: Colors.orange,
+                                                                                              onPressed: () {
+                                                                                                if (!productController.searchResult[index].selected && productController.searchResult[index].stok != 0) {
+                                                                                                  if (!orderController.sheetOrderOpen.value) {
+                                                                                                    orderController.sheetOrderOpen.value = true;
+                                                                                                    showSheetOrder();
+                                                                                                  }
+                                                                                                  orderController.addOrder(productController.searchResult[index]);
+                                                                                                }
+                                                                                              },
+                                                                                              child: const Text("Tambah"),
+                                                                                            )
+                                                                                    ],
+                                                                                  ))
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                )),
+                                                          ),
+                                                        );
+                                                      },
+                                                    )
+                                                  : GridView.builder(
+                                                      itemCount:
+                                                          productController
+                                                              .searchResult
+                                                              .length,
+                                                      shrinkWrap: true,
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 10,
+                                                              right: 10,
+                                                              bottom: 80),
+                                                      gridDelegate:
+                                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                                        mainAxisExtent: 240,
+                                                        crossAxisCount: 2,
+                                                        crossAxisSpacing: 5,
+                                                        mainAxisSpacing: 5,
+                                                      ),
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return GestureDetector(
+                                                          onLongPress: () {
+                                                            setState(() {
+                                                              vibrateDevices();
+                                                              productController
+                                                                  .searchResult[
+                                                                      index]
+                                                                  .selected = true;
+                                                              _select = true;
+                                                              if (productController
+                                                                  .searchResult
+                                                                  .every((element) =>
+                                                                      element
+                                                                          .selected)) {
+                                                                _selectAll =
+                                                                    true;
+                                                              }
+                                                            });
+                                                            _openOptionProduct(
+                                                                context,
+                                                                productController
+                                                                        .searchResult[
+                                                                    index]);
+                                                          },
+                                                          onTap: () {
+                                                            if (productController
+                                                                    .searchResult
+                                                                    .any((element) =>
+                                                                        element
+                                                                            .selected) ||
+                                                                _select) {
+                                                              setState(() {
+                                                                if (productController
+                                                                    .searchResult[
+                                                                        index]
+                                                                    .selected) {
+                                                                  productController
+                                                                      .searchResult[
+                                                                          index]
+                                                                      .selected = false;
+                                                                  _selectAll =
+                                                                      false;
+                                                                } else {
+                                                                  productController
+                                                                      .searchResult[
+                                                                          index]
+                                                                      .selected = true;
+                                                                  if (productController
+                                                                      .searchResult
+                                                                      .every((element) =>
+                                                                          element
+                                                                              .selected)) {
+                                                                    _selectAll =
+                                                                        true;
+                                                                  }
+                                                                }
+                                                              });
+                                                            }
+                                                          },
+                                                          child: Card(
+                                                            surfaceTintColor:
+                                                                productController
+                                                                        .searchResult[
+                                                                            index]
+                                                                        .selected
+                                                                    ? const Color
+                                                                        .fromARGB(
+                                                                        96,
+                                                                        197,
+                                                                        30,
+                                                                        30)
+                                                                    : Colors
+                                                                        .white,
+                                                            elevation: 3,
+                                                            clipBehavior:
+                                                                Clip.antiAlias,
                                                             child: Padding(
                                                               padding:
                                                                   const EdgeInsets
                                                                       .all(10),
-                                                              child: Row(
+                                                              child: Column(
                                                                 crossAxisAlignment:
                                                                     CrossAxisAlignment
-                                                                        .center,
+                                                                        .start,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
                                                                 children: [
-                                                                  Container(
-                                                                    width: 80,
-                                                                    height: 80,
-                                                                    clipBehavior:
-                                                                        Clip.antiAlias,
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              10),
+                                                                  SizedBox(
+                                                                    height: 100,
+                                                                    child:
+                                                                        Center(
+                                                                      child: productController.searchResult[index].foto !=
+                                                                              null
+                                                                          ? Image
+                                                                              .network(
+                                                                              "$url/storage/img/${productController.searchResult[index].foto}",
+                                                                              fit: BoxFit.cover,
+                                                                            )
+                                                                          : Image
+                                                                              .asset(
+                                                                              "assets/img/food.png",
+                                                                              fit: BoxFit.cover,
+                                                                            ),
                                                                     ),
-                                                                    child: searchResult[index].foto !=
-                                                                            null
-                                                                        ? Image
-                                                                            .network(
-                                                                            "$url/storage/img/${searchResult[index].foto}",
-                                                                            fit:
-                                                                                BoxFit.cover,
-                                                                          )
-                                                                        : Image
-                                                                            .asset(
-                                                                            "assets/img/food.png",
-                                                                            fit:
-                                                                                BoxFit.cover,
-                                                                          ),
                                                                   ),
                                                                   const SizedBox(
-                                                                      width:
+                                                                      height:
                                                                           10),
-                                                                  Expanded(
-                                                                    child:
-                                                                        Column(
-                                                                      crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .start,
-                                                                      children: [
-                                                                        Row(
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                          children: [
-                                                                            Flexible(
-                                                                                child: Column(
-                                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                                              children: [
-                                                                                Text(
-                                                                                  searchResult[index].namaProduk,
-                                                                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
-                                                                                ),
-                                                                                Text(
-                                                                                  "Rp.${searchResult[index].harga_jual}",
-                                                                                  style: const TextStyle(fontSize: 12),
-                                                                                ),
-                                                                              ],
-                                                                            )),
-                                                                            GestureDetector(
-                                                                              onTap: () {
-                                                                                _openOptionProduct(context, searchResult[index]);
-                                                                              },
-                                                                              child: const Icon(CupertinoIcons.ellipsis_vertical),
-                                                                            )
-                                                                          ],
-                                                                        ),
-                                                                        Row(
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                          crossAxisAlignment:
-                                                                              CrossAxisAlignment.end,
-                                                                          children: [
-                                                                            searchResult[index].stok != null
-                                                                                ? Text(searchResult[index].stok != 0 ? "Stok : ${searchResult[index].stok}" : "Stok Habis")
-                                                                                : Container(),
-                                                                            order.isNotEmpty && order.where((element) => element['id'] == products[index].id).isNotEmpty
-                                                                                ? Row(
+                                                                  Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(productController
+                                                                          .searchResult[
+                                                                              index]
+                                                                          .namaProduk),
+                                                                      Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.spaceBetween,
+                                                                        children: [
+                                                                          Text(
+                                                                            "Rp.${productController.searchResult[index].harga_jual.toString()}",
+                                                                            style:
+                                                                                const TextStyle(
+                                                                              fontSize: 15,
+                                                                              fontWeight: FontWeight.bold,
+                                                                            ),
+                                                                          ),
+                                                                          productController.searchResult[index].stok != null
+                                                                              ? Text(
+                                                                                  productController.searchResult[index].stok != 0 ? "Stok : ${productController.searchResult[index].stok}" : "Stok Habis",
+                                                                                )
+                                                                              : Container(),
+                                                                        ],
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  const SizedBox(
+                                                                      height:
+                                                                          5),
+                                                                  Obx(() => Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.end,
+                                                                        children: [
+                                                                          orderController.order.isNotEmpty && orderController.order.where((element) => element.id == productController.searchResult[index].id).isNotEmpty
+                                                                              ? Expanded(
+                                                                                  child: Row(
+                                                                                    mainAxisAlignment: MainAxisAlignment.center,
                                                                                     children: [
                                                                                       IconButton(
                                                                                         onPressed: () {
-                                                                                          _decrement(context, products[index].id);
+                                                                                          orderController.decrementOrder(productController.searchResult[index].id);
+                                                                                          if (orderController.order.isEmpty) {
+                                                                                            showSheetOrder();
+                                                                                          }
                                                                                         },
                                                                                         icon: const Icon(Icons.remove),
                                                                                       ),
                                                                                       Text(
-                                                                                        order.firstWhere((element) => element['id'] == products[index].id)['qty'].toString(),
+                                                                                        orderController.order.firstWhere((element) => element.id == productController.searchResult[index].id).qty.toString(),
                                                                                         style: const TextStyle(fontSize: 20),
                                                                                       ),
                                                                                       IconButton(
                                                                                         onPressed: () {
-                                                                                          _increment(context, products[index].id);
+                                                                                          orderController.incrementOrder(productController.searchResult[index].id);
                                                                                         },
                                                                                         icon: const Icon(Icons.add),
                                                                                       ),
                                                                                     ],
-                                                                                  )
-                                                                                : CupertinoButton(
-                                                                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                                                                    color: Colors.orange,
-                                                                                    onPressed: () {
-                                                                                      if (searchResult[index].stok != 0) {
-                                                                                        _addOrder(context, searchResult[index]);
-                                                                                      }
-                                                                                    },
-                                                                                    child: const Text("Tambah"),
-                                                                                  )
-                                                                          ],
-                                                                        )
-                                                                      ],
-                                                                    ),
-                                                                  ),
+                                                                                  ),
+                                                                                )
+                                                                              : Expanded(
+                                                                                  child: SizedBox(
+                                                                                    width: double.infinity,
+                                                                                    child: FilledButton(
+                                                                                      style: const ButtonStyle(
+                                                                                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))),
+                                                                                        backgroundColor: MaterialStatePropertyAll(Colors.orange),
+                                                                                        foregroundColor: MaterialStatePropertyAll(Colors.white),
+                                                                                      ),
+                                                                                      onPressed: () {
+                                                                                        if (!productController.searchResult[index].selected && productController.searchResult[index].stok != 0) {
+                                                                                          if (!orderController.sheetOrderOpen.value) {
+                                                                                            orderController.sheetOrderOpen.value = true;
+                                                                                            showSheetOrder();
+                                                                                          }
+                                                                                          orderController.addOrder(productController.searchResult[index]);
+                                                                                        }
+                                                                                      },
+                                                                                      child: const Text("Tambah"),
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                        ],
+                                                                      )),
                                                                 ],
                                                               ),
                                                             ),
-                                                          )),
+                                                          ),
+                                                        );
+                                                      },
                                                     ),
-                                                  );
-                                                },
-                                              )
-                                            : GridView.builder(
-                                                itemCount: searchResult.length,
-                                                shrinkWrap: true,
-                                                padding: const EdgeInsets.only(
-                                                    left: 10,
-                                                    right: 10,
-                                                    bottom: 80),
-                                                gridDelegate:
-                                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                                        mainAxisExtent: 240,
-                                                        crossAxisCount: 2,
-                                                        crossAxisSpacing: 5,
-                                                        mainAxisSpacing: 5),
-                                                itemBuilder: (context, index) {
-                                                  return GestureDetector(
-                                                    onLongPress: () {
-                                                      setState(() {
-                                                        vibrateDevices();
-                                                        searchResult[index]
-                                                            .selected = true;
-                                                        _select = true;
-                                                        if (searchResult.every(
-                                                            (element) => element
-                                                                .selected)) {
-                                                          _selectAll = true;
-                                                        }
-                                                      });
-                                                      _openOptionProduct(
-                                                          context,
-                                                          searchResult[index]);
-                                                    },
-                                                    onTap: () {
-                                                      if (searchResult.any(
-                                                              (element) => element
-                                                                  .selected) ||
-                                                          _select) {
-                                                        if (searchResult[index]
-                                                            .selected) {
-                                                          setState(() {
-                                                            searchResult[index]
-                                                                    .selected =
-                                                                false;
-                                                            _selectAll = false;
-                                                          });
-                                                        } else {
-                                                          setState(() {
-                                                            searchResult[index]
-                                                                    .selected =
-                                                                true;
-                                                            if (searchResult.every(
-                                                                (element) => element
-                                                                    .selected)) {
-                                                              _selectAll = true;
-                                                            }
-                                                          });
-                                                        }
-                                                      }
-                                                    },
-                                                    child: Card(
-                                                      surfaceTintColor:
-                                                          searchResult[
-                                                                      index]
-                                                                  .selected
-                                                              ? const Color
-                                                                  .fromARGB(96,
-                                                                  197, 30, 30)
-                                                              : Colors.white,
-                                                      elevation: 3,
-                                                      clipBehavior:
-                                                          Clip.antiAlias,
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(10),
-                                                        child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: [
-                                                            SizedBox(
-                                                                height: 100,
-                                                                child: Center(
-                                                                  child: searchResult[index]
-                                                                              .foto !=
-                                                                          null
-                                                                      ? Image
-                                                                          .network(
-                                                                          "$url/storage/img/${searchResult[index].foto}",
-                                                                          fit: BoxFit
-                                                                              .cover,
-                                                                        )
-                                                                      : Image
-                                                                          .asset(
-                                                                          "assets/img/food.png",
-                                                                          fit: BoxFit
-                                                                              .cover,
-                                                                        ),
-                                                                )),
-                                                            const SizedBox(
-                                                              height: 10,
-                                                            ),
-                                                            Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Text(searchResult[
-                                                                        index]
-                                                                    .namaProduk),
-                                                                Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
-                                                                  children: [
-                                                                    Text(
-                                                                      "Rp.${searchResult[index].harga_jual.toString()}",
-                                                                      style: const TextStyle(
-                                                                          fontSize:
-                                                                              15,
-                                                                          fontWeight:
-                                                                              FontWeight.bold),
-                                                                    ),
-                                                                    searchResult[index].stok !=
-                                                                            null
-                                                                        ? Text(searchResult[index].stok !=
-                                                                                0
-                                                                            ? "Stok : ${searchResult[index].stok}"
-                                                                            : "Stok Habis")
-                                                                        : Container()
-                                                                  ],
-                                                                )
-                                                              ],
-                                                            ),
-                                                            const SizedBox(
-                                                              height: 5,
-                                                            ),
-                                                            Row(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .end,
-                                                              children: [
-                                                                order.isNotEmpty &&
-                                                                        order
-                                                                            .where((element) =>
-                                                                                element['id'] ==
-                                                                                searchResult[index]
-                                                                                    .id)
-                                                                            .isNotEmpty
-                                                                    ? Expanded(
-                                                                        child:
-                                                                            Row(
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.center,
-                                                                        children: [
-                                                                          IconButton(
-                                                                            onPressed:
-                                                                                () {
-                                                                              _decrement(context, searchResult[index].id);
-                                                                            },
-                                                                            icon:
-                                                                                const Icon(Icons.remove),
-                                                                          ),
-                                                                          Text(
-                                                                            order.firstWhere((element) => element['id'] == searchResult[index].id)['qty'].toString(),
-                                                                            style:
-                                                                                const TextStyle(fontSize: 20),
-                                                                          ),
-                                                                          IconButton(
-                                                                            onPressed:
-                                                                                () {
-                                                                              _increment(context, searchResult[index].id);
-                                                                            },
-                                                                            icon:
-                                                                                const Icon(Icons.add),
-                                                                          ),
-                                                                        ],
-                                                                      ))
-                                                                    : Expanded(
-                                                                        child:
-                                                                            SizedBox(
-                                                                        width: double
-                                                                            .infinity,
-                                                                        child: FilledButton(
-                                                                            style: const ButtonStyle(shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))), backgroundColor: MaterialStatePropertyAll(Colors.orange), foregroundColor: MaterialStatePropertyAll(Colors.white)),
-                                                                            onPressed: () {
-                                                                              if (!searchResult[index].selected && searchResult[index].stok != 0) {
-                                                                                _addOrder(context, searchResult[index]);
-                                                                              }
-                                                                              return;
-                                                                            },
-                                                                            child: const Text("Tambah")),
-                                                                      ))
-                                                              ],
-                                                            )
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                      ))
-                                    : const Expanded(
-                                        child: SizedBox(
-                                        child: Center(
-                                            child: Text("Data masih kosong")),
-                                      ))
-                              ],
-                            ))
+                                            ))
+                                          : const Expanded(
+                                              child: SizedBox(
+                                              child: Center(
+                                                  child: Text(
+                                                      "Data masih kosong")),
+                                            ))
+                                    ],
+                                  ));
+                            },
+                          )
                         : const Center(
                             child: CircularProgressIndicator(
                             color: Colors.orange,
@@ -1268,48 +1163,54 @@ class _ProductState extends State<Product> {
                           size: 30,
                         ),
                       ),
-                      body: loadingCategory
-                          ? RefreshIndicator(
-                              onRefresh: _handleRefresh,
-                              color: Colors.orange,
-                              child: category.isNotEmpty
-                                  ? SizedBox(
-                                      height: double.infinity,
-                                      child: ListView.builder(
-                                        itemCount: category.length,
-                                        shrinkWrap: true,
-                                        padding: const EdgeInsets.all(10),
-                                        itemBuilder: (context, index) {
-                                          return Column(
-                                            children: [
-                                              Card(
-                                                surfaceTintColor: Colors.white,
-                                                child: ListTile(
-                                                  contentPadding:
-                                                      const EdgeInsets.only(
-                                                          left: 10),
-                                                  title: Text(category[index]
-                                                      ['kategori']),
-                                                  trailing: IconButton(
-                                                      onPressed: () {
-                                                        _openOptionCategory(
-                                                            context,
-                                                            category[index]);
-                                                      },
-                                                      icon: const Icon(
-                                                          CupertinoIcons
-                                                              .ellipsis_vertical)),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : const SizedBox(
-                                      height: double.infinity,
-                                      child: Center(
-                                          child: Text("Data masih kosong"))))
+                      body: !loadingCategory
+                          ? GetBuilder<CategoryController>(
+                              builder: (controller) {
+                                return RefreshIndicator(
+                                    onRefresh: _handleRefresh,
+                                    color: Colors.orange,
+                                    child: categoryController
+                                            .category.isNotEmpty
+                                        ? SizedBox(
+                                            height: double.infinity,
+                                            child: ListView.builder(
+                                              itemCount: categoryController
+                                                  .category.length,
+                                              shrinkWrap: true,
+                                              padding: const EdgeInsets.all(10),
+                                              itemBuilder: (context, index) {
+                                                var category =
+                                                    categoryController.category;
+                                                return Card(
+                                                  surfaceTintColor:
+                                                      Colors.white,
+                                                  child: ListTile(
+                                                    contentPadding:
+                                                        const EdgeInsets.only(
+                                                            left: 10),
+                                                    title: Text(category[index]
+                                                        ['kategori']),
+                                                    trailing: IconButton(
+                                                        onPressed: () {
+                                                          _openOptionCategory(
+                                                              context,
+                                                              category[index]);
+                                                        },
+                                                        icon: const Icon(
+                                                            CupertinoIcons
+                                                                .ellipsis_vertical)),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : const SizedBox(
+                                            height: double.infinity,
+                                            child: Center(
+                                                child: Text(
+                                                    "Data masih kosong"))));
+                              },
+                            )
                           : const Center(
                               child: CircularProgressIndicator(
                               color: Colors.orange,
@@ -1359,7 +1260,7 @@ class _ProductState extends State<Product> {
                                                       e['kategori'];
                                                   _selectedCategoryId = e['id'];
                                                 });
-                                                refreshFilter();
+                                                fetchDataProduct();
                                               },
                                               child: Text(e['kategori']),
                                             ))
@@ -1392,345 +1293,347 @@ class _ProductState extends State<Product> {
                               ],
                             ),
                           ),
-                          searchResult.isNotEmpty
-                              ? Expanded(
-                                  child: SizedBox(
-                                  height: double.infinity,
-                                  child: row
-                                      ? ListView.builder(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 80),
-                                          itemCount: searchResult.length,
-                                          shrinkWrap: true,
-                                          itemBuilder: (context, index) {
-                                            return GestureDetector(
-                                              onLongPress: () {},
-                                              child: SizedBox(
-                                                height: 115,
-                                                child: Card(
+                          GetBuilder<ProductController>(
+                            builder: (controller) {
+                              return productController.searchResult.isNotEmpty
+                                  ? Expanded(
+                                      child: SizedBox(
+                                      height: double.infinity,
+                                      child: row
+                                          ? ListView.builder(
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 80),
+                                              itemCount: productController
+                                                  .searchResult.length,
+                                              shrinkWrap: true,
+                                              itemBuilder: (context, index) {
+                                                return GestureDetector(
+                                                  onLongPress: () {},
+                                                  child: SizedBox(
+                                                    height: 115,
+                                                    child: Card(
+                                                        surfaceTintColor:
+                                                            Colors.white,
+                                                        clipBehavior:
+                                                            Clip.antiAlias,
+                                                        elevation: 3,
+                                                        margin: const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 10,
+                                                            vertical: 5),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(10),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              Container(
+                                                                width: 80,
+                                                                height: 80,
+                                                                clipBehavior: Clip
+                                                                    .antiAlias,
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              10),
+                                                                ),
+                                                                child: productController
+                                                                            .searchResult[
+                                                                                index]
+                                                                            .foto !=
+                                                                        null
+                                                                    ? Image
+                                                                        .network(
+                                                                        "$url/storage/img/${productController.searchResult[index].foto}",
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      )
+                                                                    : Image
+                                                                        .asset(
+                                                                        "assets/img/food.png",
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  width: 10),
+                                                              Expanded(
+                                                                child: Column(
+                                                                  crossAxisAlignment:
+                                                                      CrossAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                      children: [
+                                                                        Flexible(
+                                                                            child:
+                                                                                Column(
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Text(
+                                                                              productController.searchResult[index].namaProduk,
+                                                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+                                                                            ),
+                                                                            Text(
+                                                                              "Rp.${productController.searchResult[index].harga_jual}",
+                                                                              style: const TextStyle(fontSize: 12),
+                                                                            ),
+                                                                          ],
+                                                                        )),
+                                                                      ],
+                                                                    ),
+                                                                    Obx(
+                                                                        () =>
+                                                                            Row(
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                                                              children: [
+                                                                                productController.searchResult[index].stok != null ? Text(productController.searchResult[index].stok != 0 ? "Stok : ${productController.searchResult[index].stok}" : "Stok Habis") : Container(),
+                                                                                orderController.order.isNotEmpty && orderController.order.where((element) => element.id == productController.searchResult[index].id).isNotEmpty
+                                                                                    ? Row(
+                                                                                        children: [
+                                                                                          IconButton(
+                                                                                            onPressed: () {
+                                                                                              orderController.decrementOrder(products[index].id);
+                                                                                              if (orderController.order.isEmpty) {
+                                                                                                showSheetOrder();
+                                                                                              }
+                                                                                            },
+                                                                                            icon: const Icon(Icons.remove),
+                                                                                          ),
+                                                                                          Text(
+                                                                                            orderController.order.firstWhere((element) => element.id == products[index].id).qty.toString(),
+                                                                                            style: const TextStyle(fontSize: 20),
+                                                                                          ),
+                                                                                          IconButton(
+                                                                                            onPressed: () {
+                                                                                              orderController.incrementOrder(products[index].id);
+                                                                                            },
+                                                                                            icon: const Icon(Icons.add),
+                                                                                          ),
+                                                                                        ],
+                                                                                      )
+                                                                                    : CupertinoButton(
+                                                                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                                                                        color: Colors.orange,
+                                                                                        onPressed: () {
+                                                                                          if (!productController.searchResult[index].selected && productController.searchResult[index].stok != 0) {
+                                                                                            if (!orderController.sheetOrderOpen.value) {
+                                                                                              orderController.sheetOrderOpen.value = true;
+                                                                                              showSheetOrder();
+                                                                                            }
+                                                                                            orderController.addOrder(productController.searchResult[index]);
+                                                                                          }
+                                                                                        },
+                                                                                        child: const Text("Tambah"),
+                                                                                      )
+                                                                              ],
+                                                                            ))
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        )),
+                                                  ),
+                                                );
+                                              },
+                                            )
+                                          : GridView.builder(
+                                              itemCount: productController
+                                                  .searchResult.length,
+                                              shrinkWrap: true,
+                                              padding: const EdgeInsets.only(
+                                                  left: 10,
+                                                  right: 10,
+                                                  bottom: 80),
+                                              gridDelegate:
+                                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                                      mainAxisExtent: 240,
+                                                      crossAxisCount: 2,
+                                                      crossAxisSpacing: 5,
+                                                      mainAxisSpacing: 5),
+                                              itemBuilder: (context, index) {
+                                                return GestureDetector(
+                                                  child: Card(
                                                     surfaceTintColor:
-                                                        Colors.white,
+                                                        productController
+                                                                .searchResult[
+                                                                    index]
+                                                                .selected
+                                                            ? const Color
+                                                                .fromARGB(
+                                                                96, 197, 30, 30)
+                                                            : Colors.white,
                                                     clipBehavior:
                                                         Clip.antiAlias,
                                                     elevation: 3,
-                                                    margin: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 5),
                                                     child: Padding(
                                                       padding:
                                                           const EdgeInsets.all(
                                                               10),
-                                                      child: Row(
+                                                      child: Column(
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
-                                                                .center,
+                                                                .start,
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
                                                         children: [
-                                                          Container(
-                                                            width: 80,
-                                                            height: 80,
-                                                            clipBehavior:
-                                                                Clip.antiAlias,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
-                                                            ),
-                                                            child: searchResult[
-                                                                            index]
-                                                                        .foto !=
-                                                                    null
-                                                                ? Image.network(
-                                                                    "$url/storage/img/${searchResult[index].foto}",
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  )
-                                                                : Image.asset(
-                                                                    "assets/img/food.png",
-                                                                    fit: BoxFit
-                                                                        .cover,
+                                                          SizedBox(
+                                                              height: 100,
+                                                              child: Center(
+                                                                child: productController
+                                                                            .searchResult[
+                                                                                index]
+                                                                            .foto !=
+                                                                        null
+                                                                    ? Image
+                                                                        .network(
+                                                                        "$url/storage/img/${productController.searchResult[index].foto}",
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      )
+                                                                    : Image
+                                                                        .asset(
+                                                                        "assets/img/food.png",
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      ),
+                                                              )),
+                                                          const SizedBox(
+                                                            height: 10,
+                                                          ),
+                                                          Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(productController
+                                                                  .searchResult[
+                                                                      index]
+                                                                  .namaProduk),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                  Text(
+                                                                    "Rp.${productController.searchResult[index].harga_jual.toString()}",
+                                                                    style: const TextStyle(
+                                                                        fontSize:
+                                                                            15,
+                                                                        fontWeight:
+                                                                            FontWeight.bold),
                                                                   ),
+                                                                  productController
+                                                                              .searchResult[
+                                                                                  index]
+                                                                              .stok !=
+                                                                          null
+                                                                      ? Text(productController.searchResult[index].stok !=
+                                                                              0
+                                                                          ? "Stok : ${productController.searchResult[index].stok}"
+                                                                          : "Stok Habis")
+                                                                      : Container()
+                                                                ],
+                                                              )
+                                                            ],
                                                           ),
                                                           const SizedBox(
-                                                              width: 10),
-                                                          Expanded(
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
-                                                                  children: [
-                                                                    Flexible(
-                                                                        child:
-                                                                            Column(
-                                                                      crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .start,
-                                                                      children: [
-                                                                        Text(
-                                                                          searchResult[index]
-                                                                              .namaProduk,
-                                                                          style: const TextStyle(
-                                                                              fontSize: 14,
-                                                                              fontWeight: FontWeight.bold,
-                                                                              overflow: TextOverflow.ellipsis),
-                                                                        ),
-                                                                        Text(
-                                                                          "Rp.${searchResult[index].harga_jual}",
-                                                                          style:
-                                                                              const TextStyle(fontSize: 12),
-                                                                        ),
-                                                                      ],
-                                                                    )),
-                                                                  ],
-                                                                ),
-                                                                Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
-                                                                  crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .end,
-                                                                  children: [
-                                                                    searchResult[index].stok !=
-                                                                            null
-                                                                        ? Text(searchResult[index].stok !=
-                                                                                0
-                                                                            ? "Stok : ${searchResult[index].stok}"
-                                                                            : "Stok Habis")
-                                                                        : Container(),
-                                                                    order.isNotEmpty &&
-                                                                            order.where((element) => element['id'] == products[index].id).isNotEmpty
-                                                                        ? Row(
+                                                            height: 5,
+                                                          ),
+                                                          Obx(() => Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .end,
+                                                                children: [
+                                                                  orderController
+                                                                              .order
+                                                                              .isNotEmpty &&
+                                                                          orderController
+                                                                              .order
+                                                                              .where((element) => element.id == productController.searchResult[index].id)
+                                                                              .isNotEmpty
+                                                                      ? Expanded(
+                                                                          child:
+                                                                              Row(
+                                                                            mainAxisAlignment:
+                                                                                MainAxisAlignment.center,
                                                                             children: [
                                                                               IconButton(
                                                                                 onPressed: () {
-                                                                                  _decrement(context, products[index].id);
+                                                                                  orderController.decrementOrder(productController.searchResult[index].id);
+                                                                                  if (orderController.order.isEmpty) {
+                                                                                    showSheetOrder();
+                                                                                  }
                                                                                 },
                                                                                 icon: const Icon(Icons.remove),
                                                                               ),
                                                                               Text(
-                                                                                order.firstWhere((element) => element['id'] == products[index].id)['qty'].toString(),
+                                                                                orderController.order.firstWhere((element) => element.id == productController.searchResult[index].id).qty.toString(),
                                                                                 style: const TextStyle(fontSize: 20),
                                                                               ),
                                                                               IconButton(
                                                                                 onPressed: () {
-                                                                                  _increment(context, products[index].id);
+                                                                                  orderController.incrementOrder(productController.searchResult[index].id);
                                                                                 },
                                                                                 icon: const Icon(Icons.add),
                                                                               ),
                                                                             ],
-                                                                          )
-                                                                        : CupertinoButton(
-                                                                            padding:
-                                                                                const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                                                            color:
-                                                                                Colors.orange,
-                                                                            onPressed:
-                                                                                () {
-                                                                              if (searchResult[index].stok != 0) {
-                                                                                _addOrder(context, searchResult[index]);
-                                                                              }
-                                                                            },
+                                                                          ),
+                                                                        )
+                                                                      : Expanded(
+                                                                          child:
+                                                                              SizedBox(
+                                                                            width:
+                                                                                double.infinity,
                                                                             child:
-                                                                                const Text("Tambah"),
-                                                                          )
-                                                                  ],
-                                                                )
-                                                              ],
-                                                            ),
-                                                          ),
+                                                                                FilledButton(
+                                                                              style: const ButtonStyle(
+                                                                                shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))),
+                                                                                backgroundColor: MaterialStatePropertyAll(Colors.orange),
+                                                                                foregroundColor: MaterialStatePropertyAll(Colors.white),
+                                                                              ),
+                                                                              onPressed: () {
+                                                                                if (!productController.searchResult[index].selected && productController.searchResult[index].stok != 0) {
+                                                                                  if (!orderController.sheetOrderOpen.value) {
+                                                                                    orderController.sheetOrderOpen.value = true;
+                                                                                    showSheetOrder();
+                                                                                  }
+                                                                                  orderController.addOrder(productController.searchResult[index]);
+                                                                                }
+                                                                              },
+                                                                              child: const Text("Tambah"),
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                ],
+                                                              ))
                                                         ],
                                                       ),
-                                                    )),
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : GridView.builder(
-                                          itemCount: searchResult.length,
-                                          shrinkWrap: true,
-                                          padding: const EdgeInsets.only(
-                                              left: 10, right: 10, bottom: 80),
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  mainAxisExtent: 240,
-                                                  crossAxisCount: 2,
-                                                  crossAxisSpacing: 5,
-                                                  mainAxisSpacing: 5),
-                                          itemBuilder: (context, index) {
-                                            return GestureDetector(
-                                              child: Card(
-                                                surfaceTintColor:
-                                                    searchResult[index].selected
-                                                        ? const Color.fromARGB(
-                                                            96, 197, 30, 30)
-                                                        : Colors.white,
-                                                clipBehavior: Clip.antiAlias,
-                                                elevation: 3,
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      SizedBox(
-                                                          height: 100,
-                                                          child: Center(
-                                                            child: searchResult[
-                                                                            index]
-                                                                        .foto !=
-                                                                    null
-                                                                ? Image.network(
-                                                                    "$url/storage/img/${searchResult[index].foto}",
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  )
-                                                                : Image.asset(
-                                                                    "assets/img/food.png",
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  ),
-                                                          )),
-                                                      const SizedBox(
-                                                        height: 10,
-                                                      ),
-                                                      Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Text(searchResult[
-                                                                  index]
-                                                              .namaProduk),
-                                                          Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceBetween,
-                                                            children: [
-                                                              Text(
-                                                                "Rp.${searchResult[index].harga_jual.toString()}",
-                                                                style: const TextStyle(
-                                                                    fontSize:
-                                                                        15,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold),
-                                                              ),
-                                                              searchResult[index]
-                                                                          .stok !=
-                                                                      null
-                                                                  ? Text(searchResult[index]
-                                                                              .stok !=
-                                                                          0
-                                                                      ? "Stok : ${searchResult[index].stok}"
-                                                                      : "Stok Habis")
-                                                                  : Container()
-                                                            ],
-                                                          )
-                                                        ],
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 5,
-                                                      ),
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .end,
-                                                        children: [
-                                                          order.isNotEmpty &&
-                                                                  order
-                                                                      .where((element) =>
-                                                                          element[
-                                                                              'id'] ==
-                                                                          searchResult[index]
-                                                                              .id)
-                                                                      .isNotEmpty
-                                                              ? Expanded(
-                                                                  child: Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .center,
-                                                                  children: [
-                                                                    IconButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        _decrement(
-                                                                            context,
-                                                                            searchResult[index].id);
-                                                                      },
-                                                                      icon: const Icon(
-                                                                          Icons
-                                                                              .remove),
-                                                                    ),
-                                                                    Text(
-                                                                      order
-                                                                          .firstWhere((element) =>
-                                                                              element['id'] ==
-                                                                              searchResult[index].id)['qty']
-                                                                          .toString(),
-                                                                      style: const TextStyle(
-                                                                          fontSize:
-                                                                              20),
-                                                                    ),
-                                                                    IconButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        _increment(
-                                                                            context,
-                                                                            searchResult[index].id);
-                                                                      },
-                                                                      icon: const Icon(
-                                                                          Icons
-                                                                              .add),
-                                                                    ),
-                                                                  ],
-                                                                ))
-                                                              : Expanded(
-                                                                  child:
-                                                                      SizedBox(
-                                                                  width: double
-                                                                      .infinity,
-                                                                  child: FilledButton(
-                                                                      style: const ButtonStyle(shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))), backgroundColor: MaterialStatePropertyAll(Colors.orange), foregroundColor: MaterialStatePropertyAll(Colors.white)),
-                                                                      onPressed: () {
-                                                                        if (!searchResult[index].selected &&
-                                                                            searchResult[index].stok !=
-                                                                                0) {
-                                                                          _addOrder(
-                                                                              context,
-                                                                              searchResult[index]);
-                                                                        }
-                                                                        return;
-                                                                      },
-                                                                      child: const Text("Tambah")),
-                                                                ))
-                                                        ],
-                                                      )
-                                                    ],
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                ))
-                              : const Expanded(
-                                  child: SizedBox(
-                                  child:
-                                      Center(child: Text("Data masih kosong")),
-                                ))
+                                                );
+                                              },
+                                            ),
+                                    ))
+                                  : const Expanded(
+                                      child: SizedBox(
+                                      child: Center(
+                                          child: Text("Data masih kosong")),
+                                    ));
+                            },
+                          )
                         ],
                       ))
                   : const Center(

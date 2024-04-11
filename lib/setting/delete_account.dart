@@ -16,7 +16,6 @@ class DeleteAccount extends StatefulWidget {
 }
 
 class _DeleteAccountState extends State<DeleteAccount> {
-  final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool showPwd = false;
 
@@ -54,44 +53,14 @@ class _DeleteAccountState extends State<DeleteAccount> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(15),
             child: Form(
                 child: Column(
               children: [
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text("Email Saat Ini",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(
-                  height: 6,
-                ),
-                CupertinoTextField(
-                  controller: _email,
-                  placeholder: "Masukkan email saat ini",
-                  keyboardType: TextInputType.emailAddress,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-                  prefix: const Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Icon(Icons.email),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border:
-                        Border.all(color: const Color(0xFFcbd5e1), width: 0.5),
-                  ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text("Kata Sandi",
+                    Text("Masukkan kata sandi untuk menghapus akun",
                         style: TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),

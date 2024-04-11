@@ -1,10 +1,7 @@
-import 'dart:convert';
-import 'package:app/components/popup.dart';
+import 'package:app/models/category_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get.dart';
 
 class AddCategory extends StatefulWidget {
   const AddCategory({super.key});
@@ -16,6 +13,7 @@ class AddCategory extends StatefulWidget {
 
 class _AddCategoryState extends State<AddCategory> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final categoryController = Get.put(CategoryController());
   final TextEditingController _kategori = TextEditingController();
   bool loading = false;
 
@@ -23,31 +21,10 @@ class _AddCategoryState extends State<AddCategory> {
     setState(() {
       loading = true;
     });
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    final res = await http.post(
-        Uri.parse("${dotenv.env['API_URL']!}/api/category"),
-        body: jsonEncode({
-          "kategori": _kategori.text,
-        }),
-        headers: {
-          "Content-type": "application/json",
-          "Authorization": "Bearer $token"
-        });
-
-    Map<String, dynamic> result = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], true);
-      setState(() {
-        loading = false;
-      });
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], false);
-    }
+    await categoryController.addCategory(context, _kategori.text);
+    setState(() {
+      loading = false;
+    });
   }
 
   @override

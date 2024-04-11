@@ -25,11 +25,9 @@ class AuthUser {
         if (response.statusCode == 200) {
           return res['data'];
         } else {
-          await const FlutterSecureStorage().deleteAll();
           return {};
         }
       } catch (e) {
-        await const FlutterSecureStorage().deleteAll();
         return {};
       }
     } else {

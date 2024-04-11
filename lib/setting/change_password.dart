@@ -44,9 +44,8 @@ class _ChangePasswordState extends State<ChangePassword> {
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
-      print(res);
       // ignore: use_build_context_synchronously
-      // Popup().show(context, res['message'], false);
+      Popup().show(context, res['message'], false);
     }
   }
 
@@ -113,11 +112,6 @@ class _ChangePasswordState extends State<ChangePassword> {
               ),
               CupertinoTextField(
                 controller: _newPassword,
-                prefix: const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Icon(Icons.lock),
-                ),
-                obscuringCharacter: "*",
                 onChanged: (value) {
                   if (_repeatPassword.text.isNotEmpty) {
                     if (value != _repeatPassword.text) {
@@ -131,6 +125,11 @@ class _ChangePasswordState extends State<ChangePassword> {
                     }
                   }
                 },
+                prefix: const Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Icon(Icons.lock),
+                ),
+                obscuringCharacter: "*",
                 suffix: Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: GestureDetector(
@@ -210,6 +209,21 @@ class _ChangePasswordState extends State<ChangePassword> {
                       Border.all(color: const Color(0xFFcbd5e1), width: 0.5),
                 ),
               ),
+              const SizedBox(
+                height: 5,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  pwdNotSame
+                      ? const Text(
+                          "Kata sandi tidak sama",
+                          style: TextStyle(color: Colors.red),
+                          textAlign: TextAlign.start,
+                        )
+                      : const Text("")
+                ],
+              )
             ],
           ),
         ),
