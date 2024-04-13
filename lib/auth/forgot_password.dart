@@ -31,7 +31,6 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       // ignore: use_build_context_synchronously
       Popup().show(context, result['message'], true);
     } else {
-      print(result['message']);
       // ignore: use_build_context_synchronously
       Popup().show(context, result['message'], false);
     }

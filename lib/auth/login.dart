@@ -40,7 +40,6 @@ Route _goPage(Widget page) {
 }
 
 class _LoginState extends State<Login> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -111,7 +110,7 @@ class _LoginState extends State<Login> {
                     ],
                   ),
                   const SizedBox(
-                    height: 6,
+                    height: 5,
                   ),
                   CupertinoTextField(
                     controller: _emailController,
@@ -122,7 +121,7 @@ class _LoginState extends State<Login> {
                     keyboardType: TextInputType.emailAddress,
                     placeholder: "Masukkan email anda",
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 15),
+                        horizontal: 10, vertical: 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -130,7 +129,7 @@ class _LoginState extends State<Login> {
                           color: const Color(0xFF94a3b8), width: 0.5),
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 10),
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -139,7 +138,7 @@ class _LoginState extends State<Login> {
                     ],
                   ),
                   const SizedBox(
-                    height: 6,
+                    height: 5,
                   ),
                   CupertinoTextField(
                     controller: _passwordController,
@@ -162,7 +161,7 @@ class _LoginState extends State<Login> {
                     placeholder: "Masukkan kata sandi anda",
                     obscureText: !showPwd,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 15),
+                        horizontal: 10, vertical: 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -186,7 +185,7 @@ class _LoginState extends State<Login> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 20),
                   SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -198,7 +197,7 @@ class _LoginState extends State<Login> {
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                       )),
                   const SizedBox(
-                    height: 30,
+                    height: 20,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

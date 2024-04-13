@@ -14,6 +14,8 @@ class ProductController extends GetxController {
   List<Products> products = <Products>[].obs;
   List<Products> searchResult = <Products>[].obs;
   String url = dotenv.env['API_URL']!;
+  RxBool selectAll = false.obs;
+  RxBool select = false.obs;
 
   Future<void> fetchDataProduct({categoryId = ""}) async {
     bool hasToken =
@@ -32,7 +34,7 @@ class ProductController extends GetxController {
       Map<String, dynamic> res = jsonDecode(response.body);
       if (response.statusCode == 200) {
         products = (res['data'] as List<dynamic>)
-            .map((data) => Products.fromJson({...data, "selected": false}))
+            .map((data) => Products.fromJson({...data, "selected": false.obs}))
             .toList();
         searchResult = products;
         update();
@@ -44,8 +46,7 @@ class ProductController extends GetxController {
 
   Future<void> addProduct(BuildContext context, data) async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    var request = http.MultipartRequest(
-        "post", Uri.parse("${dotenv.env['API_URL']!}/api/product"));
+    var request = http.MultipartRequest("post", Uri.parse("$url/api/product"));
     if (data['img'] != null) {
       request.files
           .add(await http.MultipartFile.fromPath('foto', data['img'].path));
@@ -62,7 +63,6 @@ class ProductController extends GetxController {
     request.headers['Authorization'] = "Bearer $token";
     var streamedResponse = await request.send();
     var res = await http.Response.fromStream(streamedResponse);
-    var message = jsonDecode(res.body)['message'];
 
     if (res.statusCode == 200) {
       await fetchDataProduct();
@@ -85,10 +85,51 @@ class ProductController extends GetxController {
     }
   }
 
+  Future<void> editProduct(BuildContext context, data) async {
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+
+    var request = http.MultipartRequest(
+        "post", Uri.parse("$url/api/product/${data['id']}"));
+    if (data['new_img'] != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('new_img', data['new_img']!.path));
+    }
+    if (data['old_img'] != null) {
+      request.fields['old_img'] = data['old_img'];
+    }
+    request.fields['namaProduk'] = data['namaProduk'];
+    request.fields['barcode'] = data['barcode'];
+    request.fields['id_kategori'] = data['id_kategori'].toString();
+    request.fields['harga_beli'] = data['harga_beli'];
+    request.fields['harga_jual'] = data['harga_jual'];
+    request.fields['deskripsi'] = data['deskripsi'];
+    request.fields['stok'] = data['stok'];
+    request.headers['Content-Type'] = "application/json";
+    request.headers['Authorization'] = "Bearer $token";
+    var streamedResponse = await request.send();
+    var res = await http.Response.fromStream(streamedResponse);
+    var message = jsonDecode(res.body)['message'];
+
+    if (res.statusCode == 200) {
+      searchResult.map((e) => e.selected.value = false).toList();
+      select.value = false;
+      await fetchDataProduct();
+      // ignore: use_build_context_synchronously
+      Popup().show(context, message, true);
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+      // ignore: use_build_context_synchronously
+      Navigator.maybePop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      Popup().show(context, message, false);
+    }
+  }
+
   Future<void> deleteProduct(BuildContext context, List<int> id) async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
 
-    final response = await http.post(Uri.parse("$url/api/product/delete"),
+    final response = await http.delete(Uri.parse("$url/api/product"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -97,11 +138,15 @@ class ProductController extends GetxController {
 
     final res = jsonDecode(response.body);
     if (response.statusCode == 200) {
+      searchResult.map((e) => e.selected.value = false).toList();
+      select.value = false;
       await fetchDataProduct();
       // ignore: use_build_context_synchronously
       Popup().show(context, res['message'], true);
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
+      // ignore: use_build_context_synchronously
+      Navigator.maybePop(context);
     } else {
       // ignore: use_build_context_synchronously
       Navigator.pop(context);

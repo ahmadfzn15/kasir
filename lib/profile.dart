@@ -225,9 +225,8 @@ class _ProfileState extends State<Profile> {
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
-      print(message);
       // ignore: use_build_context_synchronously
-      // Popup().show(context, message['message'], false);
+      Popup().show(context, message['message'], false);
     }
   }
 

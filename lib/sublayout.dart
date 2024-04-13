@@ -1,7 +1,6 @@
 import 'package:app/employee/add_employee.dart';
 import 'package:app/product/add_category.dart';
 import 'package:app/product/add_product.dart';
-import 'package:app/product/edit_product.dart';
 import 'package:app/profile.dart';
 import 'package:app/setting/account.dart';
 import 'package:app/setting/change_password.dart';

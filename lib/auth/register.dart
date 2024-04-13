@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:app/add_toko.dart';
 import 'package:app/auth/email_verify.dart';
 import 'package:app/components/popup.dart';
 import 'package:flutter/cupertino.dart';
@@ -124,7 +123,7 @@ class _RegisterState extends State<Register> {
                           ],
                         ),
                         const SizedBox(
-                          height: 6,
+                          height: 5,
                         ),
                         CupertinoTextField(
                           controller: _namaController,
@@ -134,7 +133,7 @@ class _RegisterState extends State<Register> {
                           ),
                           placeholder: "Masukkan nama",
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 15),
+                              horizontal: 10, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
@@ -142,7 +141,7 @@ class _RegisterState extends State<Register> {
                                 color: const Color(0xFF94a3b8), width: 0.5),
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 10),
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -151,7 +150,7 @@ class _RegisterState extends State<Register> {
                           ],
                         ),
                         const SizedBox(
-                          height: 6,
+                          height: 5,
                         ),
                         CupertinoTextField(
                           controller: _emailController,
@@ -162,7 +161,7 @@ class _RegisterState extends State<Register> {
                           placeholder: "Masukkan email",
                           keyboardType: TextInputType.emailAddress,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 15),
+                              horizontal: 10, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
@@ -170,7 +169,7 @@ class _RegisterState extends State<Register> {
                                 color: const Color(0xFF94a3b8), width: 0.5),
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 10),
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -179,7 +178,7 @@ class _RegisterState extends State<Register> {
                           ],
                         ),
                         const SizedBox(
-                          height: 6,
+                          height: 5,
                         ),
                         CupertinoTextField(
                           controller: _passwordController,
@@ -219,7 +218,7 @@ class _RegisterState extends State<Register> {
                           placeholder: "Masukkan kata sandi",
                           obscureText: !showPwd,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 15),
+                              horizontal: 10, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
@@ -227,7 +226,7 @@ class _RegisterState extends State<Register> {
                                 color: const Color(0xFF94a3b8), width: 0.5),
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 10),
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -236,7 +235,7 @@ class _RegisterState extends State<Register> {
                           ],
                         ),
                         const SizedBox(
-                          height: 6,
+                          height: 5,
                         ),
                         CupertinoTextField(
                           controller: _passwordControllerConfirmation,
@@ -274,7 +273,7 @@ class _RegisterState extends State<Register> {
                           placeholder: "Masukkan ulang kata sandi",
                           obscureText: !showPwdConf,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 15),
+                              horizontal: 10, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
@@ -297,7 +296,7 @@ class _RegisterState extends State<Register> {
                                 : const Text("")
                           ],
                         ),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 10),
                         SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -312,7 +311,7 @@ class _RegisterState extends State<Register> {
                                       fontWeight: FontWeight.bold)),
                             )),
                         const SizedBox(
-                          height: 30,
+                          height: 20,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,

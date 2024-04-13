@@ -32,7 +32,6 @@ class _AddEmployeeState extends State<AddEmployee> {
   ];
 
   Future<void> _uploadToDatabase(BuildContext context) async {
-    print(_selectedOption);
     setState(() {
       loading = true;
     });

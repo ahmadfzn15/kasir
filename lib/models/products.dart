@@ -1,3 +1,5 @@
+import 'package:get/get.dart';
+
 class Products {
   int id;
   String? foto;
@@ -11,7 +13,7 @@ class Products {
   // ignore: non_constant_identifier_names
   int harga_jual;
   int? stok;
-  bool selected;
+  RxBool selected;
 
   Products(
       {required this.id,

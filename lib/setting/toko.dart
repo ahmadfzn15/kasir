@@ -1,12 +1,7 @@
-import 'dart:convert';
-
-import 'package:app/components/popup.dart';
-import 'package:app/etc/auth_user.dart';
+import 'package:app/models/user_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 
 class Toko extends StatefulWidget {
   const Toko({super.key});
@@ -16,13 +11,12 @@ class Toko extends StatefulWidget {
 }
 
 class _TokoState extends State<Toko> {
+  final userController = Get.put(UserController());
   final TextEditingController _namaToko = TextEditingController();
   final TextEditingController _alamatToko = TextEditingController();
   final TextEditingController _usaha = TextEditingController();
   final TextEditingController _noTlp = TextEditingController();
   final TextEditingController _password = TextEditingController();
-  int? id;
-  String url = dotenv.env['API_URL']!;
   bool loading = false;
   bool showPwd = false;
 
@@ -34,73 +28,32 @@ class _TokoState extends State<Toko> {
   }
 
   Future<void> fetchDataMarket() async {
-    Map<String, dynamic> res = await AuthUser().getCurrentUser();
+    await userController.getCurrentUser(context);
 
-    var market = res['market'];
-    _namaToko.value = TextEditingValue(text: market['nama_toko'] ?? "");
-    _alamatToko.value = TextEditingValue(text: market['alamat'] ?? "");
-    _usaha.value = TextEditingValue(text: market['bidang_usaha'] ?? "");
-    _noTlp.value = TextEditingValue(text: market['no_tlp'] ?? "");
-    setState(() {
-      id = market['id'];
-    });
+    var market = userController.toko!.value;
+    _namaToko.value = TextEditingValue(text: market.namaToko ?? "");
+    _alamatToko.value = TextEditingValue(text: market.alamat ?? "");
+    _usaha.value = TextEditingValue(text: market.bidangUsaha ?? "");
+    _noTlp.value = TextEditingValue(text: market.noTlp ?? "");
   }
 
   Future<void> _uploadToDatabase(BuildContext context) async {
     setState(() {
       loading = true;
     });
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    final res = await http.put(
-        Uri.parse("${dotenv.env['API_URL']!}/api/market/$id"),
-        body: jsonEncode({
-          "nama_toko": _namaToko.text,
-          "alamat": _alamatToko.text,
-          "bidang_usaha": _usaha.text,
-          "no_tlp": _noTlp.text,
-        }),
-        headers: {
-          "Content-type": "application/json",
-          "Authorization": "Bearer $token"
-        });
-
-    Map<String, dynamic> result = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], true);
-      setState(() {
-        loading = false;
-      });
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], false);
-    }
+    userController.editToko(context, {
+      'namaToko': _namaToko.text,
+      'alamatToko': _alamatToko.text,
+      'usaha': _usaha.text,
+      'noTlp': _noTlp.text
+    });
+    setState(() {
+      loading = false;
+    });
   }
 
   Future<void> resetData() async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    final response = await http.delete(
-      Uri.parse("$url/api/market/$id/reset"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-    );
-
-    final res = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], true);
-    } else {
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], false);
-    }
+    await userController.resetData(context);
   }
 
   void showConfirmReset() {

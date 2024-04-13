@@ -7,10 +7,11 @@ class Startup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.orange,
-      child: const Center(
+      child: Center(
         child: SizedBox(
-          width: 160,
-          height: 80,
+          width: 300,
+          height: 150,
+          child: Image.asset("assets/img/logo.png"),
         ),
       ),
     );

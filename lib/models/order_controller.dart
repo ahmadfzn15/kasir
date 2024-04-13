@@ -13,6 +13,8 @@ class OrderController extends GetxController {
         harga: product.harga_jual,
         stok: product.stok,
         qty: 1.obs));
+
+    update();
   }
 
   void incrementOrder(int id) {

@@ -105,9 +105,8 @@ class _PaymentState extends State<Payment> {
         detail: result['data'],
       )));
     } else {
-      print(result['message']);
       // ignore: use_build_context_synchronously
-      // Popup().show(context, result['message'], false);
+      Popup().show(context, result['message'], false);
     }
   }
 

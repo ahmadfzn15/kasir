@@ -1,17 +1,4 @@
-import 'dart:io';
-
-import 'package:app/components/popup.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:excel/excel.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:vibration/vibration.dart';
 
 class Help extends StatefulWidget {
   const Help({super.key});
@@ -43,7 +30,7 @@ class _HelpState extends State<Help> {
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
       ),
-      body: Wrap(
+      body: const Wrap(
         children: [],
       ),
     );

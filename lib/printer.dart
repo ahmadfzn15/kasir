@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:flutter/services.dart';
 
 class Printer extends StatefulWidget {
   const Printer({super.key});
@@ -27,62 +26,51 @@ class _PrinterState extends State<Printer> {
   Future<void> initPlatformState() async {
     bool? isConnected = await bluetooth.isConnected;
     List<BluetoothDevice> devices = [];
-    try {
-      devices = await bluetooth.getBondedDevices();
-    } on PlatformException {}
+    devices = await bluetooth.getBondedDevices();
 
     bluetooth.onStateChanged().listen((state) {
       switch (state) {
         case BlueThermalPrinter.CONNECTED:
           setState(() {
             _connected = true;
-            print("bluetooth device state: connected");
           });
           break;
         case BlueThermalPrinter.DISCONNECTED:
           setState(() {
             _connected = false;
-            print("bluetooth device state: disconnected");
           });
           break;
         case BlueThermalPrinter.DISCONNECT_REQUESTED:
           setState(() {
             _connected = false;
-            print("bluetooth device state: disconnect requested");
           });
           break;
         case BlueThermalPrinter.STATE_TURNING_OFF:
           setState(() {
             _connected = false;
-            print("bluetooth device state: bluetooth turning off");
           });
           break;
         case BlueThermalPrinter.STATE_OFF:
           setState(() {
             _connected = false;
-            print("bluetooth device state: bluetooth off");
           });
           break;
         case BlueThermalPrinter.STATE_ON:
           setState(() {
             _connected = false;
-            print("bluetooth device state: bluetooth on");
           });
           break;
         case BlueThermalPrinter.STATE_TURNING_ON:
           setState(() {
             _connected = false;
-            print("bluetooth device state: bluetooth turning on");
           });
           break;
         case BlueThermalPrinter.ERROR:
           setState(() {
             _connected = false;
-            print("bluetooth device state: error");
           });
           break;
         default:
-          print(state);
           break;
       }
     });

@@ -1,16 +1,16 @@
 import 'dart:convert';
-import 'dart:ui';
 
-import 'package:app/add_toko.dart';
 import 'package:app/components/popup.dart';
 import 'package:app/employee/employee.dart';
-import 'package:app/etc/auth_user.dart';
 import 'package:app/etc/startup.dart';
 import 'package:app/help.dart';
+import 'package:app/models/order_controller.dart';
+import 'package:app/models/user_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import 'auth/auth.dart';
@@ -65,9 +65,10 @@ Route _goPage(Widget page) {
 }
 
 class _LayoutState extends State<Layout> {
+  final userController = Get.put(UserController());
+  final orderController = Get.put(OrderController());
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   String url = dotenv.env['API_URL']!;
-
   int? _selectedIndex;
   late List<SideItem> link;
   bool loading = false;
@@ -117,20 +118,10 @@ class _LayoutState extends State<Layout> {
   }
 
   Future<void> getUser() async {
-    Map<String, dynamic> res = await AuthUser().getCurrentUser();
-    if (res.isNotEmpty) {
-      if (res['id_toko'] != null) {
-        setState(() {
-          user = res;
-        });
-      } else {
-        Navigator.pushAndRemoveUntil(
-            // ignore: use_build_context_synchronously
-            context,
-            _goPage(const AddToko()),
-            (route) => false);
-      }
-    } else {
+    await userController.getCurrentUser(context);
+    var res = userController.user;
+    // ignore: unnecessary_null_comparison
+    if (res == null) {
       Navigator.pushAndRemoveUntil(
           // ignore: use_build_context_synchronously
           context,
@@ -144,7 +135,7 @@ class _LayoutState extends State<Layout> {
     setState(() {
       role = roles;
       if (roles == "admin") {
-        _selectedIndex = 1;
+        _selectedIndex = 0;
       } else {
         _selectedIndex = 1;
       }
@@ -191,7 +182,19 @@ class _LayoutState extends State<Layout> {
         loading = false;
       }
     } catch (e) {
-      print(e);
+      await const FlutterSecureStorage().deleteAll();
+      Navigator.pushAndRemoveUntil(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return const Auth();
+          },
+        ),
+        (route) => false,
+      );
+      // ignore: use_build_context_synchronously
+      Popup().show(context, "Logout Berhasil", true);
       loading = false;
     }
   }
@@ -234,83 +237,90 @@ class _LayoutState extends State<Layout> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(
-                  color: Colors.orange,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.isNotEmpty ? user['market']['nama_toko'] : "",
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold),
+              Obx(() => DrawerHeader(
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
                     ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context)
-                            .push(_goPage(const Sublayout(id: 0)));
-                      },
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userController.toko!.value.namaToko != null
+                              ? userController.toko!.value.namaToko!
+                              : "",
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context)
+                                .push(_goPage(const Sublayout(id: 0)));
+                          },
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              user['foto'] != null
-                                  ? CircleAvatar(
-                                      radius: 35,
-                                      backgroundImage: NetworkImage(
-                                          "$url/storage/img/${user['foto']}"),
-                                    )
-                                  : const CircleAvatar(
-                                      radius: 35,
-                                      backgroundImage:
-                                          AssetImage("assets/img/user.png"),
-                                    ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                 children: [
-                                  Text(
-                                    user.isNotEmpty ? user['nama'] : "",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
-                                    ),
-                                  ),
-                                  Text(
-                                    user.isNotEmpty ? user['role'] : "",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                    ),
+                                  userController.user?.value.foto != null
+                                      ? CircleAvatar(
+                                          radius: 35,
+                                          backgroundImage: NetworkImage(
+                                              "$url/storage/img/${userController.user!.value.foto}"),
+                                        )
+                                      : const CircleAvatar(
+                                          radius: 35,
+                                          backgroundImage:
+                                              AssetImage("assets/img/user.png"),
+                                        ),
+                                  const SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userController.user?.value.nama != null
+                                            ? userController.user!.value.nama!
+                                            : "",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17,
+                                        ),
+                                      ),
+                                      Text(
+                                        userController.user?.value.role != null
+                                            ? userController.user!.value.role!
+                                            : "",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
+                              const IconButton(
+                                onPressed: null,
+                                icon: Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
                             ],
                           ),
-                          const IconButton(
-                            onPressed: null,
-                            icon: Icon(
-                              Icons.chevron_right,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  )),
               role != null && role == 'admin'
                   ? ListTile(
                       leading: _selectedIndex == 0

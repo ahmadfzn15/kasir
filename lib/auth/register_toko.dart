@@ -11,6 +11,6 @@ class RegisterToko extends StatefulWidget {
 class _RegisterTokoState extends State<RegisterToko> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return const Scaffold();
   }
 }

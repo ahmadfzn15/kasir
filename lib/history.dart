@@ -5,7 +5,6 @@ import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
 import 'package:app/etc/format_time.dart';
 import 'package:app/order/receipt.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +13,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:vibration/vibration.dart';
 
 class History extends StatefulWidget {
   const History({super.key});
@@ -47,6 +45,7 @@ Route _goPage(Widget page) {
 
 class _HistoryState extends State<History> {
   String url = dotenv.env['API_URL']!;
+  bool sheetOrderOpen = false;
   Map<String, dynamic> sale = {};
   Map<String, dynamic> user = {};
   List<dynamic> history = [];
@@ -271,7 +270,7 @@ class _HistoryState extends State<History> {
           .value = TextCellValue((i + 1).toString());
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1))
-          .value = TextCellValue(history[i]['nomor_struk']);
+          .value = TextCellValue(history[i]['kode']);
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1))
           .value = TextCellValue("Rp.${history[i]['cash']}");
@@ -288,8 +287,6 @@ class _HistoryState extends State<History> {
 
     var fileBytes = excel.save();
     var status = await Permission.storage.request();
-    var vibrate = await const FlutterSecureStorage().read(key: 'vibrate');
-    var sound = await const FlutterSecureStorage().read(key: 'sound');
 
     if (status.isGranted) {
       var date = DateTime.now();
@@ -302,16 +299,6 @@ class _HistoryState extends State<History> {
         File(outputFile)
           ..createSync(recursive: true)
           ..writeAsBytesSync(fileBytes);
-
-        if (sound == "1") {
-          final notif = AudioPlayer();
-          await notif.play(AssetSource("sound/sound.mp3"));
-        }
-        bool? hasVibration = await Vibration.hasVibrator();
-
-        if (hasVibration! && vibrate == "1") {
-          Vibration.vibrate(duration: 200, amplitude: 100);
-        }
 
         // ignore: use_build_context_synchronously
         Popup().show(context, "File berhasil didownload", true);
@@ -493,7 +480,11 @@ class _HistoryState extends State<History> {
                                   ),
                                   const SizedBox(
                                     height: 10,
-                                  )
+                                  ),
+                                  const Divider(),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
                                 ],
                               )
                             : Container(),

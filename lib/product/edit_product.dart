@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:app/components/popup.dart';
+import 'package:app/models/product_controller.dart';
 import 'package:app/models/products.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -22,6 +23,7 @@ class EditProduct extends StatefulWidget {
 }
 
 class _EditProductState extends State<EditProduct> {
+  final productController = Get.put(ProductController());
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _barcode = TextEditingController();
   final TextEditingController _namaProduk = TextEditingController();
@@ -32,9 +34,11 @@ class _EditProductState extends State<EditProduct> {
   final TextEditingController _stok = TextEditingController();
   final TextEditingController _kategori = TextEditingController();
   XFile? _image;
+  String? foto;
   String? _img;
   List<DropdownMenuEntry<dynamic>> _category = [];
   int _selectedOption = 1;
+  int? id;
   bool allowStock = false;
   bool allowVarian = false;
   bool loading = false;
@@ -45,7 +49,9 @@ class _EditProductState extends State<EditProduct> {
   void initState() {
     super.initState();
 
-    _img = "${dotenv.env['API_URL']}/storage/img/${widget.product.foto}";
+    id = widget.product.id;
+    foto = widget.product.foto;
+    _img = foto != null ? "${dotenv.env['API_URL']}/storage/img/$foto" : null;
     _barcode.value = TextEditingValue(text: widget.product.barcode ?? "");
     _namaProduk.value = TextEditingValue(text: widget.product.namaProduk);
     _hargaBeli.value =
@@ -58,6 +64,7 @@ class _EditProductState extends State<EditProduct> {
             widget.product.stok != null ? widget.product.stok.toString() : "0");
     _kategori.value =
         TextEditingValue(text: widget.product.id_kategori.toString());
+    allowStock = widget.product.stok != null;
     fetchDataCategory();
   }
 
@@ -68,7 +75,9 @@ class _EditProductState extends State<EditProduct> {
       XFile? pickImg =
           await ImagePicker().pickImage(source: ImageSource.gallery);
       setState(() {
+        _img = null;
         _image = pickImg;
+        foto = null;
       });
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
@@ -99,7 +108,9 @@ class _EditProductState extends State<EditProduct> {
       XFile? pickImg =
           await ImagePicker().pickImage(source: ImageSource.camera);
       setState(() {
+        _img = null;
         _image = pickImg;
+        foto = null;
       });
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
@@ -167,8 +178,12 @@ class _EditProductState extends State<EditProduct> {
                 alignment: WrapAlignment.spaceEvenly,
                 spacing: 50,
                 children: [
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.black),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
                       _openFileManager();
                     },
                     child: const Column(
@@ -185,8 +200,12 @@ class _EditProductState extends State<EditProduct> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.black),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
                       _openCamera();
                     },
                     child: const Column(
@@ -203,10 +222,16 @@ class _EditProductState extends State<EditProduct> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.red),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
                       setState(() {
                         _image = null;
+                        _img = null;
+                        foto = null;
                       });
                       Navigator.pop(context);
                     },
@@ -280,42 +305,22 @@ class _EditProductState extends State<EditProduct> {
     setState(() {
       loading = true;
     });
-    String? token = await const FlutterSecureStorage().read(key: 'token');
+    productController.editProduct(context, {
+      'id': id,
+      'old_img': foto,
+      'new_img': _image,
+      'namaProduk': _namaProduk.text,
+      'barcode': barcode ?? "",
+      'id_kategori': _selectedOption.toString(),
+      'harga_beli': _hargaBeli.text,
+      'harga_jual': _hargaJual.text,
+      'deskripsi': _deskripsi.text,
+      'stok': _stok.text,
+    });
 
-    var request = http.MultipartRequest(
-        "post",
-        Uri.parse(
-            "${dotenv.env['API_URL']!}/api/product/${widget.product.id}"));
-    if (_image != null) {
-      request.files
-          .add(await http.MultipartFile.fromPath('foto', _image!.path));
-    }
-    request.fields['namaProduk'] = _namaProduk.text;
-    request.fields['barcode'] = barcode ?? "";
-    request.fields['id_kategori'] = _selectedOption.toString();
-    request.fields['harga_beli'] = _hargaBeli.text;
-    request.fields['harga_jual'] = _hargaJual.text;
-    request.fields['deskripsi'] = _deskripsi.text;
-    request.fields['stok'] = _stok.text;
-    request.headers['Content-Type'] = "application/json";
-    request.headers['Authorization'] = "Bearer $token";
-    var streamedResponse = await request.send();
-    var res = await http.Response.fromStream(streamedResponse);
-    var message = jsonDecode(res.body)['message'];
-
-    if (res.statusCode == 200) {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, message, true);
-      setState(() {
-        loading = false;
-      });
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // print(message);
-      // ignore: use_build_context_synchronously
-      Popup().show(context, message, false);
-    }
+    setState(() {
+      loading = false;
+    });
   }
 
   void scanBarcode() async {
@@ -394,7 +399,7 @@ class _EditProductState extends State<EditProduct> {
                                       border: Border.all(color: Colors.grey),
                                     ),
                                     clipBehavior: Clip.antiAlias,
-                                    child: _img != null && _image == null
+                                    child: _img != null
                                         ? Image.network(
                                             _img!,
                                             fit: BoxFit.cover,
@@ -716,7 +721,7 @@ class _EditProductState extends State<EditProduct> {
                       SwitchListTile(
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 0),
-                        value: allowStock && _stok.text.isNotEmpty,
+                        value: allowStock,
                         title: const Text("Manajemen Stok"),
                         activeColor: Colors.orange,
                         onChanged: (value) {
@@ -726,12 +731,14 @@ class _EditProductState extends State<EditProduct> {
                               _stok.clear();
                             } else {
                               _stok.value = TextEditingValue(
-                                  text: widget.product.stok.toString());
+                                  text: widget.product.stok != null
+                                      ? widget.product.stok.toString()
+                                      : "0");
                             }
                           });
                         },
                       ),
-                      allowStock && _stok.text.isNotEmpty
+                      allowStock
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
