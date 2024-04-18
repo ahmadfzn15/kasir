@@ -73,31 +73,71 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> editToko(BuildContext context, data) async {
+  Future<void> updateUser(BuildContext context, data) async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
+    var request =
+        http.MultipartRequest("post", Uri.parse("$url/api/user/update"));
+    if (data['new_img'] != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('new_img', data['new_img']!.path));
+    }
+    if (data['old_img'] != null) {
+      request.fields['old_img'] = data['old_img'];
+    }
+    request.fields['nama'] = data['nama'];
+    request.fields['email'] = data['email'];
+    request.fields['no_tlp'] = data['noTlp'];
+    request.headers['Content-Type'] = "application/json";
+    request.headers['Authorization'] = "Bearer $token";
+    var streamedResponse = await request.send();
+    var res = await http.Response.fromStream(streamedResponse);
+    var message = jsonDecode(res.body)['message'];
 
-    final res = await http.put(
-        Uri.parse("${dotenv.env['API_URL']!}/api/market/${toko!.value.id}"),
-        body: jsonEncode({
-          "nama_toko": data['namaToko'],
-          "alamat": data['alamatToko'],
-          "bidang_usaha": data['usaha'],
-          "no_tlp": data['noTlp'],
-        }),
-        headers: {
-          "Content-type": "application/json",
-          "Authorization": "Bearer $token"
-        });
-
-    Map<String, dynamic> result = jsonDecode(res.body);
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], true);
+      await getCurrentUser(context);
+      // ignore: use_build_context_synchronously
+      Popup().show(context, message, true);
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
       // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], false);
+      Popup().show(context, message['message'], false);
+    }
+  }
+
+  Future<void> editToko(BuildContext context, data) async {
+    String? token = await const FlutterSecureStorage().read(key: 'token');
+
+    var request = http.MultipartRequest(
+        "post", Uri.parse("$url/api/market/${toko!.value.id}"));
+    if (data['new_img'] != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('new_img', data['new_img']!.path));
+    }
+    if (data['old_img'] != null) {
+      request.fields['old_img'] = data['old_img'];
+    }
+    request.fields['nama_toko'] = data['namaToko'];
+    request.fields['alamat'] = data['alamatToko'];
+    request.fields['no_tlp'] = data['noTlp'];
+    request.fields['bidang_usaha'] = data['usaha'];
+    request.headers['Content-Type'] = "application/json";
+    request.headers['Authorization'] = "Bearer $token";
+    var streamedResponse = await request.send();
+    var res = await http.Response.fromStream(streamedResponse);
+    var message = jsonDecode(res.body)['message'];
+
+    if (res.statusCode == 200) {
+      // ignore: use_build_context_synchronously
+      await getCurrentUser(context);
+      // ignore: use_build_context_synchronously
+      Popup().show(context, message, true);
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      Popup().show(context, message, false);
     }
   }
 

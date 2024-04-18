@@ -312,6 +312,19 @@ class _ReceiptState extends State<Receipt> {
                             const Divider(
                               color: Color(0xFFcbd5e1),
                             ),
+                            data['sale']['nama_pelanggan'] != null
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text("Nama Pelanggan"),
+                                      Text(data['sale']['nama_pelanggan'])
+                                    ],
+                                  )
+                                : Container(),
+                            const SizedBox(
+                              height: 5,
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -343,10 +356,16 @@ class _ReceiptState extends State<Receipt> {
                               height: 5,
                             ),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text("Status"),
-                                Text(data['sale']['status'])
+                                Text(
+                                  data['sale']['status'] == 1
+                                      ? "Lunas"
+                                      : "Belum Lunas",
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
+                                )
                               ],
                             ),
                             const Divider(
@@ -356,21 +375,43 @@ class _ReceiptState extends State<Receipt> {
                               itemCount: data['detail'].length,
                               shrinkWrap: true,
                               itemBuilder: (context, index) {
-                                return ListTile(
-                                  contentPadding: const EdgeInsets.all(0),
-                                  title: Text(
-                                    data['detail'][index]['product']
-                                        ['namaProduk'],
-                                    style: const TextStyle(fontSize: 15),
-                                  ),
-                                  subtitle: Text(
-                                    "Rp.${data['detail'][index]['product']['harga_jual']} x ${data['detail'][index]['qty']}",
-                                    style: const TextStyle(fontSize: 15),
-                                  ),
-                                  trailing: Text(
-                                    "Rp.${data['detail'][index]['product']['harga_jual'] * data['detail'][index]['qty']}",
-                                    style: const TextStyle(fontSize: 15),
-                                  ),
+                                return Column(
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              data['detail'][index]['product']
+                                                  ['namaProduk'],
+                                              style:
+                                                  const TextStyle(fontSize: 15),
+                                            ),
+                                            Text(
+                                              "Rp.${data['detail'][index]['product']['harga_jual']} x ${data['detail'][index]['qty']}",
+                                              style:
+                                                  const TextStyle(fontSize: 13),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          "Rp.${data['detail'][index]['product']['harga_jual'] * data['detail'][index]['qty']}",
+                                          style: const TextStyle(fontSize: 15),
+                                        ),
+                                      ],
+                                    ),
+                                    data['detail'].length > 1
+                                        ? const SizedBox(
+                                            height: 5,
+                                          )
+                                        : Container(),
+                                  ],
                                 );
                               },
                             ),
@@ -387,6 +428,34 @@ class _ReceiptState extends State<Receipt> {
                                 Text("Rp.${data['sale']['total_harga']}")
                               ],
                             ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            data['sale']['biaya_tambahan'] != 0
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                          "Biaya Tambahan (${data['sale']['deskripsi_biaya_tambahan']})"),
+                                      Text(
+                                          "Rp.${data['sale']['biaya_tambahan']}")
+                                    ],
+                                  )
+                                : Container(),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            data['sale']['diskon'] != null
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text("Diskon"),
+                                      Text("${data['sale']['diskon']} %")
+                                    ],
+                                  )
+                                : Container(),
                             const Divider(
                               color: Color(0xFFcbd5e1),
                             ),
@@ -416,29 +485,35 @@ class _ReceiptState extends State<Receipt> {
                             const SizedBox(
                               height: 15,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text("Bayar"),
-                                Text("Rp.${data['sale']['cash']}")
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 5,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text("Kembalian"),
-                                Text("Rp.${data['sale']['cashback']}")
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 30,
-                            ),
+                            data['sale']['cash'] != null
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text("Bayar"),
+                                      Text("Rp.${data['sale']['cash']}"),
+                                      const SizedBox(
+                                        height: 5,
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
+                            data['sale']['cashback'] != null
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text("Kembalian"),
+                                      Text("Rp.${data['sale']['cashback']}"),
+                                      const SizedBox(
+                                        height: 30,
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
                             const Text(
                               "Terima kasih telah berbelanja di toko ini",
-                              style: TextStyle(fontSize: 15),
+                              style: TextStyle(fontSize: 14),
                             ),
                           ],
                         ),

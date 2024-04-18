@@ -203,8 +203,8 @@ class _LayoutState extends State<Layout> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text("Sign out"),
-        content: const Text("Are your sure to sign out now?"),
+        title: const Text("Logout"),
+        content: const Text("Apakah yakin anda ingin logout sekarang?"),
         actions: [
           CupertinoDialogAction(
             isDefaultAction: true,

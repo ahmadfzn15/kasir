@@ -1,5 +1,6 @@
 class Market {
   int? id;
+  String? logo;
   String? namaToko;
   String? alamat;
   String? bidangUsaha;
@@ -7,6 +8,7 @@ class Market {
 
   Market({
     this.id,
+    this.logo,
     this.namaToko,
     this.alamat,
     this.bidangUsaha,
@@ -16,6 +18,7 @@ class Market {
   factory Market.fromJson(Map<String, dynamic> json) {
     return Market(
       id: json['id'],
+      logo: json['logo'],
       namaToko: json['nama_toko'],
       alamat: json['alamat'],
       bidangUsaha: json['bidang_usaha'],

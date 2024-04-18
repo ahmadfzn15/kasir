@@ -2,12 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:app/components/banners.dart';
 import 'package:app/employee/employee.dart';
-import 'package:app/etc/auth_user.dart';
 import 'package:app/etc/format_time.dart';
 import 'package:app/etc/label.dart';
 import 'package:app/etc/wave.dart';
+import 'package:app/models/user_controller.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,16 +30,14 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List<Widget> page = const [
-    Banners(img: "assets/img/french-fries.jpeg"),
-    Banners(img: "assets/img/sprite.jpg"),
-    Banners(img: "assets/img/burger.jpeg")
-  ];
-  Map<String, dynamic> user = {};
+  final userController = Get.put(UserController());
   Map<String, dynamic> sale = {};
   bool loading = false;
   String url = dotenv.env['API_URL']!;
   DateTime time = DateTime.now();
+  List<Color> colorLabel = [];
+  int firstIndex = -1;
+  int secondIndex = -1;
 
   @override
   void initState() {
@@ -51,10 +48,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> getUser() async {
-    Map<String, dynamic> res = await AuthUser().getCurrentUser();
-    setState(() {
-      user = res;
-    });
+    await userController.getCurrentUser(context);
   }
 
   Color getRandomColor() {
@@ -119,82 +113,92 @@ class _HomeState extends State<Home> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             vertical: 30, horizontal: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
+                        child: Obx(() => Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                IconButton(
-                                    onPressed: () {
-                                      Scaffold.of(context).openDrawer();
-                                    },
-                                    icon: const Icon(
-                                      Icons.menu,
-                                      size: 30,
-                                      color: Colors.white,
-                                    )),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    IconButton(
+                                        onPressed: () {
+                                          Scaffold.of(context).openDrawer();
+                                        },
+                                        icon: const Icon(
+                                          Icons.menu,
+                                          size: 30,
+                                          color: Colors.white,
+                                        )),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 10, top: 5),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            Label.welcome,
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                          const SizedBox(
+                                            height: 3,
+                                          ),
+                                          Text(
+                                            userController.user?.value.nama !=
+                                                    null
+                                                ? userController
+                                                    .user!.value.nama!
+                                                : '',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            userController.user?.value.role !=
+                                                    null
+                                                ? userController
+                                                    .user!.value.role!
+                                                : '',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 Padding(
                                   padding:
-                                      const EdgeInsets.only(left: 10, top: 5),
+                                      const EdgeInsets.only(right: 15, top: 20),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
                                     children: [
+                                      userController.user?.value.foto != null
+                                          ? CircleAvatar(
+                                              radius: 40,
+                                              backgroundImage: NetworkImage(
+                                                  "$url/storage/img/${userController.user!.value.foto}"),
+                                            )
+                                          : const CircleAvatar(
+                                              radius: 40,
+                                              backgroundImage: AssetImage(
+                                                  "assets/img/user.png"),
+                                            ),
+                                      const SizedBox(
+                                        height: 5,
+                                      ),
                                       Text(
-                                        Label.welcome,
+                                        formatTime2(DateTime.now()),
                                         style: const TextStyle(
                                             color: Colors.white),
-                                      ),
-                                      const SizedBox(
-                                        height: 3,
-                                      ),
-                                      Text(
-                                        user.isNotEmpty ? user['nama'] : '',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(
-                                        user.isNotEmpty ? user['role'] : '',
-                                        style: const TextStyle(
-                                            color: Colors.white, fontSize: 14),
-                                      ),
+                                      )
                                     ],
                                   ),
-                                ),
+                                )
                               ],
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(right: 15, top: 20),
-                              child: Column(
-                                children: [
-                                  user['foto'] != null
-                                      ? CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage: NetworkImage(
-                                              "$url/storage/img/${user['foto']}"),
-                                        )
-                                      : const CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage:
-                                              AssetImage("assets/img/user.png"),
-                                        ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  Text(
-                                    formatTime2(DateTime.now()),
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
+                            )),
                       ),
                     ),
                     Container(
@@ -241,30 +245,41 @@ class _HomeState extends State<Home> {
                                           const SizedBox(
                                             height: 10,
                                           ),
-                                          Expanded(
-                                              child: Row(
+                                          GridView(
+                                            shrinkWrap: true,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 15),
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                                    mainAxisExtent: 140,
+                                                    crossAxisCount: 2,
+                                                    crossAxisSpacing: 10),
                                             children: [
-                                              Expanded(
-                                                child: PieChart(
-                                                  PieChartData(
-                                                    sections: sale.isNotEmpty
-                                                        ? sale['produk_terjual']
-                                                                ['data']
-                                                            .map<PieChartSectionData>(
-                                                                (value) {
-                                                            return PieChartSectionData(
-                                                              title: value[
-                                                                      'jumlah']
-                                                                  .toString(),
-                                                              color:
-                                                                  getRandomColor(),
-                                                              value: value[
-                                                                      'jumlah']
-                                                                  .toDouble(),
-                                                            );
-                                                          }).toList()
-                                                        : [],
-                                                  ),
+                                              PieChart(
+                                                PieChartData(
+                                                  sections: sale.isNotEmpty
+                                                      ? sale['produk_terjual']
+                                                              ['data']
+                                                          .map<PieChartSectionData>(
+                                                              (value) {
+                                                          var color =
+                                                              getRandomColor();
+                                                          colorLabel.add(color);
+                                                          setState(() {
+                                                            firstIndex++;
+                                                          });
+                                                          return PieChartSectionData(
+                                                            title:
+                                                                value['jumlah']
+                                                                    .toString(),
+                                                            color: colorLabel[
+                                                                firstIndex],
+                                                            value:
+                                                                value['jumlah']
+                                                                    .toDouble(),
+                                                          );
+                                                        }).toList()
+                                                      : [],
                                                 ),
                                               ),
                                               SingleChildScrollView(
@@ -275,26 +290,35 @@ class _HomeState extends State<Home> {
                                                       ? sale['produk_terjual']
                                                               ['data']
                                                           .map<Widget>((value) {
+                                                          setState(() {
+                                                            secondIndex++;
+                                                          });
                                                           return Row(
                                                             crossAxisAlignment:
                                                                 CrossAxisAlignment
                                                                     .center,
                                                             children: [
                                                               Container(
-                                                                width: 10,
-                                                                height: 10,
+                                                                width: 15,
+                                                                height: 15,
                                                                 decoration: BoxDecoration(
                                                                     borderRadius:
                                                                         BorderRadius.circular(
                                                                             10),
-                                                                    color:
-                                                                        getRandomColor()),
+                                                                    color: colorLabel[
+                                                                        secondIndex]),
                                                               ),
                                                               const SizedBox(
                                                                 width: 7,
                                                               ),
-                                                              Text(value[
-                                                                  'namaProduk'])
+                                                              Flexible(
+                                                                  child: Text(
+                                                                value[
+                                                                    'namaProduk'],
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ))
                                                             ],
                                                           );
                                                         }).toList()
@@ -302,108 +326,139 @@ class _HomeState extends State<Home> {
                                                 ),
                                               )
                                             ],
-                                          )),
+                                          ),
                                         ],
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                              Card(
-                                margin: const EdgeInsets.all(20),
-                                elevation: 3,
-                                shadowColor: const Color(0xFFf1f5f9),
-                                clipBehavior: Clip.antiAlias,
-                                surfaceTintColor: Colors.white,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(15),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "Omset Perhari",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 17),
+                              Container(
+                                  margin: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 3),
                                       ),
-                                      const SizedBox(
-                                        height: 20,
-                                      ),
-                                      Expanded(
-                                          child: BarChart(BarChartData(
-                                        barGroups: [
-                                          BarChartGroupData(x: 1, barRods: [
-                                            BarChartRodData(
-                                                toY: sale.isNotEmpty
-                                                    ? double.parse(sale['omset']
-                                                        .toString())
-                                                    : 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                          BarChartGroupData(x: 2, barRods: [
-                                            BarChartRodData(
-                                                toY: 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                          BarChartGroupData(x: 3, barRods: [
-                                            BarChartRodData(
-                                                toY: 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                          BarChartGroupData(x: 4, barRods: [
-                                            BarChartRodData(
-                                                toY: 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                          BarChartGroupData(x: 5, barRods: [
-                                            BarChartRodData(
-                                                toY: 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                          BarChartGroupData(x: 6, barRods: [
-                                            BarChartRodData(
-                                                toY: 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                          BarChartGroupData(x: 7, barRods: [
-                                            BarChartRodData(
-                                                toY: 0,
-                                                color: Colors.orange,
-                                                width: 25),
-                                          ]),
-                                        ],
-                                        borderData: FlBorderData(
-                                          show: false,
-                                        ),
-                                        titlesData: const FlTitlesData(
-                                            bottomTitles: AxisTitles(
-                                              sideTitles:
-                                                  SideTitles(showTitles: true),
-                                            ),
-                                            leftTitles: AxisTitles(
-                                              sideTitles:
-                                                  SideTitles(showTitles: true),
-                                            ),
-                                            rightTitles: AxisTitles(
-                                              sideTitles:
-                                                  SideTitles(showTitles: false),
-                                            ),
-                                            topTitles: AxisTitles(
-                                              sideTitles:
-                                                  SideTitles(showTitles: false),
-                                            )),
-                                      ))),
                                     ],
                                   ),
-                                ),
-                              )
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(
+                                          sigmaX: 10, sigmaY: 10),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(15),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.8),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              "Omset Perhari",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 17),
+                                            ),
+                                            const SizedBox(
+                                              height: 20,
+                                            ),
+                                            Expanded(
+                                                child: BarChart(BarChartData(
+                                              barGroups: [
+                                                BarChartGroupData(
+                                                    x: 1,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: sale.isNotEmpty
+                                                              ? double.parse(
+                                                                  sale['omset']
+                                                                      .toString())
+                                                              : 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                                BarChartGroupData(
+                                                    x: 2,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                                BarChartGroupData(
+                                                    x: 3,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                                BarChartGroupData(
+                                                    x: 4,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                                BarChartGroupData(
+                                                    x: 5,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                                BarChartGroupData(
+                                                    x: 6,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                                BarChartGroupData(
+                                                    x: 7,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                          toY: 0,
+                                                          color: Colors.orange,
+                                                          width: 25),
+                                                    ]),
+                                              ],
+                                              borderData: FlBorderData(
+                                                show: false,
+                                              ),
+                                              titlesData: const FlTitlesData(
+                                                  bottomTitles: AxisTitles(
+                                                    sideTitles: SideTitles(
+                                                        showTitles: true),
+                                                  ),
+                                                  leftTitles: AxisTitles(
+                                                    sideTitles: SideTitles(
+                                                        showTitles: true),
+                                                  ),
+                                                  rightTitles: AxisTitles(
+                                                    sideTitles: SideTitles(
+                                                        showTitles: false),
+                                                  ),
+                                                  topTitles: AxisTitles(
+                                                    sideTitles: SideTitles(
+                                                        showTitles: false),
+                                                  )),
+                                            ))),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ))
                             ])),
                   ],
                 ),

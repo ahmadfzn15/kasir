@@ -1,13 +1,10 @@
-import 'dart:convert';
-
-import 'package:app/components/popup.dart';
 import 'package:app/employee/edit_employee.dart';
+import 'package:app/models/employee_controller.dart';
 import 'package:app/sublayout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 
 class Employee extends StatefulWidget {
   const Employee({super.key});
@@ -39,10 +36,11 @@ Route _goPage(Widget page) {
 }
 
 class _EmployeeState extends State<Employee> {
+  final employeeController = Get.put(EmployeeController());
   List<dynamic> employee = [];
   String url = dotenv.env['API_URL']!;
   bool pwdNotSame = false;
-  bool loading = false;
+  bool loading = true;
 
   @override
   void initState() {
@@ -50,45 +48,15 @@ class _EmployeeState extends State<Employee> {
     fetchDataEmployee();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    fetchDataEmployee();
-  }
-
   Future<void> _handleRefresh() async {
-    fetchDataEmployee();
+    await fetchDataEmployee();
   }
 
   Future<void> fetchDataEmployee() async {
+    await employeeController.fetchDataEmployee();
     setState(() {
-      loading = true;
+      loading = false;
     });
-
-    bool hasToken =
-        await const FlutterSecureStorage().containsKey(key: 'token');
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    if (hasToken) {
-      final response = await http.get(
-        Uri.parse("$url/api/cashier"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token"
-        },
-      );
-
-      Map<String, dynamic> res = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        loading = false;
-        setState(() {
-          employee = (res['data'] as List<dynamic>).map((e) => e).toList();
-        });
-      } else {
-        throw Exception(res['message']);
-      }
-    }
   }
 
   void _openOption(BuildContext context, Map<String, dynamic> data) {
@@ -103,11 +71,15 @@ class _EmployeeState extends State<Employee> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              GestureDetector(
-                onTap: () {
+              TextButton(
+                onPressed: () {
                   Navigator.pop(context);
                   Navigator.push(context, _goPage(EditEmployee(data: data)));
                 },
+                style: const ButtonStyle(
+                    foregroundColor: MaterialStatePropertyAll(Colors.black),
+                    padding: MaterialStatePropertyAll(
+                        EdgeInsets.symmetric(vertical: 0))),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -122,11 +94,15 @@ class _EmployeeState extends State<Employee> {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: () {
+              TextButton(
+                onPressed: () {
                   Navigator.pop(context);
                   openDelete(context, data['id']);
                 },
+                style: const ButtonStyle(
+                    foregroundColor: MaterialStatePropertyAll(Colors.red),
+                    padding: MaterialStatePropertyAll(
+                        EdgeInsets.symmetric(vertical: 0))),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -173,27 +149,7 @@ class _EmployeeState extends State<Employee> {
   }
 
   Future<void> deleteEmployee(BuildContext context, int id) async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-
-    final response = await http.delete(
-      Uri.parse("$url/api/user/$id"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-    );
-
-    final res = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      _handleRefresh();
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], true);
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, res['message'], false);
-    }
+    await employeeController.deleteEmployee(context, id);
   }
 
   @override
@@ -232,62 +188,73 @@ class _EmployeeState extends State<Employee> {
         ),
       ),
       body: !loading
-          ? employee.isNotEmpty
-              ? RefreshIndicator(
+          ? GetBuilder<EmployeeController>(
+              builder: (controller) {
+                return RefreshIndicator(
                   onRefresh: () {
                     return _handleRefresh();
                   },
-                  child: SizedBox(
-                    height: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: employee.length,
-                        itemBuilder: (context, index) {
-                          return Wrap(
-                            children: [
-                              Card(
-                                surfaceTintColor: Colors.white,
-                                child: ListTile(
-                                  leading: employee[index]['foto'] != null
-                                      ? CircleAvatar(
-                                          backgroundImage: NetworkImage(
-                                              "$url/storage/img/${employee[index]['foto']}"),
-                                        )
-                                      : const CircleAvatar(
-                                          backgroundImage:
-                                              AssetImage("assets/img/user.png"),
-                                        ),
-                                  contentPadding:
-                                      const EdgeInsets.only(right: 0, left: 10),
-                                  title: Text(employee[index]['nama']),
-                                  subtitle: Text(employee[index]['role']),
-                                  trailing: IconButton(
-                                      onPressed: () {
-                                        _openOption(context, employee[index]);
-                                      },
-                                      icon: const Icon(
-                                          CupertinoIcons.ellipsis_vertical)),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () {
-                    return _handleRefresh();
-                  },
-                  child: const SizedBox(
-                    height: double.infinity,
-                    child: Center(
-                      child: Text("Data Kosong"),
-                    ),
-                  ))
+                  child: employeeController.employee.isNotEmpty
+                      ? SizedBox(
+                          height: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: employeeController.employee.length,
+                              itemBuilder: (context, index) {
+                                return Wrap(
+                                  children: [
+                                    Card(
+                                      surfaceTintColor: Colors.white,
+                                      child: ListTile(
+                                        leading: employeeController
+                                                    .employee[index]['foto'] !=
+                                                null
+                                            ? CircleAvatar(
+                                                backgroundImage: NetworkImage(
+                                                    "$url/storage/img/${employeeController.employee[index]['foto']}"),
+                                              )
+                                            : const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/img/user.png"),
+                                              ),
+                                        contentPadding: const EdgeInsets.only(
+                                            right: 0, left: 10),
+                                        title: Text(employeeController
+                                            .employee[index]['nama']),
+                                        subtitle: Text(employeeController
+                                            .employee[index]['role']),
+                                        trailing: IconButton(
+                                            onPressed: () {
+                                              _openOption(
+                                                  context,
+                                                  employeeController
+                                                      .employee[index]);
+                                            },
+                                            icon: const Icon(CupertinoIcons
+                                                .ellipsis_vertical)),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: () {
+                            return _handleRefresh();
+                          },
+                          child: const SizedBox(
+                            height: double.infinity,
+                            child: Center(
+                              child: Text("Data Kosong"),
+                            ),
+                          )),
+                );
+              },
+            )
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.orange,

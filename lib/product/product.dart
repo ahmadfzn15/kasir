@@ -643,7 +643,7 @@ class _ProductState extends State<Product> {
                             padding: EdgeInsets.zero,
                             tabAlignment: TabAlignment.fill,
                             splashBorderRadius:
-                                BorderRadius.all(Radius.circular(10)),
+                                const BorderRadius.all(Radius.circular(10)),
                           ),
                         )),
                     body: TabBarView(children: [
@@ -1014,7 +1014,7 @@ class _ProductState extends State<Product> {
                                                                   bottom: 80),
                                                           gridDelegate:
                                                               const SliverGridDelegateWithFixedCrossAxisCount(
-                                                            mainAxisExtent: 240,
+                                                            mainAxisExtent: 255,
                                                             crossAxisCount: 2,
                                                             crossAxisSpacing: 5,
                                                             mainAxisSpacing: 5,
@@ -1128,10 +1128,21 @@ class _ProductState extends State<Product> {
                                                                                         ),
                                                                                       ),
                                                                                       const SizedBox(height: 10),
-                                                                                      Column(
+                                                                                      Expanded(
+                                                                                          child: Column(
                                                                                         crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                         children: [
-                                                                                          Text(productController.searchResult[index].namaProduk),
+                                                                                          Row(
+                                                                                            children: [
+                                                                                              Flexible(
+                                                                                                  child: Text(
+                                                                                                productController.searchResult[index].namaProduk,
+                                                                                                overflow: TextOverflow.ellipsis,
+                                                                                                maxLines: 2,
+                                                                                              ))
+                                                                                            ],
+                                                                                          ),
                                                                                           Row(
                                                                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                             children: [
@@ -1150,7 +1161,7 @@ class _ProductState extends State<Product> {
                                                                                             ],
                                                                                           ),
                                                                                         ],
-                                                                                      ),
+                                                                                      )),
                                                                                       const SizedBox(height: 5),
                                                                                       Row(
                                                                                         mainAxisAlignment: MainAxisAlignment.end,
@@ -1230,8 +1241,8 @@ class _ProductState extends State<Product> {
                                               : const Expanded(
                                                   child: SizedBox(
                                                   child: Center(
-                                                      child: Text(
-                                                          "Data masih kosong")),
+                                                      child:
+                                                          Text("Data kosong")),
                                                 ))
                                         ],
                                       ));
@@ -1313,8 +1324,8 @@ class _ProductState extends State<Product> {
                                             : const SizedBox(
                                                 height: double.infinity,
                                                 child: Center(
-                                                    child: Text(
-                                                        "Data masih kosong"))));
+                                                    child:
+                                                        Text("Data kosong"))));
                                   },
                                 )
                               : const Center(
@@ -1748,7 +1759,7 @@ class _ProductState extends State<Product> {
                                       : const Expanded(
                                           child: SizedBox(
                                           child: Center(
-                                              child: Text("Data masih kosong")),
+                                              child: Text("Data kosong")),
                                         ));
                                 },
                               )

@@ -107,6 +107,8 @@ class _SettingState extends State<Setting> {
                           hoverColor: Colors.white12,
                           contentPadding: const EdgeInsets.all(0),
                           horizontalTitleGap: 10,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
                           leading: const Icon(
                             Icons.account_circle_outlined,
                             size: 30,
@@ -123,6 +125,9 @@ class _SettingState extends State<Setting> {
                                     onTap: () {
                                       Navigator.of(context).push(_goPage(4));
                                     },
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
                                     hoverColor: Colors.white12,
                                     contentPadding: const EdgeInsets.all(0),
                                     horizontalTitleGap: 10,
@@ -147,6 +152,8 @@ class _SettingState extends State<Setting> {
                           hoverColor: Colors.white12,
                           contentPadding: const EdgeInsets.all(0),
                           horizontalTitleGap: 10,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
                           leading: const Icon(
                             Icons.settings_outlined,
                             size: 30,

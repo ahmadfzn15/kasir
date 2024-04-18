@@ -258,7 +258,7 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Status"),
-                        Text(widget.detail['status'])
+                        Text(widget.detail['status'] ? "Lunas" : "Belum Lunas")
                       ],
                     ),
                     const SizedBox(
@@ -278,7 +278,7 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Diterima"),
-                        Text("Rp.${widget.detail['cash']}")
+                        Text("Rp.${widget.detail['cash'] ?? "-"}")
                       ],
                     ),
                     const SizedBox(
@@ -288,7 +288,7 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Kembalian"),
-                        Text("Rp.${widget.detail['cashback']}")
+                        Text("Rp.${widget.detail['cashback'] ?? "-"}")
                       ],
                     ),
                   ],

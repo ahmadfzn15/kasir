@@ -70,6 +70,8 @@ class _LanguageState extends State<Language> {
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
                       return RadioListTile(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         value: languages[index],
                         activeColor: Colors.orange,
                         title: Text(languages[index]),

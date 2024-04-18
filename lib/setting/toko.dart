@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:app/models/user_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Toko extends StatefulWidget {
   const Toko({super.key});
@@ -17,6 +21,9 @@ class _TokoState extends State<Toko> {
   final TextEditingController _usaha = TextEditingController();
   final TextEditingController _noTlp = TextEditingController();
   final TextEditingController _password = TextEditingController();
+  XFile? _image;
+  String? foto;
+  String? _img;
   bool loading = false;
   bool showPwd = false;
 
@@ -27,10 +34,176 @@ class _TokoState extends State<Toko> {
     fetchDataMarket();
   }
 
+  void _openFileManager() async {
+    PermissionStatus status = await Permission.storage.request();
+
+    if (status.isGranted) {
+      XFile? pickImg =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
+      setState(() {
+        _img = null;
+        _image = pickImg;
+        foto = null;
+      });
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_contevar ronously
+      showCupertinoModalPopup(
+        // ignore: use_build_context_synchronously
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+            title: const Text("Access denied"),
+            content: const Text("Please allow storage usage to upload images."),
+            actions: [
+              CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Ok"))
+            ]),
+      );
+    }
+  }
+
+  void _openCamera() async {
+    PermissionStatus status = await Permission.camera.request();
+
+    if (status.isGranted) {
+      XFile? pickImg =
+          await ImagePicker().pickImage(source: ImageSource.camera);
+      setState(() {
+        _img = null;
+        _image = pickImg;
+        foto = null;
+      });
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      showCupertinoModalPopup(
+        // ignore: use_build_context_synchronously
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+            title: const Text("Access denied"),
+            content: const Text("Please allow camera to upload images."),
+            actions: [
+              CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Ok"))
+            ]),
+      );
+    }
+  }
+
+  void _openDialogImage(BuildContext context) {
+    showModalBottomSheet(
+      showDragHandle: true,
+      enableDrag: true,
+      constraints:
+          const BoxConstraints(maxHeight: 120, minWidth: double.infinity),
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: ListView(
+            shrinkWrap: true,
+            physics: const BouncingScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                spacing: 50,
+                children: [
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.black),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
+                      _openFileManager();
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Galeri")
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.black),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
+                      _openCamera();
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Kamera")
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.red),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
+                      setState(() {
+                        _image = null;
+                        _img = null;
+                        foto = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.delete,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Text("Hapus")
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> fetchDataMarket() async {
     await userController.getCurrentUser(context);
 
     var market = userController.toko!.value;
+    foto = market.logo;
     _namaToko.value = TextEditingValue(text: market.namaToko ?? "");
     _alamatToko.value = TextEditingValue(text: market.alamat ?? "");
     _usaha.value = TextEditingValue(text: market.bidangUsaha ?? "");
@@ -42,10 +215,12 @@ class _TokoState extends State<Toko> {
       loading = true;
     });
     userController.editToko(context, {
+      'old_img': foto,
+      'new_img': _image,
       'namaToko': _namaToko.text,
       'alamatToko': _alamatToko.text,
+      'noTlp': _noTlp.text,
       'usaha': _usaha.text,
-      'noTlp': _noTlp.text
     });
     setState(() {
       loading = false;
@@ -200,6 +375,7 @@ class _TokoState extends State<Toko> {
         child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -211,6 +387,66 @@ class _TokoState extends State<Toko> {
                 ),
                 const SizedBox(
                   height: 15,
+                ),
+                const Text(
+                  "Logo Toko",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 6,
+                ),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: _img != null
+                          ? Image.network(
+                              _img!,
+                              fit: BoxFit.cover,
+                            )
+                          : _image != null
+                              ? Image.file(
+                                  File(_image!.path),
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.grey),
+                                      color: Colors.black12),
+                                  clipBehavior: Clip.antiAlias,
+                                ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        _openDialogImage(context);
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(color: Colors.grey, blurRadius: 1)
+                            ]),
+                        child: const Icon(Icons.add_photo_alternate_rounded),
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 12,
                 ),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.start,

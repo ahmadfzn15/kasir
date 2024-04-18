@@ -49,9 +49,20 @@ class _HistoryState extends State<History> {
   Map<String, dynamic> sale = {};
   Map<String, dynamic> user = {};
   List<dynamic> history = [];
+  List<dynamic> sortResult = [];
   bool loading = true;
   bool _selectAll = false;
   bool _select = false;
+  String _selectedStatus = "Semua";
+  int? _selectedStatusId;
+  final DateTime firstDate = DateTime(1970);
+  final DateTime lastDate = DateTime(2100);
+  DateTime fromDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month - 1,
+    DateTime.now().day,
+  );
+  DateTime toDate = DateTime.now();
 
   @override
   void initState() {
@@ -59,7 +70,6 @@ class _HistoryState extends State<History> {
 
     getUser();
     fetchDataHistory();
-    fetchDataSale();
   }
 
   Future<void> getUser() async {
@@ -73,29 +83,28 @@ class _HistoryState extends State<History> {
     fetchDataHistory();
   }
 
-  Future<void> fetchDataSale() async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
+  void sortByStatus() {
+    setState(() {
+      if (_selectedStatusId != null) {
+        sortResult = history
+            .where((element) => element['status'] == _selectedStatusId)
+            .toList();
+      } else {
+        sortResult = history;
+      }
+    });
+  }
 
-    final response = await http.get(
-      Uri.parse("$url/api/sale/statistics"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-    );
-
-    Map<String, dynamic> res = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      setState(() {
-        sale = res['data'];
-        loading = false;
-      });
-    } else {
-      setState(() {
-        loading = false;
-      });
-      throw Exception(res['message']);
-    }
+  void sortByDate() {
+    setState(() {
+      sortResult = history
+          .where((element) =>
+              DateTime.parse(element['created_at'])
+                  .isAfter(fromDate.subtract(const Duration(days: 1))) &&
+              DateTime.parse(element['created_at'])
+                  .isBefore(toDate.add(const Duration(days: 1))))
+          .toList();
+    });
   }
 
   Future<void> fetchDataHistory() async {
@@ -118,6 +127,7 @@ class _HistoryState extends State<History> {
           history = (res['data'] as List<dynamic>)
               .map((e) => {...e, "selected": false})
               .toList();
+          sortByDate();
 
           loading = false;
         });
@@ -372,252 +382,279 @@ class _HistoryState extends State<History> {
         foregroundColor: Colors.white,
       ),
       body: !loading
-          ? history.isNotEmpty
-              ? RefreshIndicator(
-                  onRefresh: () {
-                    return _refresh();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      children: [
-                        user['role'] == 'admin'
-                            ? Column(
-                                children: [
-                                  GridView(
-                                      shrinkWrap: true,
-                                      gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                              mainAxisExtent: 80,
-                                              crossAxisCount: 2,
-                                              crossAxisSpacing: 5,
-                                              mainAxisSpacing: 5),
-                                      children: [
-                                        Card(
-                                          surfaceTintColor: Colors.white,
-                                          shadowColor: const Color(0xFFf1f5f9),
-                                          child: ListTile(
-                                            title: const Text(
-                                              "Transaksi Lunas",
-                                              style: TextStyle(fontSize: 13),
-                                            ),
-                                            subtitle: Text(
-                                              sale.isNotEmpty
-                                                  ? sale['transaksi_lunas']
-                                                      .toString()
-                                                  : "0",
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        ),
-                                        Card(
-                                          surfaceTintColor: Colors.white,
-                                          shadowColor: const Color(0xFFf1f5f9),
-                                          child: ListTile(
-                                            title: const Text(
-                                              "Produk Terjual",
-                                              style: TextStyle(fontSize: 13),
-                                            ),
-                                            subtitle: Text(
-                                              sale.isNotEmpty
-                                                  ? sale['produk_terjual']
-                                                          ['jumlah']
-                                                      .toString()
-                                                  : "0",
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        ),
-                                        Card(
-                                          surfaceTintColor: Colors.white,
-                                          shadowColor: const Color(0xFFf1f5f9),
-                                          child: ListTile(
-                                            title: const Text(
-                                              "Omset",
-                                              style: TextStyle(fontSize: 13),
-                                            ),
-                                            subtitle: Text(
-                                              "Rp.${sale.isNotEmpty ? sale['omset'].toString() : "0"}",
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        ),
-                                        Card(
-                                          surfaceTintColor: Colors.white,
-                                          shadowColor: const Color(0xFFf1f5f9),
-                                          child: ListTile(
-                                            title: const Text(
-                                              "Keuntungan",
-                                              style: TextStyle(fontSize: 13),
-                                            ),
-                                            subtitle: Text(
-                                              "Rp.${sale.isNotEmpty ? sale['laba'].toString() : "0"}",
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        )
-                                      ]),
-                                  const SizedBox(
-                                    height: 10,
+          ? RefreshIndicator(
+              onRefresh: () {
+                return _refresh();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10, bottom: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          MenuAnchor(
+                              builder: (context, controller, child) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    if (controller.isOpen) {
+                                      controller.close();
+                                    } else {
+                                      controller.open();
+                                    }
+                                  },
+                                  child: Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    direction: Axis.horizontal,
+                                    children: [
+                                      Text(
+                                        _selectedStatus,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      const Icon(Icons.chevron_right),
+                                      Chip(
+                                        label:
+                                            Text(sortResult.length.toString()),
+                                        labelStyle: const TextStyle(
+                                            color: Colors.white),
+                                        padding: const EdgeInsets.all(6),
+                                        shape:
+                                            const CircleBorder(eccentricity: 0),
+                                        labelPadding: const EdgeInsets.all(0),
+                                        color: const MaterialStatePropertyAll(
+                                            Colors.orange),
+                                      )
+                                    ],
                                   ),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: CupertinoButton(
-                                      color: Colors.orange,
-                                      onPressed: () {
-                                        printExcel();
-                                      },
-                                      child: const Text("Download Excel"),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  const Divider(),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                ],
-                              )
-                            : Container(),
-                        Expanded(
-                            child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: history.length,
-                          padding: const EdgeInsets.symmetric(horizontal: 0),
-                          itemBuilder: (context, index) {
-                            return Wrap(
+                                );
+                              },
+                              menuChildren: [
+                                MenuItemButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedStatus = "Semua";
+                                      _selectedStatusId = null;
+                                    });
+                                    sortByStatus();
+                                  },
+                                  child: const Text("Semua"),
+                                ),
+                                MenuItemButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedStatus = "Lunas";
+                                      _selectedStatusId = 1;
+                                    });
+                                    sortByStatus();
+                                  },
+                                  child: const Text("Lunas"),
+                                ),
+                                MenuItemButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedStatus = "Belum Lunas";
+                                      _selectedStatusId = 0;
+                                    });
+                                    sortByStatus();
+                                  },
+                                  child: const Text("Belum Lunas"),
+                                ),
+                              ]),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100)),
+                            surfaceTintColor: Colors.white,
+                            child: Row(
                               children: [
-                                user.isNotEmpty && user['role'] == 'admin'
-                                    ? Card(
-                                        clipBehavior: Clip.antiAlias,
-                                        surfaceTintColor: Colors.white,
-                                        child: ListTile(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  vertical: 0, horizontal: 10),
-                                          onLongPress: () {
-                                            setState(() {
-                                              _select = true;
-                                              history[index]['selected'] = true;
-                                            });
-                                            showSheetOrder(context);
-                                          },
-                                          onTap: () {
-                                            if (history[index]['selected']) {
+                                TextButton(
+                                  child: Text(
+                                      "${fromDate.day}/${fromDate.month}/${fromDate.year}"),
+                                  onPressed: () async {
+                                    DateTime? date = await showDatePicker(
+                                        context: context,
+                                        initialDate: fromDate,
+                                        firstDate: firstDate,
+                                        lastDate: lastDate);
+
+                                    setState(() {
+                                      fromDate = date!;
+                                    });
+                                    sortByDate();
+                                  },
+                                ),
+                                const Text(" - "),
+                                TextButton(
+                                  child: Text(
+                                      "${toDate.day}/${toDate.month}/${toDate.year}"),
+                                  onPressed: () async {
+                                    DateTime? date = await showDatePicker(
+                                        context: context,
+                                        initialDate: toDate,
+                                        firstDate: firstDate,
+                                        lastDate: lastDate);
+
+                                    setState(() {
+                                      toDate = date!;
+                                    });
+                                    sortByDate();
+                                  },
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    sortResult.isNotEmpty
+                        ? ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: sortResult.length,
+                            padding: const EdgeInsets.symmetric(horizontal: 0),
+                            itemBuilder: (context, index) {
+                              return Wrap(
+                                children: [
+                                  user.isNotEmpty && user['role'] == 'admin'
+                                      ? Card(
+                                          clipBehavior: Clip.antiAlias,
+                                          surfaceTintColor: Colors.white,
+                                          child: ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 0,
+                                                    horizontal: 10),
+                                            onLongPress: () {
                                               setState(() {
-                                                history[index]['selected'] =
-                                                    false;
-                                              });
-                                              showSheetOrder(context);
-                                            } else if (history.any((element) =>
-                                                element['selected'])) {
-                                              setState(() {
-                                                history[index]['selected'] =
+                                                _select = true;
+                                                sortResult[index]['selected'] =
                                                     true;
                                               });
                                               showSheetOrder(context);
-                                            } else {
+                                            },
+                                            onTap: () {
+                                              if (sortResult[index]
+                                                  ['selected']) {
+                                                setState(() {
+                                                  sortResult[index]
+                                                      ['selected'] = false;
+                                                });
+                                                showSheetOrder(context);
+                                              } else if (sortResult.any(
+                                                  (element) =>
+                                                      element['selected'])) {
+                                                setState(() {
+                                                  sortResult[index]
+                                                      ['selected'] = true;
+                                                });
+                                                showSheetOrder(context);
+                                              } else {
+                                                Navigator.of(context).push(
+                                                    _goPage(Receipt(
+                                                        id: sortResult[index]
+                                                            ['id'])));
+                                              }
+                                            },
+                                            selected: sortResult[index]
+                                                ['selected'],
+                                            selectedTileColor: Colors.black26,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            title: Text(
+                                              sortResult[index]['kode']
+                                                  .toString(),
+                                            ),
+                                            subtitle: Text(
+                                                "Rp.${sortResult[index]['total_pembayaran']}",
+                                                style: const TextStyle(
+                                                    fontSize: 20,
+                                                    color: Colors.orange,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                            trailing: Wrap(
+                                              direction: Axis.vertical,
+                                              crossAxisAlignment:
+                                                  WrapCrossAlignment.end,
+                                              children: [
+                                                Text(
+                                                    sortResult[index]
+                                                                ['status'] ==
+                                                            1
+                                                        ? "Lunas"
+                                                        : "Belum Lunas",
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                    )),
+                                                Text(
+                                                  formatTime(sortResult[index]
+                                                      ['created_at']),
+                                                ),
+                                                Text(
+                                                    "Dibuat oleh ${sortResult[index]['cashier']['nama']}"),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      : Card(
+                                          clipBehavior: Clip.antiAlias,
+                                          surfaceTintColor: Colors.white,
+                                          child: ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 0,
+                                                    horizontal: 10),
+                                            onTap: () {
                                               Navigator.of(context).push(
                                                   _goPage(Receipt(
-                                                      id: history[index]
+                                                      id: sortResult[index]
                                                           ['id'])));
-                                            }
-                                          },
-                                          selected: history[index]['selected'],
-                                          selectedTileColor: Colors.black26,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          title: Text(
-                                            history[index]['kode'].toString(),
-                                          ),
-                                          subtitle: Text(
-                                              "Rp.${history[index]['total_pembayaran']}",
-                                              style: const TextStyle(
-                                                  fontSize: 20,
-                                                  color: Colors.orange,
-                                                  fontWeight: FontWeight.bold)),
-                                          trailing: Wrap(
-                                            direction: Axis.vertical,
-                                            crossAxisAlignment:
-                                                WrapCrossAlignment.end,
-                                            children: [
-                                              Text(history[index]['status'],
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                  )),
-                                              Text(
-                                                formatTime(history[index]
-                                                    ['created_at']),
-                                              ),
-                                              Text(
-                                                  "Dibuat oleh ${history[index]['cashier']['nama']}"),
-                                            ],
-                                          ),
-                                        ),
-                                      )
-                                    : Card(
-                                        clipBehavior: Clip.antiAlias,
-                                        surfaceTintColor: Colors.white,
-                                        child: ListTile(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  vertical: 0, horizontal: 10),
-                                          onTap: () {
-                                            Navigator.of(context).push(_goPage(
-                                                Receipt(
-                                                    id: history[index]['id'])));
-                                          },
-                                          selectedTileColor: Colors.black26,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          title: Text(
-                                            history[index]['kode'].toString(),
-                                          ),
-                                          subtitle: Text(
-                                              "Rp.${history[index]['total_pembayaran']}",
-                                              style: const TextStyle(
-                                                  fontSize: 20,
-                                                  color: Colors.orange,
-                                                  fontWeight: FontWeight.bold)),
-                                          trailing: Wrap(
-                                            direction: Axis.vertical,
-                                            crossAxisAlignment:
-                                                WrapCrossAlignment.end,
-                                            children: [
-                                              Text(history[index]['status'],
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                  )),
-                                              Text(
-                                                formatTime(history[index]
-                                                    ['created_at']),
-                                              ),
-                                            ],
+                                            },
+                                            selectedTileColor: Colors.black26,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            title: Text(
+                                              sortResult[index]['kode']
+                                                  .toString(),
+                                            ),
+                                            subtitle: Text(
+                                                "Rp.${sortResult[index]['total_pembayaran']}",
+                                                style: const TextStyle(
+                                                    fontSize: 20,
+                                                    color: Colors.orange,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                            trailing: Wrap(
+                                              direction: Axis.vertical,
+                                              crossAxisAlignment:
+                                                  WrapCrossAlignment.end,
+                                              children: [
+                                                Text(
+                                                    sortResult[index]['status'],
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                    )),
+                                                Text(
+                                                  formatTime(sortResult[index]
+                                                      ['created_at']),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                              ],
-                            );
-                          },
-                        ))
-                      ],
-                    ),
-                  ),
-                )
-              : const Center(
-                  child: Text("Data Kosong"),
-                )
+                                ],
+                              );
+                            },
+                          )
+                        : const Center(
+                            child: Text("Data Kosong"),
+                          )
+                  ],
+                ),
+              ))
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.orange,

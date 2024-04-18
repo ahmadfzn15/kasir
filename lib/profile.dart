@@ -1,14 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
+import 'package:app/models/user_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
 class Profile extends StatefulWidget {
@@ -20,11 +18,13 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final userController = Get.put(UserController());
   final TextEditingController _nama = TextEditingController(text: "");
   final TextEditingController _email = TextEditingController(text: "");
   final TextEditingController _noTlp = TextEditingController(text: "");
   XFile? _image;
   String? _img;
+  bool loading = true;
   String url = dotenv.env['API_URL']!;
 
   @override
@@ -32,9 +32,6 @@ class _ProfileState extends State<Profile> {
     super.initState();
 
     getUser();
-    setState(() {
-      _image = null;
-    });
   }
 
   @override
@@ -43,7 +40,7 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> refresh() async {
-    getUser();
+    await getUser();
   }
 
   Future<void> getUser() async {
@@ -53,6 +50,9 @@ class _ProfileState extends State<Profile> {
     _nama.value = TextEditingValue(text: res['nama'] ?? "");
     _email.value = TextEditingValue(text: res['email'] ?? "");
     _noTlp.value = TextEditingValue(text: res['no_tlp'] ?? "");
+    setState(() {
+      loading = false;
+    });
   }
 
   void _openFileManager() async {
@@ -62,6 +62,7 @@ class _ProfileState extends State<Profile> {
       XFile? pickImg =
           await ImagePicker().pickImage(source: ImageSource.gallery);
       setState(() {
+        _img = null;
         _image = pickImg;
       });
       // ignore: use_build_context_synchronously
@@ -93,6 +94,7 @@ class _ProfileState extends State<Profile> {
       XFile? pickImg =
           await ImagePicker().pickImage(source: ImageSource.camera);
       setState(() {
+        _img = null;
         _image = pickImg;
       });
       // ignore: use_build_context_synchronously
@@ -136,8 +138,12 @@ class _ProfileState extends State<Profile> {
                 alignment: WrapAlignment.spaceEvenly,
                 spacing: 50,
                 children: [
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.black),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
                       _openFileManager();
                     },
                     child: const Column(
@@ -154,8 +160,12 @@ class _ProfileState extends State<Profile> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.black),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
                       _openCamera();
                     },
                     child: const Column(
@@ -172,9 +182,14 @@ class _ProfileState extends State<Profile> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    style: const ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(Colors.red),
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.symmetric(vertical: 0))),
+                    onPressed: () {
                       setState(() {
+                        _img = null;
                         _image = null;
                       });
                       Navigator.pop(context);
@@ -203,31 +218,13 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> updateData() async {
-    String? token = await const FlutterSecureStorage().read(key: 'token');
-    var request =
-        http.MultipartRequest("put", Uri.parse("$url/api/user/update"));
-    if (_image != null) {
-      request.files
-          .add(await http.MultipartFile.fromPath('foto', _image!.path));
-    }
-    request.fields['nama'] = _nama.text;
-    request.fields['email'] = _email.text;
-    request.fields['no_tlp'] = _noTlp.text;
-    request.headers['Content-Type'] = "application/json";
-    request.headers['Authorization'] = "Bearer $token";
-    var streamedResponse = await request.send();
-    var res = await http.Response.fromStream(streamedResponse);
-    var message = jsonDecode(res.body);
-
-    if (res.statusCode == 200) {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, message['message'], true);
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    } else {
-      // ignore: use_build_context_synchronously
-      Popup().show(context, message['message'], false);
-    }
+    await userController.updateUser(context, {
+      "new_img": _image,
+      "old_img": _img,
+      "nama": _nama.text,
+      "email": _email.text,
+      "noTlp": _noTlp.text,
+    });
   }
 
   @override
@@ -262,20 +259,22 @@ class _ProfileState extends State<Profile> {
                         border: Border.all(color: Colors.grey),
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: _img != null && _image == null
-                          ? Image.network(
-                              "$url/storage/img/$_img",
-                              fit: BoxFit.cover,
-                            )
-                          : _image != null
-                              ? Image.file(
-                                  File(_image!.path),
+                      child: !loading
+                          ? _img != null
+                              ? Image.network(
+                                  "$url/storage/img/$_img",
                                   fit: BoxFit.cover,
                                 )
-                              : Image.asset(
-                                  "assets/img/user.png",
-                                  fit: BoxFit.cover,
-                                ),
+                              : _image != null
+                                  ? Image.file(
+                                      File(_image!.path),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      "assets/img/user.png",
+                                      fit: BoxFit.cover,
+                                    )
+                          : Container(),
                     ),
                     GestureDetector(
                       onTap: () async {

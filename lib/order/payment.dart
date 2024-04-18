@@ -5,6 +5,7 @@ import 'package:app/models/order_controller.dart';
 import 'package:app/order/success.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -43,16 +44,36 @@ Route _goPage(Widget page) {
 class _PaymentState extends State<Payment> {
   final orderController = Get.put(OrderController());
   final TextEditingController _cash = TextEditingController();
-  final TextEditingController _cashback = TextEditingController(text: "0");
-  final TextEditingController _discountValue = TextEditingController(text: "0");
-  final TextEditingController _etcValue = TextEditingController(text: "0");
-  final TextEditingController _deskripsi = TextEditingController(text: "");
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _cashback = TextEditingController(text: "");
+  final TextEditingController _discountValue = TextEditingController(text: "");
+  final TextEditingController _etcValue = TextEditingController(text: "");
   final TextEditingController _ket = TextEditingController(text: "");
-  final List<DropdownMenuEntry<dynamic>> _metode = [
-    const DropdownMenuEntry(value: 0, label: "Tunai"),
+  final List<DropdownMenuEntry<int>> _biaya = [
+    const DropdownMenuEntry(value: 1, label: "Ongkir"),
+    const DropdownMenuEntry(value: 2, label: "Lain-lain"),
   ];
 
-  int _selectedOption = 0;
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '0');
+    } else if (newValue.text == '0') {
+      return newValue;
+    } else {
+      final num = int.tryParse(newValue.text);
+      if (num == null) {
+        return oldValue;
+      } else if (num > 100) {
+        return oldValue;
+      } else {
+        return newValue;
+      }
+    }
+  }
+
+  int? etcDescription;
+  int _status = 1;
   bool _pas = false;
   bool _discount = false;
   bool _etc = false;
@@ -76,14 +97,15 @@ class _PaymentState extends State<Payment> {
 
     final res = await http.post(Uri.parse("${dotenv.env['API_URL']!}/api/sale"),
         body: jsonEncode({
+          "nama_pelanggan": _name.text,
           "cash": _cash.text,
           "cashback": _cashback.text,
           "total_harga": widget.total,
-          "status": _metode[_selectedOption].label,
+          "status": _status == 1,
           "biaya_tambahan": _etcValue.text,
-          "deskripsi_biaya_tambahan": _deskripsi.text,
+          "deskripsi_biaya_tambahan": etcDescription,
           "diskon": _discountValue.text,
-          "total_pembayaran": total == 0 ? widget.total : harga,
+          "total_pembayaran": total == 0 ? harga : total,
           "ket": _ket.text,
           "order":
               orderController.order.map((element) => element.toMap()).toList()
@@ -105,8 +127,9 @@ class _PaymentState extends State<Payment> {
         detail: result['data'],
       )));
     } else {
+      print(result['message']);
       // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], false);
+      // Popup().show(context, result['message'], false);
     }
   }
 
@@ -118,7 +141,8 @@ class _PaymentState extends State<Payment> {
       setState(() {
         _hargaKurang = false;
       });
-      _cash.value = TextEditingValue(text: widget.total.toString());
+      _cash.value = TextEditingValue(
+          text: total != 0 ? total.toString() : widget.total.toString());
       _cashback.value = const TextEditingValue(text: "0");
     } else {
       setState(() {
@@ -161,40 +185,81 @@ class _PaymentState extends State<Payment> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text("Metode Pembayaran",
+                      Text("Nama Pelanggan (Opsional)",
                           style: TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(
                     height: 6,
                   ),
-                  SizedBox(
-                      width: double.infinity,
-                      child: DropdownMenu(
-                        leadingIcon: const Icon(Icons.payment),
-                        expandedInsets: const EdgeInsets.all(0),
-                        initialSelection:
-                            _metode.isNotEmpty ? _metode[0].value : 0,
-                        inputDecorationTheme: InputDecorationTheme(
-                            constraints: const BoxConstraints(maxHeight: 50),
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 10),
-                            border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFe2e8f0), width: 0.5),
-                                borderRadius: BorderRadius.circular(10))),
-                        onSelected: (newValue) {
+                  CupertinoTextField(
+                    controller: _name,
+                    prefix: const Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Icon(Icons.person),
+                    ),
+                    placeholder: "Masukkan nama pelanggan",
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: const Color(0xFFcbd5e1), width: 0.5),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text("Status Pembayaran",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 6,
+                  ),
+                  Row(
+                    children: [
+                      RadioMenuButton(
+                        value: 1,
+                        groupValue: _status,
+                        style: ButtonStyle(
+                            shape: MaterialStatePropertyAll(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)))),
+                        onChanged: (value) {
                           setState(() {
-                            _selectedOption = newValue;
+                            _status = value!;
                           });
                         },
-                        dropdownMenuEntries: _metode,
-                      )),
+                        child: const Text("Lunas"),
+                      ),
+                      RadioMenuButton(
+                        value: 0,
+                        groupValue: _status,
+                        style: ButtonStyle(
+                            shape: MaterialStatePropertyAll(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)))),
+                        onChanged: (value) {
+                          setState(() {
+                            _status = value!;
+                          });
+                        },
+                        child: const Text("Utang"),
+                      ),
+                    ],
+                  ),
                   const SizedBox(
                     height: 10,
                   ),
                   SwitchListTile(
                     activeColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                     value: _discount,
                     title: const Wrap(
@@ -246,8 +311,13 @@ class _PaymentState extends State<Payment> {
                               if (int.parse(value) > 0 &&
                                   int.parse(value) <= 100) {
                                 setState(() {
-                                  total =
-                                      harga * ((100 - int.parse(value)) / 100);
+                                  if (total != 0) {
+                                    total = total *
+                                        ((100 - int.parse(value)) / 100);
+                                  } else {
+                                    total = harga *
+                                        ((100 - int.parse(value)) / 100);
+                                  }
                                 });
                               } else {
                                 setState(() {
@@ -271,9 +341,11 @@ class _PaymentState extends State<Payment> {
                         ])
                       : Container(),
                   const SizedBox(
-                    height: 6,
+                    height: 10,
                   ),
                   SwitchListTile(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     activeColor: Colors.orange,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                     value: _etc,
@@ -293,6 +365,12 @@ class _PaymentState extends State<Payment> {
                     onChanged: (value) {
                       setState(() {
                         _etc = value;
+                        if (value) {
+                          etcDescription = 1;
+                        } else {
+                          etcDescription = null;
+                        }
+
                         if (_etcValue.text.isNotEmpty) {
                           if (total != 0) {
                             total -= double.parse(_etcValue.text);
@@ -304,59 +382,96 @@ class _PaymentState extends State<Payment> {
                     },
                   ),
                   _etc
-                      ? Column(
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text("Masukkan Biaya Tambahan",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
-                              ],
-                            ),
+                            Expanded(
+                                flex: 4,
+                                child: Column(
+                                  children: [
+                                    const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text("Masukkan Biaya Tambahan",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 6,
+                                    ),
+                                    CupertinoTextField(
+                                      controller: _etcValue,
+                                      keyboardType: TextInputType.number,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          if (value.isNotEmpty) {
+                                            if (total ==
+                                                harga +
+                                                    double.parse(
+                                                        _etcValue.text)) {
+                                              total -=
+                                                  double.parse(_etcValue.text);
+                                            }
+                                            total = double.parse(
+                                                (harga + int.parse(value))
+                                                    .toString());
+                                          } else {
+                                            total -= double.parse(
+                                                (int.parse(_etcValue.text))
+                                                    .toString());
+                                          }
+                                        });
+                                      },
+                                      prefix: const Padding(
+                                        padding: EdgeInsets.only(left: 10),
+                                        child: Text("Rp."),
+                                      ),
+                                      placeholder: "0",
+                                      padding: const EdgeInsets.only(
+                                          right: 10, top: 15, bottom: 15),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: const Color(0xFFcbd5e1),
+                                            width: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                )),
                             const SizedBox(
-                              height: 6,
+                              width: 10,
                             ),
-                            CupertinoTextField(
-                              controller: _etcValue,
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                setState(() {
-                                  if (value.isNotEmpty) {
-                                    if (total ==
-                                        harga + double.parse(_etcValue.text)) {
-                                      total -= double.parse(_etcValue.text);
-                                    }
-                                    total = double.parse(
-                                        (harga + int.parse(value)).toString());
-                                  } else {
-                                    total -= double.parse(
-                                        (int.parse(_etcValue.text)).toString());
-                                  }
-                                });
-                              },
-                              prefix: const Padding(
-                                padding: EdgeInsets.only(left: 10),
-                                child: Text("Rp."),
-                              ),
-                              placeholder: "0",
-                              padding: const EdgeInsets.only(
-                                  right: 10, top: 15, bottom: 15),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: const Color(0xFFcbd5e1), width: 0.5),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
+                            Expanded(
+                                flex: 3,
+                                child: DropdownMenu(
+                                    expandedInsets: const EdgeInsets.all(0),
+                                    initialSelection: etcDescription,
+                                    inputDecorationTheme: InputDecorationTheme(
+                                        constraints:
+                                            const BoxConstraints(maxHeight: 50),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 10),
+                                        border: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFcbd5e1),
+                                                width: 0.5),
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    onSelected: (newValue) {
+                                      setState(() {
+                                        etcDescription = newValue!;
+                                      });
+                                    },
+                                    dropdownMenuEntries: _biaya))
                           ],
                         )
                       : Container(),
                   const SizedBox(
-                    height: 6,
+                    height: 15,
                   ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,

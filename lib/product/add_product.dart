@@ -38,6 +38,7 @@ class _AddProductState extends State<AddProduct> {
   bool allowStock = false;
   bool allowVarian = false;
   bool loading = false;
+  bool checkHarga = false;
   String? barcode;
 
   @override
@@ -587,6 +588,18 @@ class _AddProductState extends State<AddProduct> {
                               padding: EdgeInsets.only(left: 10),
                               child: Text("Rp."),
                             ),
+                            onChanged: (value) {
+                              if (int.parse(_hargaJual.text) <
+                                  int.parse(_hargaBeli.text)) {
+                                setState(() {
+                                  checkHarga = true;
+                                });
+                              } else {
+                                setState(() {
+                                  checkHarga = false;
+                                });
+                              }
+                            },
                             placeholder: "0",
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 15),
@@ -597,6 +610,21 @@ class _AddProductState extends State<AddProduct> {
                                   color: const Color(0xFFcbd5e1), width: 0.5),
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          checkHarga
+                              ? const Text(
+                                  "Harga jual harus lebih tinggi dari harga beli.",
+                                  style: TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.start,
+                                )
+                              : const Text("")
                         ],
                       ),
                       const SizedBox(
