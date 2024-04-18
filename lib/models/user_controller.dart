@@ -104,7 +104,7 @@ class UserController extends GetxController {
       // ignore: use_build_context_synchronously
       Popup().show(context, message['message'], false);
     }
-  }4
+  }
 
   Future<void> editToko(BuildContext context, data) async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
