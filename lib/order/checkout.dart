@@ -1,3 +1,4 @@
+import 'package:app/etc/format_number.dart';
 import 'package:app/models/order.dart';
 import 'package:app/models/order_controller.dart';
 import 'package:app/order/payment.dart';
@@ -104,7 +105,7 @@ class _CheckoutState extends State<Checkout> {
                                 style: const TextStyle(
                                     fontSize: 15, fontWeight: FontWeight.bold)),
                             subtitle: Text(
-                                "Rp.${orderController.order[index].harga}"),
+                                "Rp.${formatNumber(orderController.order[index].harga)}"),
                             trailing: Wrap(
                               direction: Axis.horizontal,
                               crossAxisAlignment: WrapCrossAlignment.center,
@@ -156,7 +157,7 @@ class _CheckoutState extends State<Checkout> {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold))),
                   Obx(() => Text(
-                      "Rp.${orderController.order.fold(0, (previousValue, element) => previousValue + (element.harga * element.qty.value))}",
+                      "Rp.${formatNumber(orderController.order.fold(0, (previousValue, element) => previousValue + (element.harga * element.qty.value)))}",
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.bold)))
                 ],

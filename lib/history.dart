@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
+import 'package:app/etc/format_number.dart';
 import 'package:app/etc/format_time.dart';
 import 'package:app/order/receipt.dart';
 import 'package:excel/excel.dart';
@@ -568,7 +569,7 @@ class _HistoryState extends State<History> {
                                                   .toString(),
                                             ),
                                             subtitle: Text(
-                                                "Rp.${sortResult[index]['total_pembayaran']}",
+                                                "Rp.${formatNumber(sortResult[index]['total_pembayaran'])}",
                                                 style: const TextStyle(
                                                     fontSize: 20,
                                                     color: Colors.orange,
@@ -633,7 +634,11 @@ class _HistoryState extends State<History> {
                                                   WrapCrossAlignment.end,
                                               children: [
                                                 Text(
-                                                    sortResult[index]['status'],
+                                                    sortResult[index]
+                                                                ['status'] ==
+                                                            1
+                                                        ? "Lunas"
+                                                        : "Belum Lunas",
                                                     style: const TextStyle(
                                                       fontSize: 16,
                                                     )),

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:app/components/popup.dart';
+import 'package:app/etc/format_number.dart';
 import 'package:app/etc/format_time.dart';
 import 'package:app/models/order_controller.dart';
 import 'package:app/order/receipt.dart';
@@ -258,7 +259,9 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Status"),
-                        Text(widget.detail['status'] ? "Lunas" : "Belum Lunas")
+                        Text(widget.detail['status']
+                            ? "Lunas"
+                            : "Belum Lunas (Utang)")
                       ],
                     ),
                     const SizedBox(
@@ -268,7 +271,8 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Total Tagihan"),
-                        Text("Rp.${widget.detail['total_pembayaran']}")
+                        Text(
+                            "Rp.${formatNumber(widget.detail['total_pembayaran'])}")
                       ],
                     ),
                     const SizedBox(
@@ -278,7 +282,8 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Diterima"),
-                        Text("Rp.${widget.detail['cash'] ?? "-"}")
+                        Text(
+                            "Rp.${widget.detail['cash'] != null ? formatNumber(int.parse(widget.detail['cash'])) : "-"}")
                       ],
                     ),
                     const SizedBox(
@@ -288,7 +293,8 @@ class _SuccessState extends State<Success> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Kembalian"),
-                        Text("Rp.${widget.detail['cashback'] ?? "-"}")
+                        Text(
+                            "Rp.${widget.detail['cashback'] != null ? formatNumber(int.parse(widget.detail['cashback'])) : "-"}")
                       ],
                     ),
                   ],

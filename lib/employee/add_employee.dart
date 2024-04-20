@@ -21,15 +21,10 @@ class _AddEmployeeState extends State<AddEmployee> {
   final TextEditingController _noTlp = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _repeatPassword = TextEditingController();
-  int _selectedOption = 1;
   bool pwdNotSame = false;
   bool showPwd = false;
   bool showRepeatPwd = false;
   bool loading = false;
-  final List<DropdownMenuEntry<int>> _role = [
-    const DropdownMenuEntry(value: 1, label: "Staff Kasir"),
-    const DropdownMenuEntry(value: 2, label: "Staff Inventaris"),
-  ];
 
   Future<void> _uploadToDatabase(BuildContext context) async {
     setState(() {
@@ -41,7 +36,6 @@ class _AddEmployeeState extends State<AddEmployee> {
         Uri.parse("${dotenv.env['API_URL']!}/api/cashier"),
         body: jsonEncode({
           "nama": _nama.text,
-          "role": _selectedOption,
           "email": _email.text,
           "no_tlp": _noTlp.text,
           "password": _password.text,
@@ -105,40 +99,6 @@ class _AddEmployeeState extends State<AddEmployee> {
                             color: const Color(0xFFcbd5e1), width: 0.5),
                       ),
                     ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text("Posisi Karyawan",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    SizedBox(
-                        width: double.infinity,
-                        child: DropdownMenu(
-                          leadingIcon: const Icon(Icons.person),
-                          expandedInsets: const EdgeInsets.all(0),
-                          initialSelection: 1,
-                          inputDecorationTheme: InputDecorationTheme(
-                              constraints: const BoxConstraints(maxHeight: 50),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              border: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color(0xFFcbd5e1), width: 0.5),
-                                  borderRadius: BorderRadius.circular(10))),
-                          onSelected: (newValue) {
-                            setState(() {
-                              _selectedOption = newValue!;
-                            });
-                          },
-                          dropdownMenuEntries: _role,
-                        )),
                     const SizedBox(
                       height: 12,
                     ),

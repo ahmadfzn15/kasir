@@ -21,12 +21,11 @@ class _DeleteAccountState extends State<DeleteAccount> {
 
   Future<void> deleteAccount() async {
     String? token = await const FlutterSecureStorage().read(key: 'token');
-    String? id = await const FlutterSecureStorage().read(key: 'id');
 
-    final res = await http.post(
+    final res = await http.delete(
         Uri.parse("${dotenv.env['API_URL']!}/api/user/delete"),
         headers: {"Authorization": "Bearer $token"},
-        body: {"id": id, "password": _password.text});
+        body: {"password": _password.text});
 
     final result = jsonDecode(res.body);
     if (res.statusCode == 200) {
@@ -43,8 +42,9 @@ class _DeleteAccountState extends State<DeleteAccount> {
       // ignore: use_build_context_synchronously
       Popup().show(context, result['message'], true);
     } else {
+      print(result['message']);
       // ignore: use_build_context_synchronously
-      Popup().show(context, result['message'], false);
+      // Popup().show(context, result['message'], false);
     }
   }
 

@@ -586,33 +586,6 @@ class _TokoState extends State<Toko> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text("Reset Semua Data",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
-                  ],
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: CupertinoButton(
-                      color: Colors.red,
-                      onPressed: () {
-                        showConfirmReset();
-                      },
-                      child: const Text("Reset")),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Divider(),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
                     Text("Hapus Toko",
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),

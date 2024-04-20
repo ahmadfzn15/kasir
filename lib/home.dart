@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:app/employee/employee.dart';
+import 'package:app/etc/format_number.dart';
 import 'package:app/etc/format_time.dart';
 import 'package:app/etc/label.dart';
 import 'package:app/etc/wave.dart';
@@ -518,7 +519,7 @@ class _HomeState extends State<Home> {
                             style: TextStyle(fontSize: 13),
                           ),
                           subtitle: Text(
-                            "Rp.${sale.isNotEmpty ? sale['omset'].toString() : "0"}",
+                            "Rp.${sale.isNotEmpty ? formatNumber(sale['omset']) : "0"}",
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),
@@ -533,7 +534,7 @@ class _HomeState extends State<Home> {
                             style: TextStyle(fontSize: 13),
                           ),
                           subtitle: Text(
-                            "Rp.${sale.isNotEmpty ? sale['laba'].toString() : "0"}",
+                            "Rp.${sale.isNotEmpty ? formatNumber(sale['laba']) : "0"}",
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),

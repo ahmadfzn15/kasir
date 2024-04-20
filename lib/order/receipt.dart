@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:app/components/popup.dart';
 import 'package:app/etc/auth_user.dart';
+import 'package:app/etc/format_number.dart';
 import 'package:app/etc/format_time.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/cupertino.dart';
@@ -394,14 +395,14 @@ class _ReceiptState extends State<Receipt> {
                                                   const TextStyle(fontSize: 15),
                                             ),
                                             Text(
-                                              "Rp.${data['detail'][index]['product']['harga_jual']} x ${data['detail'][index]['qty']}",
+                                              "Rp.${formatNumber(data['detail'][index]['product']['harga_jual'])} x ${data['detail'][index]['qty']}",
                                               style:
                                                   const TextStyle(fontSize: 13),
                                             ),
                                           ],
                                         ),
                                         Text(
-                                          "Rp.${data['detail'][index]['product']['harga_jual'] * data['detail'][index]['qty']}",
+                                          "Rp.${formatNumber(data['detail'][index]['product']['harga_jual'] * data['detail'][index]['qty'])}",
                                           style: const TextStyle(fontSize: 15),
                                         ),
                                       ],
@@ -425,21 +426,24 @@ class _ReceiptState extends State<Receipt> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text("Subtotal"),
-                                Text("Rp.${data['sale']['total_harga']}")
+                                Text(
+                                    "Rp.${formatNumber(data['sale']['total_harga'])}")
                               ],
                             ),
                             const SizedBox(
                               height: 5,
                             ),
-                            data['sale']['biaya_tambahan'] != 0
+                            data['sale']['biaya_tambahan'] != null
                                 ? Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
+                                      Flexible(
+                                          child: Text(
+                                        "Biaya Tambahan (${data['sale']['deskripsi_biaya_tambahan']})",
+                                      )),
                                       Text(
-                                          "Biaya Tambahan (${data['sale']['deskripsi_biaya_tambahan']})"),
-                                      Text(
-                                          "Rp.${data['sale']['biaya_tambahan']}")
+                                          "Rp.${formatNumber(data['sale']['biaya_tambahan'])}")
                                     ],
                                   )
                                 : Container(),
@@ -472,7 +476,7 @@ class _ReceiptState extends State<Receipt> {
                                       fontSize: 18),
                                 ),
                                 Text(
-                                  "Rp.${data['sale']['total_pembayaran']}",
+                                  "Rp.${formatNumber(data['sale']['total_pembayaran'])}",
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18),
@@ -491,26 +495,28 @@ class _ReceiptState extends State<Receipt> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text("Bayar"),
-                                      Text("Rp.${data['sale']['cash']}"),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
+                                      Text(
+                                          "Rp.${formatNumber(data['sale']['cash'])}"),
                                     ],
                                   )
                                 : Container(),
+                            const SizedBox(
+                              height: 5,
+                            ),
                             data['sale']['cashback'] != null
                                 ? Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text("Kembalian"),
-                                      Text("Rp.${data['sale']['cashback']}"),
-                                      const SizedBox(
-                                        height: 30,
-                                      ),
+                                      Text(
+                                          "Rp.${formatNumber(data['sale']['cashback'])}"),
                                     ],
                                   )
                                 : Container(),
+                            const SizedBox(
+                              height: 20,
+                            ),
                             const Text(
                               "Terima kasih telah berbelanja di toko ini",
                               style: TextStyle(fontSize: 14),

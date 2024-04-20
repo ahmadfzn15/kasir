@@ -1,3 +1,4 @@
+import 'package:app/etc/format_number.dart';
 import 'package:app/models/category_controller.dart';
 import 'package:app/models/order_controller.dart';
 import 'package:app/models/product_controller.dart';
@@ -183,7 +184,7 @@ class _ProductState extends State<Product> {
                           height: 3,
                         ),
                         Obx(() => Text(
-                              "Rp.${orderController.order.fold(0, (previousValue, element) => previousValue + (element.harga * (element.qty.value)))}",
+                              "Rp.${formatNumber(orderController.order.fold(0, (previousValue, element) => previousValue + (element.harga * (element.qty.value))))}",
                               style: const TextStyle(fontSize: 13),
                             ))
                       ],
@@ -925,7 +926,7 @@ class _ProductState extends State<Product> {
                                                                                                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
                                                                                                 ),
                                                                                                 Text(
-                                                                                                  "Rp.${productController.searchResult[index].harga_jual}",
+                                                                                                  "Rp.${formatNumber(productController.searchResult[index].harga_jual)}",
                                                                                                   style: const TextStyle(fontSize: 12),
                                                                                                 ),
                                                                                               ],
@@ -963,7 +964,7 @@ class _ProductState extends State<Product> {
                                                                                                   )
                                                                                                 : CupertinoButton(
                                                                                                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                                                                                    color: Colors.orange,
+                                                                                                    color: productController.searchResult[index].stok != 0 ? Colors.orange : Colors.orange.shade200,
                                                                                                     onPressed: () {
                                                                                                       if (!productController.searchResult[index].selected.value && productController.searchResult[index].stok != 0) {
                                                                                                         if (!orderController.sheetOrderOpen.value) {
@@ -1147,7 +1148,7 @@ class _ProductState extends State<Product> {
                                                                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                             children: [
                                                                                               Text(
-                                                                                                "Rp.${productController.searchResult[index].harga_jual.toString()}",
+                                                                                                "Rp.${formatNumber(productController.searchResult[index].harga_jual).toString()}",
                                                                                                 style: const TextStyle(
                                                                                                   fontSize: 15,
                                                                                                   fontWeight: FontWeight.bold,
@@ -1197,11 +1198,7 @@ class _ProductState extends State<Product> {
                                                                                                   child: SizedBox(
                                                                                                     width: double.infinity,
                                                                                                     child: FilledButton(
-                                                                                                      style: const ButtonStyle(
-                                                                                                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))),
-                                                                                                        backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                                                                                                        foregroundColor: MaterialStatePropertyAll(Colors.white),
-                                                                                                      ),
+                                                                                                      style: ButtonStyle(shape: const MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))), backgroundColor: MaterialStatePropertyAll(productController.searchResult[index].stok != 0 ? Colors.orange : Colors.orange.shade200), foregroundColor: const MaterialStatePropertyAll(Colors.white)),
                                                                                                       onPressed: () {
                                                                                                         if (!productController.searchResult[index].selected.value && productController.searchResult[index].stok != 0) {
                                                                                                           if (!orderController.sheetOrderOpen.value) {
@@ -1525,7 +1522,7 @@ class _ProductState extends State<Product> {
                                                                                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
                                                                                 ),
                                                                                 Text(
-                                                                                  "Rp.${productController.searchResult[index].harga_jual}",
+                                                                                  "Rp.${formatNumber(productController.searchResult[index].harga_jual)}",
                                                                                   style: const TextStyle(fontSize: 12),
                                                                                 ),
                                                                               ],
@@ -1564,7 +1561,7 @@ class _ProductState extends State<Product> {
                                                                                       )
                                                                                     : CupertinoButton(
                                                                                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                                                                        color: Colors.orange,
+                                                                                        color: productController.searchResult[index].stok != 0 ? Colors.orange : Colors.orange.shade200,
                                                                                         onPressed: () {
                                                                                           if (!productController.searchResult[index].selected.value && productController.searchResult[index].stok != 0) {
                                                                                             if (!orderController.sheetOrderOpen.value) {
@@ -1671,7 +1668,7 @@ class _ProductState extends State<Product> {
                                                                             .spaceBetween,
                                                                     children: [
                                                                       Text(
-                                                                        "Rp.${productController.searchResult[index].harga_jual.toString()}",
+                                                                        "Rp.${formatNumber(productController.searchResult[index].harga_jual).toString()}",
                                                                         style: const TextStyle(
                                                                             fontSize:
                                                                                 15,
@@ -1728,10 +1725,10 @@ class _ProductState extends State<Product> {
                                                                               child: SizedBox(
                                                                                 width: double.infinity,
                                                                                 child: FilledButton(
-                                                                                  style: const ButtonStyle(
-                                                                                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))),
-                                                                                    backgroundColor: MaterialStatePropertyAll(Colors.orange),
-                                                                                    foregroundColor: MaterialStatePropertyAll(Colors.white),
+                                                                                  style: ButtonStyle(
+                                                                                    shape: const MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)))),
+                                                                                    backgroundColor: MaterialStatePropertyAll(productController.searchResult[index].stok != 0 ? Colors.orange : Colors.orange.shade200),
+                                                                                    foregroundColor: const MaterialStatePropertyAll(Colors.white),
                                                                                   ),
                                                                                   onPressed: () {
                                                                                     if (!productController.searchResult[index].selected.value && productController.searchResult[index].stok != 0) {

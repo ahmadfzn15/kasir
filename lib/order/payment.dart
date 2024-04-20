@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:app/components/popup.dart';
+import 'package:app/etc/format_number.dart';
 import 'package:app/models/order_controller.dart';
 import 'package:app/order/success.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -103,7 +103,8 @@ class _PaymentState extends State<Payment> {
           "total_harga": widget.total,
           "status": _status == 1,
           "biaya_tambahan": _etcValue.text,
-          "deskripsi_biaya_tambahan": etcDescription,
+          "deskripsi_biaya_tambahan":
+              etcDescription == 1 ? "Ongkir" : "Lain-lain",
           "diskon": _discountValue.text,
           "total_pembayaran": total == 0 ? harga : total,
           "ket": _ket.text,
@@ -116,6 +117,8 @@ class _PaymentState extends State<Payment> {
         });
 
     Map<String, dynamic> result = jsonDecode(res.body);
+    // ignore: use_build_context_synchronously
+    Navigator.pop(context);
     if (res.statusCode == 200) {
       // ignore: use_build_context_synchronously
       Popup().show(context, result['message'], true);
@@ -127,9 +130,8 @@ class _PaymentState extends State<Payment> {
         detail: result['data'],
       )));
     } else {
-      print(result['message']);
       // ignore: use_build_context_synchronously
-      // Popup().show(context, result['message'], false);
+      Popup().show(context, result['message'], false);
     }
   }
 
@@ -142,7 +144,8 @@ class _PaymentState extends State<Payment> {
         _hargaKurang = false;
       });
       _cash.value = TextEditingValue(
-          text: total != 0 ? total.toString() : widget.total.toString());
+          text:
+              total != 0 ? total.round().toString() : widget.total.toString());
       _cashback.value = const TextEditingValue(text: "0");
     } else {
       setState(() {
@@ -151,6 +154,134 @@ class _PaymentState extends State<Payment> {
       _cash.clear();
       _cashback.clear();
     }
+  }
+
+  void _openConfirmDialog(BuildContext context) {
+    showModalBottomSheet(
+      showDragHandle: true,
+      enableDrag: true,
+      constraints:
+          const BoxConstraints(maxHeight: 350, minWidth: double.infinity),
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    _status == 1 ? "Lunas" : "Belum Lunas (Utang)",
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Nama Pelanggan",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(_name.text.isNotEmpty ? _name.text : "-",
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Total Bayar",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                          "Rp.${total == 0 ? formatNumber(harga) : formatNumber(total.round())}",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Uang diterima",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      _cashback.text.isNotEmpty
+                          ? Text(
+                              "Rp.${formatNumber(int.parse(_cash.text))}",
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.bold),
+                            )
+                          : const Text("-")
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Kembalian",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      _cashback.text.isNotEmpty
+                          ? Text(
+                              "Rp.${formatNumber(int.parse(_cashback.text))}",
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.bold),
+                            )
+                          : const Text("-")
+                    ],
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  const Text(
+                    "Apakah anda yakin ingin melanjutkan transaksi ini?",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
+                        color: Colors.red,
+                        child: const Text("Batal"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      )),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Expanded(
+                          child: CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
+                        color: Colors.orange,
+                        child: const Text("Bayar"),
+                        onPressed: () {
+                          _uploadToDatabase(context);
+                        },
+                      ))
+                    ],
+                  )
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -247,6 +378,9 @@ class _PaymentState extends State<Payment> {
                         onChanged: (value) {
                           setState(() {
                             _status = value!;
+                            _cash.clear();
+                            _cashback.clear();
+                            _pas = false;
                           });
                         },
                         child: const Text("Utang"),
@@ -473,103 +607,145 @@ class _PaymentState extends State<Payment> {
                   const SizedBox(
                     height: 15,
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                          flex: 2,
-                          child: FilterChip(
-                            selected: _pas,
-                            padding: const EdgeInsets.all(12),
-                            side: BorderSide.none,
-                            elevation: 5,
-                            label: const Text("Uang Pas ?"),
-                            onSelected: (value) {
-                              changeCash();
-                            },
-                          )),
-                      Expanded(
-                          flex: 3,
-                          child: Column(
-                            children: [
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text("Uang Cash",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 6,
-                              ),
-                              CupertinoTextField(
-                                controller: _cash,
-                                keyboardType: TextInputType.number,
-                                prefix: const Padding(
-                                  padding: EdgeInsets.only(left: 10),
-                                  child: Text("Rp."),
-                                ),
-                                readOnly: _pas,
-                                onChanged: (value) {
-                                  if (int.parse(value) >= widget.total) {
-                                    setState(() {
-                                      _hargaKurang = false;
-                                    });
-                                    _cashback.value = TextEditingValue(
-                                        text: (int.parse(value) - widget.total)
-                                            .toString());
-                                  }
+                  _status == 1
+                      ? Column(
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                    flex: 2,
+                                    child: FilterChip(
+                                      selected: _pas,
+                                      padding: const EdgeInsets.all(12),
+                                      side: BorderSide.none,
+                                      elevation: 5,
+                                      label: const Text("Uang Pas ?"),
+                                      onSelected: (value) {
+                                        changeCash();
+                                      },
+                                    )),
+                                Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      children: [
+                                        const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: [
+                                            Text("Uang Cash",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 6,
+                                        ),
+                                        CupertinoTextField(
+                                          controller: _cash,
+                                          keyboardType: TextInputType.number,
+                                          prefix: const Padding(
+                                            padding: EdgeInsets.only(left: 10),
+                                            child: Text("Rp."),
+                                          ),
+                                          readOnly: _pas,
+                                          onChanged: (value) {
+                                            if (int.parse(value) >=
+                                                widget.total) {
+                                              setState(() {
+                                                _hargaKurang = false;
+                                              });
+                                              _cashback.value =
+                                                  TextEditingValue(
+                                                      text: (int.parse(value) -
+                                                              (total == 0
+                                                                  ? harga
+                                                                  : total
+                                                                      .round()))
+                                                          .toString());
+                                            }
 
-                                  if (int.parse(value) < widget.total) {
-                                    setState(() {
-                                      _hargaKurang = true;
-                                    });
-                                  }
+                                            if (int.parse(value) <
+                                                (total == 0
+                                                    ? harga
+                                                    : total.round())) {
+                                              setState(() {
+                                                _hargaKurang = true;
+                                                _cashback.clear();
+                                              });
+                                            }
 
-                                  if (int.parse(value) == 0 || value.isEmpty) {
-                                    _cashback.clear();
-                                  }
-                                },
-                                placeholder: "0",
-                                padding: const EdgeInsets.only(
-                                    right: 10, top: 15, bottom: 15),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                      color: const Color(0xFFcbd5e1),
-                                      width: 0.5),
-                                ),
+                                            if (int.parse(value) == 0 ||
+                                                value.isEmpty ||
+                                                _cash.text.isEmpty) {
+                                              setState(() {
+                                                _cashback.clear();
+                                                _hargaKurang = false;
+                                              });
+                                            }
+                                          },
+                                          placeholder: "0",
+                                          padding: const EdgeInsets.only(
+                                              right: 10, top: 15, bottom: 15),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                                color: const Color(0xFFcbd5e1),
+                                                width: 0.5),
+                                          ),
+                                        ),
+                                      ],
+                                    )),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 2,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                _hargaKurang && _cash.text.isNotEmpty
+                                    ? const Text(
+                                        "Nominal uang kurang.",
+                                        style: TextStyle(color: Colors.red),
+                                        textAlign: TextAlign.start,
+                                      )
+                                    : Container()
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            ListTile(
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 0),
+                              title: const Text(
+                                "Jumlah Kembalian",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                            ],
-                          )),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-                    title: const Text(
-                      "Jumlah Kembalian",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    trailing: Text(
-                      "Rp.${_cashback.text}",
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
+                              trailing: _cashback.text.isNotEmpty
+                                  ? Text(
+                                      "Rp.${formatNumber(int.parse(_cashback.text))}",
+                                      style: const TextStyle(fontSize: 15),
+                                    )
+                                  : const Text("-"),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            )
+                          ],
+                        )
+                      : Container(),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Text("Keterangan",
+                          Text("Keterangan (Opsional)",
                               style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -613,7 +789,8 @@ class _PaymentState extends State<Payment> {
                   const Text("Total",
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text("Rp.${total == 0 ? harga.toString() : total.round()}",
+                  Text(
+                      "Rp.${total == 0 ? formatNumber(harga) : formatNumber(total.round())}",
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.bold))
                 ],
@@ -627,7 +804,15 @@ class _PaymentState extends State<Payment> {
                   color: Colors.orange,
                   child: const Text("Bayar"),
                   onPressed: () {
-                    _uploadToDatabase(context);
+                    if (_status == 1) {
+                      if (_cash.text.isNotEmpty) {
+                        _openConfirmDialog(context);
+                      } else {
+                        Popup().show(context, "Uang cash wajib diisi!", false);
+                      }
+                    } else {
+                      _openConfirmDialog(context);
+                    }
                   },
                 ),
               ),
