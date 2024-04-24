@@ -369,7 +369,7 @@ class _HistoryState extends State<History> {
                       history.map((e) => e['selected'] = false).toList();
                       _select = false;
                     });
-                    Navigator.pop(context);
+                    Navigator.maybePop(context);
                   },
                   child: const Text(
                     "Batalkan",

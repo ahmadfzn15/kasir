@@ -974,7 +974,7 @@ class _ProductState extends State<Product> {
                                                                                                         orderController.addOrder(productController.searchResult[index]);
                                                                                                       }
                                                                                                     },
-                                                                                                    child: const Text("Tambah"),
+                                                                                                    child: Text(productController.searchResult[index].stok != 0 ? "Tambah" : "Habis"),
                                                                                                   )
                                                                                           ],
                                                                                         )
@@ -1208,7 +1208,7 @@ class _ProductState extends State<Product> {
                                                                                                           orderController.addOrder(productController.searchResult[index]);
                                                                                                         }
                                                                                                       },
-                                                                                                      child: const Text("Tambah"),
+                                                                                                      child: Text(productController.searchResult[index].stok != 0 ? "Tambah" : "Habis"),
                                                                                                     ),
                                                                                                   ),
                                                                                                 ),
@@ -1571,7 +1571,7 @@ class _ProductState extends State<Product> {
                                                                                             orderController.addOrder(productController.searchResult[index]);
                                                                                           }
                                                                                         },
-                                                                                        child: const Text("Tambah"),
+                                                                                        child: Text(productController.searchResult[index].stok != 0 ? "Tambah" : "Habis"),
                                                                                       )
                                                                               ],
                                                                             ))
@@ -1739,7 +1739,7 @@ class _ProductState extends State<Product> {
                                                                                       orderController.addOrder(productController.searchResult[index]);
                                                                                     }
                                                                                   },
-                                                                                  child: const Text("Tambah"),
+                                                                                  child: Text(productController.searchResult[index].stok != 0 ? "Tambah" : "Habis"),
                                                                                 ),
                                                                               ),
                                                                             ),
